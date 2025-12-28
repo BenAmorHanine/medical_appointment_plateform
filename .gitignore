@@ -20,5 +20,7 @@ build/
 # Node
 node_modules/
 
+.env/
+
 # Angular
 .angular/
