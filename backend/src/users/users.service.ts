@@ -32,7 +32,7 @@ export class UsersService {
     return await this.repository.save(user);
   }
 
-  // Mettre à jour un utilisateur (cours page 225)
+  // Mettre à jour un utilisateur
   async update(id: string, updateUserDto: UpdateUserDto): Promise<UserEntity> {
     const user = await this.repository.preload({
       id,
@@ -46,7 +46,7 @@ export class UsersService {
     return await this.repository.save(user);
   }
 
-  // Supprimer un utilisateur (cours page 229)
+  // Supprimer un utilisateur
   async remove(id: string): Promise<UserEntity> {
     const user = await this.findOne(id);
     return await this.repository.remove(user);

@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { databaseConfig } from './config/database.config';
+import databaseConfig from './config/database.config';
 import { UsersModule } from './users/users.module';
 import { DoctorProfileModule } from './profiles/doctor/doctor-profile.module';
 import { PatientProfileModule } from './profiles/patient/patient-profile.module';
@@ -17,7 +17,6 @@ import { PatientProfileModule } from './profiles/patient/patient-profile.module'
 
     // Configuration TypeORM avec useFactory
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         type: 'mysql',
@@ -25,10 +24,9 @@ import { PatientProfileModule } from './profiles/patient/patient-profile.module'
         port: configService.get<number>('database.port'),
         username: configService.get<string>('database.username'),
         password: configService.get<string>('database.password'),
-        database: configService.get<string>('database.database'),
-        entities: [],
+        database: configService.get<string>('database.name'), // Attention : 'database.name' ici
         autoLoadEntities: true,
-        synchronize: true, // dev uniquement
+        synchronize: true,
       }),
     }),
 
@@ -39,3 +37,8 @@ import { PatientProfileModule } from './profiles/patient/patient-profile.module'
   ],
 })
 export class AppModule {}
+
+
+/**
+ * 
+ */
