@@ -49,4 +49,25 @@ export class AppointmentsService {
 
     return saved;
   }
+    async cancel(appointmentId: string): Promise<AppointmentEntity> {
+    const appointment = await this.repository.findOne({ where: { id: appointmentId } });
+    
+    if (!appointment) throw new NotFoundException('RDV introuvable');
+    if (appointment.status === AppointmentStatus.DONE) {  
+      throw new BadRequestException('RDV terminé impossible à annuler');
+    }
+
+    appointment.status = AppointmentStatus.CANCELLED;    
+    await this.repository.save(appointment);
+
+    const availability = await this.availabilityRepository.findOne({
+      where: { id: appointment.availabilityId }
+    });
+    if (availability) {
+      availability.bookedSlots = Math.max(0, availability.bookedSlots - 1);
+      await this.availabilityRepository.save(availability);
+    }
+
+    return appointment;
+  }
 }

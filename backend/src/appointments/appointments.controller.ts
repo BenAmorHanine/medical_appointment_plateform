@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, UsePipes, ValidationPipe, Delete ,Param} from '@nestjs/common';
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 
@@ -15,5 +15,10 @@ export class AppointmentsController {
   @Get()
   findAll() {
     return this.service.findAll();
+  }
+
+  @Delete(':id')
+  async cancel(@Param('id') id: string) {
+    return await this.service.cancel(id);
   }
 }
