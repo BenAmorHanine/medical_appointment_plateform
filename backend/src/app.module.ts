@@ -5,6 +5,8 @@ import databaseConfig from './config/database.config';
 import { UsersModule } from './users/users.module';
 import { DoctorProfileModule } from './profiles/doctor/doctor-profile.module';
 import { PatientProfileModule } from './profiles/patient/patient-profile.module';
+import { AvailabilityModule } from './availability/availability.module';
+import { AppointmentsModule } from './appointments/appointments.module';
 
 @Module({
   imports: [
@@ -34,6 +36,8 @@ import { PatientProfileModule } from './profiles/patient/patient-profile.module'
     UsersModule,
     DoctorProfileModule,
     PatientProfileModule,
+    AvailabilityModule,
+    AppointmentsModule,
   ],
 })
 export class AppModule {}
