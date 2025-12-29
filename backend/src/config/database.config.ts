@@ -1,6 +1,5 @@
 //import { registerAs } from '@nestjs/config';
 
-// config/database.config.ts
 export default () => ({
   database: {
     host: process.env.DB_HOST || 'localhost',
