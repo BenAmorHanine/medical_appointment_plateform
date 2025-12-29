@@ -1,13 +1,13 @@
 import {
   Controller,
-  Get, 
-  Post, 
-  Put, 
-  Delete, 
+  Get,
+  Post,
+  Put,
+  Delete,
   Body,
   Param,
   UsePipes,
-  ValidationPipe
+  ValidationPipe,
 } from '@nestjs/common';
 import { DoctorProfileService } from './doctor-profile.service';
 import { CreateDoctorProfileDto } from './dto/create-doctor-profile.dto';
