@@ -15,15 +15,10 @@ export class AvailabilityService {
   ) {}
 
   async create(createDto: CreateAvailabilityDto): Promise<AvailabilityEntity> {
-    // Vérifier le médecin existe
+    // Vérifier le médecin existe (doctorId est l'ID du profil médecin, pas du user)
     const doctor = await this.doctorRepository.findOne({
-  where: {
-    user: {
-      id: createDto.doctorId,  // l'UUID du user
-    },
-  },
-  relations: ['user'],  // important pour que TypeORM sache que user existe
-});
+      where: { id: createDto.doctorId },
+    });
     if (!doctor) throw new NotFoundException('Médecin introuvable');
 
     const availability = this.repository.create(createDto);

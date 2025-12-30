@@ -1,0 +1,22 @@
+
+ORDONNANCE MÉDICALE
+===================
+
+Consultation ID: b4cb85c0-5825-48f5-9532-67327e5604b7
+Type: controle
+Date: 30/12/2025
+Durée: 9 minutes
+
+Patient ID: 02986bd8-ca0c-42cc-a5bf-e60d28da9c73
+Médecin ID: bfc9a8bb-6ae7-4d46-94d8-29844d7bb076
+
+PRESCRIPTIONS:
+- Médicament 1: Posologie selon prescription
+- Médicament 2: Posologie selon prescription
+
+CERTIFICAT MÉDICAL
+==================
+Certificat médical délivré le 30/12/2025
+pour consultation de type controle.
+
+Signature électronique

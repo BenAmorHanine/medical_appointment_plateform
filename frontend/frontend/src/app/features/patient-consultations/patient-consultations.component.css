@@ -1,0 +1,27 @@
+.container-fluid {
+  padding: 20px;
+}
+
+.card {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: none;
+  border-radius: 8px;
+}
+
+.card-header {
+  border-radius: 8px 8px 0 0;
+}
+
+.badge {
+  font-size: 0.875rem;
+  padding: 0.5em 0.75em;
+}
+
+.btn-sm {
+  font-size: 0.875rem;
+}
+
+.gap-2 {
+  gap: 0.5rem;
+}
+

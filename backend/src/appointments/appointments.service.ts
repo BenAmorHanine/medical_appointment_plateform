@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { AppointmentEntity, AppointmentStatus } from './entities/appointment.entity';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { AvailabilityEntity } from '../availability/entities/availability.entity';
@@ -16,6 +16,24 @@ export class AppointmentsService {
 
   async findAll(): Promise<AppointmentEntity[]> {
     return await this.repository.find();
+  }
+
+  async findByDoctor(doctorId: string): Promise<AppointmentEntity[]> {
+    // Récupérer les availabilities du médecin
+    const availabilities = await this.availabilityRepository.find({
+      where: { doctorId },
+    });
+    
+    if (availabilities.length === 0) {
+      return [];
+    }
+    
+    const availabilityIds = availabilities.map(a => a.id);
+    
+    return await this.repository.find({
+      where: { availabilityId: In(availabilityIds) },
+      order: { appointmentDate: 'ASC', startTime: 'ASC' },
+    });
   }
 
   async create(createDto: CreateAppointmentDto): Promise<AppointmentEntity> {

@@ -1,0 +1,49 @@
+<div class="container-fluid mt-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0">Mes Rendez-vous d'Aujourd'hui</h4>
+          <small>{{ getTodayDate() }}</small>
+        </div>
+        <div class="card-body">
+          <div *ngIf="appointments.length === 0" class="text-muted text-center py-5">
+            <h5>Aucun rendez-vous pour aujourd'hui</h5>
+            <p>Vous n'avez pas de rendez-vous programmés pour aujourd'hui.</p>
+          </div>
+          
+          <div *ngIf="appointments.length > 0" class="row">
+            <div *ngFor="let appointment of appointments" class="col-md-6 col-lg-4 mb-3">
+              <div class="card h-100">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h5 class="card-title">
+                      {{ appointment.startTime }} - {{ appointment.endTime }}
+                    </h5>
+                    <span class="badge" 
+                          [class.bg-success]="appointment.status === 'reserved'"
+                          [class.bg-warning]="appointment.status === 'done'"
+                          [class.bg-danger]="appointment.status === 'cancelled'">
+                      {{ appointment.status === 'reserved' ? 'Réservé' : appointment.status === 'done' ? 'Terminé' : 'Annulé' }}
+                    </span>
+                  </div>
+                  <p class="card-text">
+                    <small class="text-muted">Patient: {{ getPatientName(appointment.patientId) }}</small>
+                  </p>
+                  <button
+                    type="button"
+                    class="btn btn-primary btn-sm w-100"
+                    (click)="selectAppointment(appointment)"
+                  >
+                    Voir les Consultations
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

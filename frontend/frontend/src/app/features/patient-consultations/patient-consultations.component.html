@@ -1,0 +1,186 @@
+<div class="container-fluid mt-4">
+  <div class="row">
+    <div class="col-12">
+      <!-- Header avec bouton retour -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Consultations du Patient</h2>
+        <button class="btn btn-secondary" (click)="goBack()">
+          ← Retour aux Rendez-vous
+        </button>
+      </div>
+
+      <!-- Consultations précédentes -->
+      <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+          <h5 class="mb-0">Historique des Consultations</h5>
+        </div>
+        <div class="card-body">
+          <div *ngIf="patientConsultations.length === 0" class="text-muted text-center py-5">
+            <h6>Aucune consultation précédente pour ce patient</h6>
+            <p>Ce patient n'a pas encore de consultations enregistrées.</p>
+          </div>
+          
+          <div *ngFor="let consultation of patientConsultations" class="card mb-3">
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col-md-2">
+                  <strong>Type:</strong><br>
+                  <span class="badge bg-primary mt-1">{{ getTypeLabel(consultation.type) }}</span>
+                </div>
+                <div class="col-md-2">
+                  <strong>Durée:</strong><br>
+                  <span class="mt-1">{{ consultation.duration }} min</span>
+                </div>
+                <div class="col-md-3">
+                  <strong>Date:</strong><br>
+                  <span class="mt-1">{{ consultation.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+                </div>
+                <div class="col-md-2">
+                  <strong>Rendez-vous:</strong><br>
+                  <small class="text-muted mt-1">
+                    {{ consultation.appointmentId ? 'Oui' : 'Non' }}
+                  </small>
+                </div>
+                <div class="col-md-3 text-end">
+                  <button
+                    class="btn btn-sm btn-outline-primary me-2"
+                    (click)="consultationService.downloadOrdonnance(consultation.id)"
+                    title="Télécharger l'ordonnance"
+                  >
+                    📄 Ordonnance
+                  </button>
+                  <button
+                    class="btn btn-sm btn-outline-success"
+                    (click)="consultationService.downloadCertificat(consultation.id)"
+                    title="Télécharger le certificat médical"
+                  >
+                    🏥 Certificat
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulaire de nouvelle consultation -->
+      <div class="card">
+        <div class="card-header bg-success text-white">
+          <h5 class="mb-0">Nouvelle Consultation</h5>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="consultationForm" (ngSubmit)="onSubmit()">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="type" class="form-label">Type de Consultation *</label>
+                <select
+                  id="type"
+                  class="form-select"
+                  formControlName="type"
+                >
+                  <option *ngFor="let type of consultationTypeKeys" [value]="type">
+                    {{ getTypeLabel(type) }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="duration" class="form-label">Durée (minutes) - Optionnel</label>
+                <input
+                  type="number"
+                  id="duration"
+                  class="form-control"
+                  formControlName="duration"
+                  placeholder="Durée en minutes (auto si vide)"
+                  min="5"
+                />
+                <small class="text-muted">
+                  Durée par défaut: Standard=30min, Contrôle=15min, Urgence=45min
+                </small>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="medicament" class="form-label">Médicament - Optionnel</label>
+                <input
+                  type="text"
+                  id="medicament"
+                  class="form-control"
+                  formControlName="medicament"
+                  placeholder="Ex: Paracétamol 500mg, 2 comprimés 3 fois par jour"
+                />
+                <small class="text-muted">
+                  Ce médicament sera ajouté à l'ordonnance
+                </small>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="joursRepos" class="form-label">Nombre de jours de repos - Optionnel</label>
+                <input
+                  type="number"
+                  id="joursRepos"
+                  class="form-control"
+                  formControlName="joursRepos"
+                  placeholder="Nombre de jours"
+                  min="1"
+                />
+                <small class="text-muted">
+                  Ce nombre sera ajouté au certificat médical
+                </small>
+              </div>
+            </div>
+
+            <div class="d-flex gap-2">
+              <button
+                type="submit"
+                class="btn btn-primary"
+                [disabled]="loading || consultationForm.invalid"
+              >
+                <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+                {{ loading ? 'Création...' : 'Créer Consultation' }}
+              </button>
+              <button
+                type="button"
+                class="btn btn-secondary"
+                (click)="consultationForm.patchValue({ type: consultationTypes.STANDARD, duration: null })"
+                [disabled]="loading"
+              >
+                Réinitialiser
+              </button>
+            </div>
+
+            <div *ngIf="error" class="alert alert-danger mt-3">
+              {{ error }}
+            </div>
+          </form>
+
+          <!-- Consultation créée -->
+          <div *ngIf="currentConsultation" class="alert alert-success mt-3">
+            <h6>✅ Consultation créée avec succès !</h6>
+            <p class="mb-2">
+              <strong>Type:</strong> {{ getTypeLabel(currentConsultation.type) }} | 
+              <strong>Durée:</strong> {{ currentConsultation.duration }} minutes |
+              <strong>ID:</strong> {{ currentConsultation.id.substring(0, 8) }}...
+            </p>
+            <div class="d-flex gap-2 mt-2">
+              <button
+                class="btn btn-sm btn-primary"
+                (click)="consultationService.downloadOrdonnance(currentConsultation.id)"
+              >
+                📄 Télécharger Ordonnance
+              </button>
+              <button
+                class="btn btn-sm btn-success"
+                (click)="consultationService.downloadCertificat(currentConsultation.id)"
+              >
+                🏥 Télécharger Certificat
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
