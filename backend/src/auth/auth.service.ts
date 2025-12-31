@@ -46,11 +46,20 @@ export class AuthService {
   }
 
   async register(registerDto: RegisterDto): Promise<any> {
-    const existingUser = await this.userRepository.findOne({
-      where: { email: registerDto.email },
+    const emailExists = await this.userRepository.findOne({
+    where: { email: registerDto.email }
     });
-    if (existingUser) {
-      throw new ConflictException('Email already exists');
+
+    if (emailExists) {
+    throw new ConflictException('Email already exists');
+    }
+
+    const usernameExists = await this.userRepository.findOne({
+    where: { username: registerDto.username }
+    });
+
+    if (usernameExists) {
+    throw new ConflictException('Username already exists');
     }
 
     const user = this.userRepository.create({

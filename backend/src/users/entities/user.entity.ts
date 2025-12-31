@@ -41,7 +41,6 @@ export class UserEntity {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  // 👈 ADD THESE 2 LINES ONLY
   @BeforeInsert()
   async hashPassword() {
     this.password = await bcrypt.hash(this.password, 12);
