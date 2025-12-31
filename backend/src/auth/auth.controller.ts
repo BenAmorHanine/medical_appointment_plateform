@@ -1,9 +1,8 @@
 import { Controller, Post, Body, Get, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';  // ✅ ADD
-import { RolesGuard } from './guards/roles.guard';       // ✅ ADD
-import { Roles } from './decorators/roles.decorator';    // ✅ ADD
+import { JwtAuthGuard } from './guards/jwt-auth.guard';  
+import { RolesGuard } from './guards/roles.guard';    
+import { Roles } from './decorators/roles.decorator';  
 import { GetUser } from './decorators/get-user.decorator';
 
 import { AuthService } from './auth.service';
@@ -34,9 +33,8 @@ export class AuthController {
     return this.authService.register(registerDto);
   }
 
-  // ✅ FIXED: GET + Full Guards
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Get('profile')  // ← CHANGED FROM POST
+  @Get('profile')  
   @Roles('doctor', 'patient', 'admin')
   @ApiOperation({ summary: 'Get current user profile' })
   @ApiResponse({ status: 200, description: 'User profile' })
