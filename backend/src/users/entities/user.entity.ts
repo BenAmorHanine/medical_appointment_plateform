@@ -4,7 +4,9 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  BeforeInsert,
 } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 
 export enum UserRole {
   ADMIN = 'admin',
@@ -38,4 +40,10 @@ export class UserEntity {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  // 👈 ADD THESE 2 LINES ONLY
+  @BeforeInsert()
+  async hashPassword() {
+    this.password = await bcrypt.hash(this.password, 12);
+  }
 }
