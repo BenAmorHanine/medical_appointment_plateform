@@ -27,5 +27,5 @@ export const routes: Routes = [
   },
 
   // FALLBACKS
-  { path: '**', redirectTo: '/auth/login' }
+  { path: '**', redirectTo: '/' }
 ];
