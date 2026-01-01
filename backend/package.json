@@ -23,6 +23,7 @@
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.3.0",
     "@nestjs/core": "^11.1.11",
+    "@nestjs/event-emitter": "^3.0.1",
     "@nestjs/mapped-types": "^2.0.4",
     "@nestjs/platform-express": "^11.1.11",
     "@nestjs/typeorm": "^11.0.0",

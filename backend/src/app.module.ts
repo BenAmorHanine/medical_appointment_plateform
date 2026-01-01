@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import databaseConfig from './config/database.config';
 import { UsersModule } from './users/users.module';
 import { DoctorProfileModule } from './profiles/doctor/doctor-profile.module';
@@ -10,7 +11,7 @@ import { AppointmentsModule } from './appointments/appointments.module';
 import { ConsultationsModule } from './consultations/consultations.module';
 import { AuthModule } from './auth/auth.module';
 import { DashboardModule } from './dashboard/dashboard.module';
-
+import { NotificationsModule } from './notifications/notifications.module';
 @Module({
   imports: [
     // Configuration globale
@@ -19,7 +20,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
       envFilePath: '.env',
       load: [databaseConfig],
     }),
-
+    EventEmitterModule.forRoot(),
     // Configuration TypeORM avec useFactory
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
@@ -44,6 +45,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     ConsultationsModule,
     AuthModule, 
     DashboardModule, 
+    NotificationsModule,
   ],
 })
 export class AppModule {}
