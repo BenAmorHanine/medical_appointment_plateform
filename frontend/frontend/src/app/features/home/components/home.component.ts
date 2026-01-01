@@ -1,6 +1,9 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { AuthService } from '../../auth/services/auth.service';
+import { Router } from '@angular/router';
+import { inject } from '@angular/core';
 
 interface Doctor {
   id: number;
@@ -30,6 +33,16 @@ interface Stat {
   styleUrls: ['./home.component.scss']
 })
 export class HomeComponent {
+
+  authService = inject(AuthService);
+  router = inject(Router);
+  
+  isAuthenticated$ = this.authService.isAuthenticated$;
+
+  logout() {
+    this.authService.logout();
+    this.router.navigate(['/']);
+  }
 
 // fake exemples for now
 

@@ -13,14 +13,26 @@
               Modern medical platform. 
               Connect with trusted doctors, read about treatments and manage your health in one place.
             </p>
-            <div class="hero-buttons animate-slide-up-delay2">
-              <a routerLink="/auth/register" class="btn btn-primary me-3">
-                Create Account
-              </a>
-              <a routerLink="/auth/login" class="btn btn-outline-light">
-                Sign In
-              </a>
-            </div>
+<!-- Home page buttons -->
+<ng-container *ngIf="!(isAuthenticated$ | async); else authButtons">
+  <!-- Show ONLY when NOT authenticated -->
+  <a routerLink="/auth/register" class="btn btn-primary me-3">
+    Create Account
+  </a>
+  <a routerLink="/auth/login" class="btn btn-outline-light">
+    Sign In
+  </a>
+</ng-container>
+
+<!-- Authenticated users see this instead -->
+<ng-template #authButtons>
+  <a routerLink="/history" class="btn btn-primary me-3">
+    My History
+  </a>
+  <button class="btn btn-outline-light" (click)="logout()">
+    Logout
+  </button>
+</ng-template>
           </div>
         </div>
 
