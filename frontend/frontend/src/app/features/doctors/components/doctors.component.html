@@ -1,0 +1,63 @@
+<section class="doctors-hero">
+  <div class="container">
+    <div class="hero-content">
+      <h1 class="hero-title">Our Doctors</h1>
+      <p class="hero-subtitle">Meet our expert medical team ready to help you</p>
+    </div>
+  </div>
+</section>
+
+<section class="doctors-grid-section">
+  <div class="container">
+    <!-- Loading -->
+    <div class="loading" *ngIf="loading">
+      <div class="spinner"></div>
+      <p>Loading doctors...</p>
+    </div>
+
+    <!-- Doctors Grid -->
+    <div class="doctors-grid" *ngIf="!loading">
+      <div class="doctor-card" *ngFor="let doctor of doctors" [@fadeInUp]>
+        <div class="doctor-avatar">
+          <img [src]="doctor.avatar || 'assets/doctor-placeholder.svg'" [alt]="doctor.name" />
+          <div class="doctor-status" [class.available]="doctor.available">
+            {{ doctor.available ? 'Available' : 'Busy' }}
+          </div>
+        </div>
+        
+        <div class="doctor-info">
+          <h3>{{ doctor.name }}</h3>
+          <div class="specialty">{{ doctor.specialty }}</div>
+          
+          <div class="rating">
+            <i *ngFor="let star of getStars(doctor.rating)" 
+               class="fas fa-star" 
+               [class.filled]="star"></i>
+            <span>{{ doctor.rating }}/5</span>
+          </div>
+
+          <div class="contact">
+            <i class="fas fa-phone"></i> {{ doctor.phone }}
+          </div>
+
+          <div class="actions">
+            <button class="btn-secondary" (click)="viewProfile(doctor)">
+              <i class="fas fa-eye"></i> View Profile
+            </button>
+            <button class="btn-primary" (click)="bookNow(doctor)" [disabled]="!doctor.available">
+              <i class="fas fa-calendar-check"></i> 
+              {{ doctor.available ? 'Book Now' : 'Not Available' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- No Doctors -->
+      <div class="no-doctors" *ngIf="!loading && doctors.length === 0">
+        <i class="fas fa-users-slash"></i>
+        <h3>No doctors yet</h3>
+        <p>Check back later for our expert medical team</p>
+      </div>
+    </div>
+  </div>
+</section>

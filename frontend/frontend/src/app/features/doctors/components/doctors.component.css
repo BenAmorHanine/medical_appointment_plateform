@@ -1,0 +1,250 @@
+.doctors-hero {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #1e40af 100%);
+  padding: 6rem 0 4rem;
+  
+  .hero-title {
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, #3b82f6 0%, white 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+
+  .hero-subtitle {
+    font-size: 1.25rem;
+    color: rgba(255, 255, 255, 0.9);
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+}
+
+.doctors-grid-section {
+  padding: 5rem 0;
+  background: rgba(255, 255, 255, 0.95);
+  min-height: 70vh;
+
+  .loading {
+    text-align: center;
+    padding: 4rem 0;
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid #e2e8f0;
+      border-top: 3px solid #3b82f6;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    p {
+      color: #64748b;
+      font-size: 1.1rem;
+    }
+  }
+
+  .doctors-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .doctor-card {
+    background: white;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(15, 23, 42, 0.1);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+
+    &:hover {
+      transform: translateY(-12px);
+      box-shadow: 0 30px 60px rgba(59, 130, 246, 0.2);
+    }
+
+    .doctor-avatar {
+      position: relative;
+      height: 220px;
+      overflow: hidden;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .doctor-status {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+
+        &.available {
+          background: rgba(34, 197, 94, 0.9);
+          color: white;
+        }
+
+        &:not(.available) {
+          background: rgba(239, 68, 68, 0.9);
+          color: white;
+        }
+      }
+    }
+
+    .doctor-info {
+      padding: 2rem;
+
+      h3 {
+        color: #1e293b;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+      }
+
+      .specialty {
+        color: #3b82f6;
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-bottom: 1.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .rating {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1.25rem;
+
+        i {
+          color: #d97706;
+          font-size: 1.1rem;
+
+          &.filled {
+            color: #f59e0b;
+          }
+        }
+
+        span {
+          color: #64748b;
+          font-weight: 500;
+        }
+      }
+
+      .contact {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        color: #64748b;
+        font-weight: 500;
+        margin-bottom: 2rem;
+        padding: 0.75rem;
+        border-radius: 12px;
+        backdrop-filter: blur(10px);
+
+        &:hover {
+          background: rgba(59, 130, 246, 0.05);
+          color: #3b82f6;
+        }
+      }
+
+      .actions {
+        display: flex;
+        gap: 1rem;
+
+        button {
+          flex: 1;
+          padding: 1rem 1.5rem;
+          border-radius: 16px;
+          font-weight: 600;
+          transition: all 0.3s ease;
+          border: none;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          font-size: 0.95rem;
+        }
+
+        .btn-secondary {
+          background: rgba(59, 130, 246, 0.1);
+          color: #3b82f6;
+          border: 2px solid rgba(59, 130, 246, 0.2);
+
+          &:hover {
+            background: rgba(59, 130, 246, 0.2);
+            transform: translateY(-2px);
+          }
+        }
+
+        .btn-primary {
+          background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+          color: white;
+
+          &:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+          }
+
+          &:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+          }
+        }
+      }
+    }
+  }
+
+.no-doctors {
+  text-align: center;
+  padding: 6rem 2rem;          
+  color: #64748b;
+  max-width: 500px;           
+  margin: 0 auto;            
+
+  i {
+    font-size: 6rem;        
+    color: #d1d5db;
+    margin-bottom: 2rem;
+    display: block;
+  }
+
+  h3 {
+    color: #374151;
+    font-size: 2.25rem;        
+    font-weight: 700;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    font-size: 1.2rem;
+    line-height: 1.7;
+    opacity: 0.8;
+  }
+}
+
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
