@@ -1,0 +1,154 @@
+<!-- HERO / BANNER (matches MedWin + your auth styles) -->
+<section class="hero-section">
+  <div class="hero-overlay">
+    <div class="container">
+      <div class="row align-items-center min-vh-100">
+        <div class="col-lg-6">
+          <div class="hero-content">
+            <h1 class="hero-title animate-slide-up">
+              We Care about
+              <span class="gradient-text">You</span>
+            </h1>
+            <p class="hero-subtitle animate-slide-up-delay">
+              Modern medical platform. 
+              Connect with trusted doctors, read about treatments and manage your health in one place.
+            </p>
+            <div class="hero-buttons animate-slide-up-delay2">
+              <a routerLink="/auth/register" class="btn btn-primary me-3">
+                Create Account
+              </a>
+              <a routerLink="/auth/login" class="btn btn-outline-light">
+                Sign In
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6 d-none d-lg-block">
+          <div class="hero-image animate-float">
+            <img src="/assets/images/medical.jpg" alt="Medical illustration" class="img-fluid">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="stats-section py-5 bg-gradient-medical">
+  <div class="container">
+    <div class="row text-center">
+      <div class="col-md-4 mb-4">
+        <div class="stat-card">
+          <h2 class="stat-number">{{ stats.patients | number }}</h2>
+          <p class="stat-label">Happy Patients</p>
+        </div>
+      </div>
+      <div class="col-md-4 mb-4">
+        <div class="stat-card">
+          <h2 class="stat-number">{{ stats.doctors | number }}</h2>
+          <p class="stat-label">Expert Doctors</p>
+        </div>
+      </div>
+      <div class="col-md-4 mb-4">
+        <div class="stat-card">
+          <h2 class="stat-number">{{ stats.appointments | number }}</h2>
+          <p class="stat-label">Appointments</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURED DOCTORS -->
+<section class="doctors-section py-5">
+  <div class="container">
+    <h2 class="section-title text-center mb-5">
+      Our Expert
+      <span class="gradient-text">Doctors</span>
+    </h2>
+    <div class="row g-4">
+      <div class="col-lg-3 col-md-6" *ngFor="let doctor of featuredDoctors">
+        <div class="doctor-card h-100 shadow-lg">
+          <div class="doctor-image position-relative overflow-hidden">
+            <img [src]="getDoctorImage(doctor)" [alt]="doctor.name" class="img-fluid w-100">
+            <div class="doctor-overlay">
+              <div class="rating mb-2">
+                <i class="fa fa-star text-warning"></i>
+                {{ doctor.rating }}/5
+              </div>
+              <a routerLink="/doctors" class="btn btn-sm btn-outline-light">
+                View Profile
+              </a>
+            </div>
+          </div>
+          <div class="doctor-info p-4">
+            <h5 class="doctor-name mb-1">{{ doctor.name }}</h5>
+            <p class="doctor-specialty text-muted mb-3">{{ doctor.specialty }}</p>
+            <div class="social-links">
+              <a href="#" class="me-2"><i class="fa fa-facebook"></i></a>
+              <a href="#" class="me-2"><i class="fa fa-twitter"></i></a>
+              <a href="#"><i class="fa fa-linkedin"></i></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT / WHY CHOOSE US -->
+<section class="about-section py-5 bg-light">
+  <div class="container">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-6">
+        <div class="about-image shadow-lg rounded-4 overflow-hidden">
+          <img src="/assets/images/about.jpg" alt="About MedWin" class="img-fluid w-100">
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <h2 class="section-title mb-4">
+          About Our
+          <span class="gradient-text">Platform</span>
+        </h2>
+        <p class="about-text mb-4">
+          Our platform offers a clean, 
+          trustworthy and modern medical experience for patients and doctors.
+        </p>
+        <ul class="about-list">
+          <li><i class="fa fa-check-circle text-primary me-2"></i> Clean UI for healthcare.</li>
+          <li><i class="fa fa-check-circle text-primary me-2"></i> Consistent styling with your login and register pages.</li>
+          <li><i class="fa fa-check-circle text-primary me-2"></i> Mobile‑friendly layout for all devices.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testimonials-section py-5 bg-gradient-medical">
+  <div class="container">
+    <h2 class="section-title text-center mb-5 text-white">
+      What Patients
+      <span class="gradient-text-white">Say</span>
+    </h2>
+    <div class="row g-4">
+      <div class="col-lg-4 col-md-6" *ngFor="let testimonial of testimonials">
+        <div class="testimonial-card bg-white shadow-lg p-4 rounded-4 h-100">
+          <div class="stars mb-3">
+            <i class="fa fa-star text-warning"></i>
+            <i class="fa fa-star text-warning"></i>
+            <i class="fa fa-star text-warning"></i>
+            <i class="fa fa-star text-warning"></i>
+            <i class="fa fa-star text-warning"></i>
+          </div>
+          <p class="testimonial-text mb-4">"{{ testimonial.text }}"</p>
+          <div class="patient-info">
+            <h6 class="patient-name mb-0">{{ testimonial.name }}</h6>
+            <span class="patient-role text-muted">Patient</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

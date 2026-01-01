@@ -1,0 +1,56 @@
+<nav class="navbar">
+  <div class="navbar-container">
+    <!-- Logo -->
+    <a routerLink="/" class="navbar-logo">
+      <div class="logo-gradient">
+        <strong>MedWin</strong>
+      </div>
+    </a>
+
+    <!-- Desktop Menu -->
+    <ul class="nav-menu" *ngIf="!isMobile">
+      <li><a routerLink="/" routerLinkActive="active">Home</a></li>
+      <li><a routerLink="/doctors" routerLinkActive="active">Doctors</a></li>
+      <li><a routerLink="/contact" routerLinkActive="active">Contact</a></li>
+    </ul>
+
+    <!-- Auth Actions -->
+    <div class="auth-actions">
+      <ng-container *ngIf="isAuthenticated$ | async as isAuth; else loginLinks">
+        <a routerLink="/history" class="btn-history" routerLinkActive="active">History</a>
+        <button class="btn-logout" (click)="logout()">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </ng-container>
+      
+      <ng-template #loginLinks>
+        <a routerLink="/auth/login" class="btn-login">Login</a>
+        <a routerLink="/auth/register" class="btn-signup">
+          <i class="fas fa-user-plus"></i> Sign Up
+        </a>
+      </ng-template>
+    </div>
+
+    <!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn" (click)="toggleMobileMenu()" *ngIf="isMobile">
+      <i class="fas fa-bars"></i>
+    </button>
+  </div>
+
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" *ngIf="showMobileMenu">
+    <ul>
+      <li><a routerLink="/" (click)="toggleMobileMenu()">Home</a></li>
+      <li><a routerLink="/doctors" (click)="toggleMobileMenu()">Doctors</a></li>
+      <li><a routerLink="/contact" (click)="toggleMobileMenu()">Contact</a></li>
+      <ng-container *ngIf="isAuthenticated$ | async; else mobileLogin">
+        <li><a routerLink="/history" (click)="toggleMobileMenu()">History</a></li>
+        <li><button class="btn-logout-mobile" (click)="logout(); toggleMobileMenu()">Logout</button></li>
+      </ng-container>
+      <ng-template #mobileLogin>
+        <li><a routerLink="/auth/login" (click)="toggleMobileMenu()" class="mobile-login">Login</a></li>
+        <li><a routerLink="/auth/register" (click)="toggleMobileMenu()" class="mobile-signup">Sign Up</a></li>
+      </ng-template>
+    </ul>
+  </div>
+</nav>
