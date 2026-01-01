@@ -9,17 +9,10 @@
 
 <section class="doctors-grid-section">
   <div class="container">
-    <!-- Loading -->
-    <div class="loading" *ngIf="loading">
-      <div class="spinner"></div>
-      <p>Loading doctors...</p>
-    </div>
-
-    <!-- Doctors Grid -->
-    <div class="doctors-grid" *ngIf="!loading">
-      <div class="doctor-card" *ngFor="let doctor of doctors" [@fadeInUp]>
+    <div class="doctors-grid">
+      <div class="doctor-card" *ngFor="let doctor of doctors">
         <div class="doctor-avatar">
-          <img [src]="doctor.avatar || 'assets/doctor-placeholder.svg'" [alt]="doctor.name" />
+          <img [src]="doctor.image" [alt]="doctor.name" />
           <div class="doctor-status" [class.available]="doctor.available">
             {{ doctor.available ? 'Available' : 'Busy' }}
           </div>
@@ -50,13 +43,6 @@
             </button>
           </div>
         </div>
-      </div>
-
-      <!-- No Doctors -->
-      <div class="no-doctors" *ngIf="!loading && doctors.length === 0">
-        <i class="fas fa-users-slash"></i>
-        <h3>No doctors yet</h3>
-        <p>Check back later for our expert medical team</p>
       </div>
     </div>
   </div>
