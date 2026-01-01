@@ -9,22 +9,61 @@
 
     <!-- Desktop Menu -->
     <ul class="nav-menu" *ngIf="!isMobile">
-      <li><a routerLink="/" routerLinkActive="active">Home</a></li>
-      <li><a routerLink="/doctors" routerLinkActive="active">Doctors</a></li>
-      <li><a routerLink="/contact" routerLinkActive="active">Contact</a></li>
+      <li>
+        <a routerLink="/" routerLinkActive="active">
+          Home
+        </a>
+      </li>
+      <li>
+        <a routerLink="/doctors" routerLinkActive="active">
+          Doctors
+        </a>
+      </li>
+      <li>
+        <a routerLink="/contact" routerLinkActive="active">
+          Contact
+        </a>
+      </li>
     </ul>
 
-    <!-- Auth Actions -->
+    <!-- Auth / User Actions -->
     <div class="auth-actions">
-      <ng-container *ngIf="isAuthenticated$ | async as isAuth; else loginLinks">
-        <a routerLink="/history" class="btn-history" routerLinkActive="active">History</a>
+      <ng-container *ngIf="isAuthenticated$ | async; else loginLinks">
+
+        <!-- Doctor links -->
+        <ng-container *ngIf="isDoctor">
+          <a routerLink="/consultations" routerLinkActive="active" class="btn-history">
+            Consultations
+          </a>
+          <a routerLink="/profile" routerLinkActive="active" class="btn-history">
+            Profile
+          </a>
+        </ng-container>
+
+        <!-- Patient links -->
+        <ng-container *ngIf="isPatient">
+          <a routerLink="/appointments" routerLinkActive="active" class="btn-history">
+            My Appointments
+          </a>
+          <a routerLink="/profile" routerLinkActive="active" class="btn-history">
+            My Profile
+          </a>
+        </ng-container>
+
+        <!-- Notification icon  -->
+        <button class="btn-icon notification-btn" (click)="goToNotifications()">
+          <i class="fas fa-bell"></i>
+        </button>
+
         <button class="btn-logout" (click)="logout()">
           <i class="fas fa-sign-out-alt"></i> Logout
         </button>
       </ng-container>
-      
+
       <ng-template #loginLinks>
-        <a routerLink="/auth/login" class="btn-login">Login</a>
+        <a routerLink="/auth/login" class="btn-login">
+          Login
+        </a>
         <a routerLink="/auth/register" class="btn-signup">
           <i class="fas fa-user-plus"></i> Sign Up
         </a>
@@ -40,16 +79,73 @@
   <!-- Mobile Menu -->
   <div class="mobile-menu" *ngIf="showMobileMenu">
     <ul>
-      <li><a routerLink="/" (click)="toggleMobileMenu()">Home</a></li>
-      <li><a routerLink="/doctors" (click)="toggleMobileMenu()">Doctors</a></li>
-      <li><a routerLink="/contact" (click)="toggleMobileMenu()">Contact</a></li>
+      <li>
+        <a routerLink="/" routerLinkActive="active" (click)="toggleMobileMenu()">
+          Home
+        </a>
+      </li>
+      <li>
+        <a routerLink="/doctors" (click)="toggleMobileMenu()">
+          Doctors
+        </a>
+      </li>
+      <li>
+        <a routerLink="/contact" (click)="toggleMobileMenu()">
+          Contact
+        </a>
+      </li>
+
       <ng-container *ngIf="isAuthenticated$ | async; else mobileLogin">
-        <li><a routerLink="/history" (click)="toggleMobileMenu()">History</a></li>
-        <li><button class="btn-logout-mobile" (click)="logout(); toggleMobileMenu()">Logout</button></li>
+        <li>
+          <button class="btn-icon" (click)="goToNotifications()">
+            <i class="fas fa-bell"></i> Notifications
+          </button>
+        </li>
+
+        <ng-container *ngIf="isDoctor">
+          <li>
+            <a routerLink="/consultations" (click)="toggleMobileMenu()">
+              Consultations
+            </a>
+          </li>
+          <li>
+            <a routerLink="/profile" (click)="toggleMobileMenu()">
+              Profile
+            </a>
+          </li>
+        </ng-container>
+
+        <ng-container *ngIf="isPatient">
+          <li>
+            <a routerLink="/appointments" (click)="toggleMobileMenu()">
+              My Appointments
+            </a>
+          </li>
+          <li>
+            <a routerLink="/profile" (click)="toggleMobileMenu()">
+              My Profile
+            </a>
+          </li>
+        </ng-container>
+
+        <li>
+          <button class="btn-logout-mobile" (click)="logout()">
+            Logout
+          </button>
+        </li>
       </ng-container>
+
       <ng-template #mobileLogin>
-        <li><a routerLink="/auth/login" (click)="toggleMobileMenu()" class="mobile-login">Login</a></li>
-        <li><a routerLink="/auth/register" (click)="toggleMobileMenu()" class="mobile-signup">Sign Up</a></li>
+        <li>
+          <a routerLink="/auth/login" (click)="toggleMobileMenu()" class="mobile-login">
+            Login
+          </a>
+        </li>
+        <li>
+          <a routerLink="/auth/register" (click)="toggleMobileMenu()" class="mobile-signup">
+            Sign Up
+          </a>
+        </li>
       </ng-template>
     </ul>
   </div>
