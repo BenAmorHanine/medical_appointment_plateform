@@ -1,0 +1,64 @@
+<section class="container py-5">
+  <h2 class="mb-4 text-center">
+    My <span class="gradient-text">Visit History</span>
+  </h2>
+
+  @if (loading) {
+    <!-- Loading -->
+    <div class="text-center">
+      <div class="spinner-border text-primary"></div>
+    </div>
+  }
+
+  @else if (error) {
+    <!-- Error -->
+    <div class="alert alert-danger">
+      {{ error }}
+    </div>
+  }
+
+  @else if (data) {
+
+    @if (data.blocked) {
+      <div class="alert alert-danger text-center fw-bold">
+        ⚠️ Your account is blocked due to repeated absences
+      </div>
+    }
+
+    <p class="text-muted text-center">
+      Absences: {{ data.absenceCount }}
+    </p>
+
+    @if (data.history.length === 0) {
+      <div class="alert alert-info text-center">
+        No consultations found.
+      </div>
+    }
+
+    @else {
+      <table class="table table-hover shadow-sm">
+        <thead class="table-light">
+          <tr>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (item of data.history; track item.consultationId) {
+            <tr>
+              <td>{{ item.date | date: 'mediumDate' }}</td>
+              <td>{{ item.type | titlecase }}</td>
+              <td>
+                <span [class]="statusClass(item.status)">
+                  {{ item.status }}
+                </span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  }
+</section>
