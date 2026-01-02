@@ -2,7 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AppointmentService, Appointment } from '../appointments/services/appointment.service';
+import { AppointmentService } from '../appointments/services/appointment.service';
+import { Appointment } from '../appointments/models/appointment.interface';
+
 import { ConsultationService, Consultation, ConsultationType, CreateConsultationDto } from '../consultations/services/consultation.service';
 import { PatientService } from '../patients/services/patient.service';
 

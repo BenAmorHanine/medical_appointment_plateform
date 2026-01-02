@@ -5,6 +5,7 @@ import { PatientConsultationsComponent } from './features/patient-consultations/
 import { authGuard } from './features/auth/guards/auth.guard';
 import { ContactComponent } from './features/contact/components/contact.component';
 import { DoctorsComponent } from './features/doctors/components/doctors.component';
+import { AppointmentsComponent } from './features/appointments/appointments.component';
 
 export const routes: Routes = [
   // PUBLIC ROUTES 
@@ -26,6 +27,7 @@ export const routes: Routes = [
     component: DoctorHomeComponent, 
     canActivate: [authGuard] 
   },
+  { path: 'appointments', component: AppointmentsComponent },
   { 
     path: 'patient-consultations/:patientId/:appointmentId', 
     component: PatientConsultationsComponent, 
