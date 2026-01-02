@@ -5,6 +5,8 @@ import { UserEntity } from '../users/entities/user.entity';
 import { AppointmentEntity } from '../appointments/entities/appointment.entity';
 import { ConsultationEntity } from '../consultations/entities/consultation.entity';
 import { UserRole } from '../users/entities/user.entity'; 
+import { NotFoundException } from '@nestjs/common';
+
 @Injectable()
 export class DashboardService {
   constructor(
@@ -32,4 +34,28 @@ export class DashboardService {
       totalConsultations,
     };
   }
+  async getAllUsers() {
+  return this.userRepository.find({
+    select: ['id', 'username', 'email', 'role', 'createdAt'],  // Champs safe
+    order: { createdAt: 'DESC' }
+  });
+}
+
+
+async changeUserRole(userId: string, newRole: string) {
+  const user = await this.userRepository.findOne({ where: { id: userId } });
+  if (!user) throw new NotFoundException('User not found');
+  
+  user.role = newRole as any; // Patient, Doctor, Admin
+  return this.userRepository.save(user);
+}
+
+async deleteUser(userId: string) {
+  const user = await this.userRepository.findOne({ where: { id: userId } });
+  if (!user) throw new NotFoundException('User not found');
+  
+  await this.userRepository.softDelete(userId);
+  return { message: 'User soft deleted successfully' };
+}
+
 }

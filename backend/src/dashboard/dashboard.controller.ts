@@ -1,6 +1,10 @@
 import {
   Controller,
   Get,
+  Patch,      
+  Delete,     
+  Param,      
+  Body,       
   UseGuards,
 } from '@nestjs/common';
 import { 
@@ -30,4 +34,29 @@ export class DashboardController {
   getStats() {
     return this.dashboardService.getStats();
   }
+  @Get('users')
+@ApiOperation({ summary: 'Get all users list (ADMIN ONLY)' })
+@ApiForbiddenResponse({ description: 'Admin role required' })
+getAllUsers() {
+  return this.dashboardService.getAllUsers();
+}
+
+// 🔥 NOUVEAU : Changer rôle user
+@Patch('users/:id/role')
+@ApiOperation({ summary: 'Change user role (ADMIN ONLY)' })
+@ApiForbiddenResponse({ description: 'Admin role required' })
+changeUserRole(
+  @Param('id') userId: string, 
+  @Body() body: { role: string }
+) {
+  return this.dashboardService.changeUserRole(userId, body.role);
+}
+
+// 🔥 NOUVEAU : Supprimer user
+@Delete('users/:id')
+@ApiOperation({ summary: 'Delete user (ADMIN ONLY)' })
+@ApiForbiddenResponse({ description: 'Admin role required' })
+deleteUser(@Param('id') userId: string) {
+  return this.dashboardService.deleteUser(userId);
+}
 }
