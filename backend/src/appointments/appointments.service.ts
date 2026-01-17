@@ -23,6 +23,25 @@ export class AppointmentsService {
     return await this.repository.find();
   }
 
+  /**
+   * Récupère un rendez-vous par ID avec le doctorId (depuis l'availability)
+   */
+  async findOne(id: string): Promise<AppointmentEntity & { doctorId: string }> {
+    const appointment = await this.repository.findOne({
+      where: { id },
+    });
+    if (!appointment) {
+      throw new NotFoundException('Rendez-vous introuvable');
+    }
+    const availability = await this.availabilityRepository.findOne({
+      where: { id: appointment.availabilityId },
+    });
+    if (!availability) {
+      throw new NotFoundException('Créneau associé introuvable');
+    }
+    return { ...appointment, doctorId: availability.doctorId };
+  }
+
   async findByDoctor(doctorId: string): Promise<AppointmentEntity[]> {
     // Récupérer les availabilities du médecin
     const availabilities = await this.availabilityRepository.find({

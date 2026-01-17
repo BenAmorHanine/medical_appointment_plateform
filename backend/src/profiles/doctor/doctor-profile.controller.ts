@@ -22,6 +22,11 @@ export class DoctorProfileController {
     return this.doctorProfileService.findAll();
   }
 
+  @Get('user/:userId')
+  findByUserId(@Param('userId') userId: string) {
+    return this.doctorProfileService.findByUserId(userId);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.doctorProfileService.findOne(id);

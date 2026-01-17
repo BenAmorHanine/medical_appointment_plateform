@@ -32,6 +32,14 @@ export class DoctorProfileService {
     return profile;
   }
 
+  async findByUserId(userId: string): Promise<DoctorProfileEntity | null> {
+    return await this.repository
+      .createQueryBuilder('doctorProfile')
+      .leftJoinAndSelect('doctorProfile.user', 'user')
+      .where('user.id = :userId', { userId })
+      .getOne();
+  }
+
   async create(
     createDoctorProfileDto: CreateDoctorProfileDto,
   ): Promise<DoctorProfileEntity> {

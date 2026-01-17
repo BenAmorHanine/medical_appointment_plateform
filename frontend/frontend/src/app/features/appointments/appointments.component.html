@@ -4,12 +4,12 @@
     <div class="row align-items-center">
       <div class="col-lg-8">
         <h1 class="section-title mb-4">
-          Mes 
+          Mes
           <span class="gradient-text">Rendez-vous</span>
         </h1>
-        <p class="lead mb-0">Gérez vos consultations avec vos médecins préférés</p>
+        <p class="lead mb-0">Rendez-vous d'aujourd'hui</p>
       </div>
-      <div class="col-lg-4 text-lg-end">
+      <div class="col-lg-4 text-lg-end" *ngIf="!isDoctor">
         <a routerLink="/doctors" class="btn btn-primary btn-lg px-4">
           <i class="fas fa-calendar-plus me-2"></i>
           Nouveau RDV
@@ -22,14 +22,14 @@
 <!-- LISTE RDV -->
 <section class="appointments-list py-5">
   <div class="container">
-    @if (loading) {
+    @if (isLoading) {
       <div class="text-center py-5">
         <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;"></div>
         <p class="mt-3">Chargement de vos rendez-vous...</p>
       </div>
     }
 
-    @if (!loading && appointments.length === 0) {
+    @if (!isLoading && appointmentList.length === 0) {
       <div class="text-center py-5">
         <i class="fas fa-calendar-times fa-4x text-muted mb-4"></i>
         <h3 class="text-muted">Aucun rendez-vous</h3>
@@ -38,7 +38,7 @@
       </div>
     }
 
-    @for (appointment of appointments; track appointment.id) {
+    @for (appointment of appointmentList; track appointment.id) {
       <div class="appointment-card card mb-4 shadow-lg border-0 overflow-hidden">
         <div class="card-body p-4">
           <div class="row align-items-center">
@@ -50,22 +50,25 @@
               </div>
             </div>
             <div class="col-md-6">
-              <h5 class="card-title mb-2">Dr. {{ appointment.doctorId }}</h5>
+              <h5 class="card-title mb-2" *ngIf="isDoctor">Patient: {{ getPatientName(appointment.patientId) }}</h5>
+              <h5 class="card-title mb-2" *ngIf="!isDoctor">Dr. {{ appointment.doctorId }}</h5>
               <p class="card-text text-muted mb-1">{{ appointment.status }}</p>
             </div>
             <div class="col-md-3 text-md-end">
               @if (appointment.status === 'reserved') {
-                <button 
+                <button
                   class="btn btn-outline-danger w-100 mb-2"
                   (click)="cancelAppointment(appointment.id)"
                 >
                   <i class="fas fa-times me-1"></i>Annuler
                 </button>
               }
-              <a [routerLink]="['/patient-consultations', appointment.patientId, appointment.id]" 
+              <a [routerLink]="['/patient-consultations', appointment.patientId, appointment.id]"
                  class="btn btn-primary w-100">
                 <i class="fas fa-eye me-1"></i>Détails
               </a>
+
+
             </div>
           </div>
         </div>

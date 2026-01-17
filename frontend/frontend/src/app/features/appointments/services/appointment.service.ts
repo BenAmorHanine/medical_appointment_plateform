@@ -52,7 +52,7 @@ export class AppointmentService {
       }
     });
   }*/
- // 
+ //
   const mockRDV: Appointment[] = [
     {
       id: '1',
@@ -95,3 +95,5 @@ export class AppointmentService {
   }, 1500);
 }
 }
+export { Appointment };
+

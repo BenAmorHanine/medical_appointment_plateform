@@ -43,9 +43,9 @@ export class LoginComponent {
       next: () => {
         const user = this.authService.getCurrentUser();
         if (user?.role === 'doctor') {
-          this.router.navigate(['/doctor-home', user.id]);
+          this.router.navigate(['/appointments']);
         } else {
-          this.router.navigate(['/patient-consultations', user?.id || '', '']);
+          this.router.navigate(['/']);
         }
       },
       error: (error) => {

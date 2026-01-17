@@ -32,8 +32,8 @@
 
         <!-- Doctor links -->
         <ng-container *ngIf="isDoctor">
-          <a routerLink="/consultations" routerLinkActive="active" class="btn-history">
-            Consultations
+          <a routerLink="/appointments" routerLinkActive="active" class="btn-history">
+            My Appointments
           </a>
           <a routerLink="/profile" routerLinkActive="active" class="btn-history">
             Profile
@@ -42,9 +42,6 @@
 
         <!-- Patient links -->
         <ng-container *ngIf="isPatient">
-          <a routerLink="/appointments" routerLinkActive="active" class="btn-history">
-            My Appointments
-          </a>
           <a routerLink="/profile" routerLinkActive="active" class="btn-history">
             My Profile
           </a>
@@ -104,8 +101,8 @@
 
         <ng-container *ngIf="isDoctor">
           <li>
-            <a routerLink="/consultations" (click)="toggleMobileMenu()">
-              Consultations
+            <a routerLink="/appointments" (click)="toggleMobileMenu()">
+              My Appointments
             </a>
           </li>
           <li>
@@ -116,11 +113,6 @@
         </ng-container>
 
         <ng-container *ngIf="isPatient">
-          <li>
-            <a routerLink="/appointments" (click)="toggleMobileMenu()">
-              My Appointments
-            </a>
-          </li>
           <li>
             <a routerLink="/profile" (click)="toggleMobileMenu()">
               My Profile
