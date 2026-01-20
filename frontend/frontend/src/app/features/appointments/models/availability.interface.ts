@@ -5,8 +5,8 @@ export interface Availability {
   startTime: string;
   endTime: string;
   capacity: number;
-  booked: number;
-  isAvailable: boolean;
+  bookedSlots: number;
+ 
 }
 
 export interface AvailabilitySlot {
@@ -17,4 +17,11 @@ export interface AvailabilitySlot {
     rating: number;
   };
   slots: Availability[];
+}
+export interface CreateAvailabilityDto {
+  doctorId: string;
+  date: string;     
+  startTime: string; 
+  endTime: string;
+  capacity: number;
 }

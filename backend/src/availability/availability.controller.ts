@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UsePipes, ValidationPipe,Delete } from '@nestjs/common';
 import { AvailabilityService } from './availability.service';
 import { CreateAvailabilityDto } from './dto/create-availability.dto';
 
@@ -26,4 +26,10 @@ export class AvailabilityController {
   findAvailableSlots(@Param('doctorId') doctorId: string, @Param('date') date: string) {
     return this.service.findAvailableSlots(doctorId, date);
   }
+
+@Delete(':id')
+remove(@Param('id') id: string) {
+  return this.service.remove(id);
+}
+
 }

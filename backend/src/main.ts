@@ -8,7 +8,11 @@ async function bootstrap() {
   
   // CORS
   //to update
-  app.enableCors();
+  app.enableCors({
+    origin: 'http://localhost:4200',  
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+  });
 
   // Servir les fichiers statiques pour les PDFs
   app.useStaticAssets(join(process.cwd(), 'uploads'), {

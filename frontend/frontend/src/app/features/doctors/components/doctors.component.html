@@ -9,41 +9,50 @@
 
 <section class="doctors-grid-section">
   <div class="container">
-    <div class="doctors-grid">
-      <div class="doctor-card" *ngFor="let doctor of doctors">
-        <div class="doctor-avatar">
-          <img [src]="doctor.image" [alt]="doctor.name" />
-          <div class="doctor-status" [class.available]="doctor.available">
-            {{ doctor.available ? 'Available' : 'Busy' }}
-          </div>
-        </div>
-        
-        <div class="doctor-info">
-          <h3>{{ doctor.name }}</h3>
-          <div class="specialty">{{ doctor.specialty }}</div>
-          
-          <div class="rating">
-            <i *ngFor="let star of getStars(doctor.rating)" 
-               class="fas fa-star" 
-               [class.filled]="star"></i>
-            <span>{{ doctor.rating }}/5</span>
-          </div>
-
-          <div class="contact">
-            <i class="fas fa-phone"></i> {{ doctor.phone }}
-          </div>
-
-          <div class="actions">
-            <button class="btn-secondary" (click)="viewProfile(doctor)">
-              <i class="fas fa-eye"></i> View Profile
-            </button>
-            <button class="btn-primary" (click)="bookNow(doctor)" [disabled]="!doctor.available">
-              <i class="fas fa-calendar-check"></i> 
-              {{ doctor.available ? 'Book Now' : 'Not Available' }}
-            </button>
-          </div>
-        </div>
+    @if (loading) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;"></div>
+        <p>Loading doctors...</p>
       </div>
-    </div>
+    } @else {
+      <div class="doctors-grid">
+        @for (doctor of doctors; track doctor.id) {
+          <div class="doctor-card">
+            <div class="doctor-avatar">
+              <img [src]="doctor.image" [alt]="doctor.name" />
+              <div class="doctor-status" [class.available]="doctor.available">
+                {{ doctor.available ? 'Available' : 'Busy' }}
+              </div>
+            </div>
+            
+            <div class="doctor-info">
+              <h3>{{ doctor.name }}</h3>
+              <div class="specialty">{{ doctor.specialty }}</div>
+              
+              <div class="rating">
+                @for (star of getStars(doctor.rating); track $index) {
+                  <i class="fas fa-star" [class.filled]="star"></i>
+                }
+                <span>{{ doctor.rating }}/5</span>
+              </div>
+
+              <div class="contact">
+                <i class="fas fa-phone"></i> {{ doctor.phone }}
+              </div>
+
+              <div class="actions">
+                <button class="btn-secondary" (click)="viewProfile(doctor)">
+                  <i class="fas fa-eye"></i> View Profile
+                </button>
+                <button class="btn-primary" (click)="bookNow(doctor)" [disabled]="!doctor.available">
+                  <i class="fas fa-calendar-check"></i> 
+                  {{ doctor.available ? 'Book Now' : 'Not Available' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
   </div>
 </section>

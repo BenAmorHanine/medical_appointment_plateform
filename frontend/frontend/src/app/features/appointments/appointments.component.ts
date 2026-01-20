@@ -26,87 +26,76 @@ export class AppointmentsComponent implements OnInit {
   appointmentsWithPatientNames: Array<Appointment & { patientName?: string }> = [];
   loading = false;
 
-  ngOnInit() {
+ ngOnInit() {
     const currentUser = this.authService.getCurrentUser();
-    
-    if (currentUser?.role === 'doctor') {
-      // Load appointments for doctor - filter to today's appointments
-      this.loadDoctorAppointments(currentUser.id);
-    } else {
-      // Patient flow (though this shouldn't be shown in navbar anymore)
-      const patientId = this.route.snapshot.paramMap.get('patientId') || '123';
-      this.appointmentService.loadAppointmentsForPatient(patientId);
-    }
+  if (currentUser?.role === 'doctor') {
+    this.loadDoctorAppointments(currentUser.id);
+  } else if (currentUser?.role === 'patient') {
+    this.loadPatientAppointments(currentUser.id);
   }
+}
 
-  loadDoctorAppointments(userId: string) {
-    this.loading = true;
-    console.log('Loading appointments for doctor userId:', userId);
-    
-    // First, get the doctor profile ID from the user ID
-    this.http.get<any>(`${this.apiUrl}/doctor-profiles/user/${userId}`).subscribe({
-      next: (doctorProfile) => {
-        console.log('Doctor profile retrieved:', doctorProfile);
-        if (doctorProfile && doctorProfile.id) {
-          console.log('Loading appointments for doctor profile ID:', doctorProfile.id);
-          // Load appointments for this doctor
-          this.appointmentService.getAppointmentsByDoctor(doctorProfile.id).subscribe({
-            next: (allAppointments) => {
-              console.log('All appointments loaded:', allAppointments);
-              console.log('Number of appointments:', allAppointments.length);
-              
-              // Filter to today's appointments only
-              const today = new Date();
-              today.setHours(0, 0, 0, 0);
-              const todayYear = today.getFullYear();
-              const todayMonth = today.getMonth();
-              const todayDay = today.getDate();
-              
-              console.log('Today date:', today.toISOString());
-              
-              this.appointments = allAppointments.filter(appointment => {
-                const appointmentDate = new Date(appointment.appointmentDate);
-                appointmentDate.setHours(0, 0, 0, 0);
-                const appYear = appointmentDate.getFullYear();
-                const appMonth = appointmentDate.getMonth();
-                const appDay = appointmentDate.getDate();
-                
-                const isToday = appYear === todayYear && appMonth === todayMonth && appDay === todayDay;
-                console.log(`Appointment date: ${appointment.appointmentDate}, Parsed: ${appointmentDate.toISOString()}, Is today: ${isToday}`);
-                
-                return isToday;
-              });
-              
-              console.log('Filtered appointments for today:', this.appointments.length);
-              
-              // Load patient names for doctor view
-              this.loadPatientNames();
-              this.loading = false;
-            },
-            error: (err) => {
-              console.error('Error loading appointments:', err);
-              this.loading = false;
-            }
-          });
-        } else {
-          console.error('Doctor profile not found or invalid:', doctorProfile);
-          this.loading = false;
-        }
-      },
-      error: (err) => {
-        console.error('Error loading doctor profile:', err);
-        this.loading = false;
+
+loadPatientAppointments(patientId: string) {
+  this.loading = true;
+  
+  this.appointmentService.getAppointmentsByPatient(patientId).subscribe({
+    next: (appointments) => {
+      console.log(' Patient RDV:', appointments);
+      this.appointments = appointments; 
+      console.log(' Patient appointments:', this.appointments.length);
+      this.loading = false;
+    },
+    error: (err) => {
+      console.error('Error:', err);
+      this.loading = false;
+    }
+  });
+}
+
+
+loadDoctorAppointments(userId: string) {
+  this.loading = true;
+  
+  this.http.get<any>(`${this.apiUrl}/doctor-profiles/user/${userId}`).subscribe({
+    next: (doctorProfile) => {
+      if (doctorProfile && doctorProfile.id) {
+        this.appointmentService.getAppointmentsByDoctor(doctorProfile.id).subscribe({
+          next: (allAppointments) => {
+            console.log(' TOUS RDV:', allAppointments);
+            
+            
+            this.appointments = allAppointments; 
+            
+            console.log(' Appointments loaded:', this.appointments.length);
+            this.loadPatientNames();
+            this.loading = false;
+          },
+          error: (err) => {
+            console.error('Error:', err);
+            this.loading = false;
+          }
+        });
       }
-    });
-  }
-
-  get appointmentList(): Appointment[] {
-    const currentUser = this.authService.getCurrentUser();
-    if (currentUser?.role === 'doctor') {
-      return this.appointments;
     }
-    return this.appointmentService.appointments();
-  }
+  });
+}
+
+
+get appointmentList(): Appointment[] {
+  const currentUser = this.authService.getCurrentUser();
+  
+  console.log('🔍 appointmentList - role:', currentUser?.role, 'count:', this.appointments.length);
+  
+  return this.appointments;
+}
+
+getDoctorName(appointment: any): string {
+  // Récupère nom docteur depuis availability ou fixe temporairement
+  return appointment.availability?.doctor?.user?.name || 'Nermine';
+}
+
+
 
   get isLoading(): boolean {
     const currentUser = this.authService.getCurrentUser();
@@ -127,7 +116,6 @@ export class AppointmentsComponent implements OnInit {
           });
         },
         error: () => {
-          // En cas d'erreur, utiliser l'ID tronqué comme fallback
           this.appointmentsWithPatientNames.push({
             ...appointment,
             patientName: `Patient ${appointment.patientId.substring(0, 8)}...`
@@ -146,17 +134,41 @@ export class AppointmentsComponent implements OnInit {
     return this.authService.getCurrentUser()?.role === 'doctor';
   }
 
-  cancelAppointment(id: string) {
-    this.appointmentService.cancelAppointment(id).subscribe({
-      next: () => {
-        console.log('RDV annulé');
-        // Reload appointments if doctor
-        const currentUser = this.authService.getCurrentUser();
-        if (currentUser?.role === 'doctor') {
-          this.loadDoctorAppointments(currentUser.id);
-        }
-      },
-      error: (err: any) => console.error('Erreur', err)
-    });
-  }
+cancelAppointment(id: string) {
+  this.appointmentService.cancelAppointment(id).subscribe({
+    next: () => {
+      console.log(' RDV annulé:', id);
+      
+      const currentUser = this.authService.getCurrentUser();
+      if (currentUser?.role === 'doctor' && currentUser?.id) {
+        this.loadDoctorAppointments(currentUser.id);
+      } else if (currentUser?.role === 'patient' && currentUser?.id) {
+        this.loadPatientAppointments(currentUser.id);
+      }
+    },
+    error: (err) => {
+      console.error(' Erreur annulation:', err);
+      alert('Erreur lors de l\'annulation');
+    }
+  });
+}
+
+
+  canCancel(appointment: any): boolean {
+  return appointment.status === 'reserved' || appointment.status === 'RESERVED';
+}
+
+formatAppointmentDate(dateValue: any): string {
+  const date = typeof dateValue === 'string' ? new Date(dateValue) : new Date(dateValue);
+  
+  return date.toLocaleDateString('fr-TN', {
+    weekday: 'long',
+    day: 'numeric', 
+    month: 'long',
+    timeZone: 'Africa/Tunis'
+  });
+}
+
+
+
 }

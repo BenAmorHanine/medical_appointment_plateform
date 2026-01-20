@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException,BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository ,LessThan} from 'typeorm';
 import { AvailabilityEntity } from './entities/availability.entity';
@@ -15,7 +15,6 @@ export class AvailabilityService {
   ) {}
 
   async create(createDto: CreateAvailabilityDto): Promise<AvailabilityEntity> {
-    // Vérifier le médecin existe (doctorId est l'ID du profil médecin, pas du user)
     const doctor = await this.doctorRepository.findOne({
       where: { id: createDto.doctorId },
     });
@@ -44,8 +43,15 @@ export class AvailabilityService {
       where: { 
         doctorId, 
         date: new Date(date),
-        bookedSlots: LessThan(5) // Slots disponibles
+        bookedSlots: LessThan(5) 
       }
     });
   }
+  async remove(id: string): Promise<void> {
+  const result = await this.repository.delete(id);
+  
+  if (result.affected === 0) {
+    throw new NotFoundException(`Slot ${id} non trouvé`);
+  }
+}
 }

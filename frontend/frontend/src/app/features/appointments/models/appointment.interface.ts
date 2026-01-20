@@ -5,7 +5,7 @@ export interface Appointment {
   appointmentDate: string;
   startTime: string;
   endTime: string;
-  status: 'reserved' | 'cancelled' | 'done';
+  status: 'RESERVED' | 'CANCELLED' | 'DONE';
   doctorId: string;
   createdAt: string;
 }

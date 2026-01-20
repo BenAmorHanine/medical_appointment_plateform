@@ -1,27 +1,39 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { AvailabilitySlot } from '../models/availability.interface';
+import { Observable } from 'rxjs'; 
+import { Availability } from '../models/availability.interface';
 
 @Injectable({ providedIn: 'root' })
 export class AvailabilityService {
   private http = inject(HttpClient);
-  private baseUrl = '/api/availability';
+  private baseUrl = 'http://localhost:3000/availabilities';
 
-  availabilities = signal<AvailabilitySlot[]>([]);
+  availabilities = signal<Availability[]>([]);
   loading = signal(false);
+  error = signal<string | null>(null);
 
-  loadAvailabilities(doctorId?: string, date?: string) {
+  loadAvailabilitiesForDoctor(doctorId: string): Observable<Availability[]> { 
     this.loading.set(true);
-    const params = new URLSearchParams();
-    if (doctorId) params.set('doctorId', doctorId);
-    if (date) params.set('date', date);
+    this.error.set(null);
 
-    this.http.get<AvailabilitySlot[]>(`${this.baseUrl}?${params.toString()}`)
-      .subscribe({
-        next: (data) => {
-          this.availabilities.set(data);
-          this.loading.set(false);
-        }
-      });
+    return this.http.get<Availability[]>(`${this.baseUrl}/doctor/${doctorId}`);
+  }
+
+createAvailability(dto: { 
+  doctorId: string; 
+  date: string; 
+  startTime: string; 
+  endTime: string; 
+  capacity: number; 
+}): Observable<Availability> {
+  return this.http.post<Availability>(this.baseUrl, dto);
+}
+
+
+  deleteAvailability(id: string): Observable<void> {  
+    this.loading.set(true);
+    this.error.set(null);
+
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
 }

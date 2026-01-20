@@ -28,8 +28,10 @@ export class AppointmentService {
   }
 
   getAppointmentsByPatient(patientId: string): Observable<Appointment[]> {
-    return this.http.get<Appointment[]>(`${this.apiUrl}?patientId=${patientId}`);
-  }
+  console.log('🔍 Appel API patientId:', patientId); // DEBUG
+  return this.http.get<Appointment[]>(`${this.apiUrl}?patientId=${patientId}`);
+}
+
 
   createAppointment(dto: any): Observable<Appointment> {
     return this.http.post<Appointment>(this.apiUrl, dto);
@@ -40,60 +42,19 @@ export class AppointmentService {
   }
 
   loadAppointmentsForPatient(patientId: string) {
+    console.log('🔍 Loading patient appointments for:', patientId);
     this.loading.set(true);
-    /*this.getAppointmentsByPatient(patientId).subscribe({
+    this.getAppointmentsByPatient(patientId).subscribe({
       next: (data) => {
         this.appointments.set(data);
         this.loading.set(false);
       },
       error: () => {
-        this.error.set('Erreur chargement RDV');
+        this.error.set('Error loading appointments');
         this.loading.set(false);
       }
     });
-  }*/
- //
-  const mockRDV: Appointment[] = [
-    {
-      id: '1',
-      patientId: patientId,
-      availabilityId: 'slot-001',
-      appointmentDate: '2026-01-03',
-      startTime: '09:00',
-      endTime: '10:00',
-      status: 'reserved' as const,
-      doctorId: 'Dr House',
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: '2',
-      patientId: patientId,
-      availabilityId: 'slot-002',
-      appointmentDate: '2026-01-05',
-      startTime: '14:30',
-      endTime: '15:30',
-      status: 'reserved' as const,
-      doctorId: 'Dr Jenni',
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: '3',
-      patientId: patientId,
-      availabilityId: 'slot-003',
-      appointmentDate: '2026-01-07',
-      startTime: '11:00',
-      endTime: '12:00',
-      status: 'cancelled' as const,
-      doctorId: 'Dr Morco',
-      createdAt: new Date().toISOString()
-    }
-  ];
-
-  setTimeout(() => {
-    this.appointments.set(mockRDV);
-    this.loading.set(false);
-  }, 1500);
-}
+  }
 }
 export { Appointment };
 

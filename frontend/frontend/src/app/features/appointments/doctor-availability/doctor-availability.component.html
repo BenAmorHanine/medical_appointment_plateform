@@ -1,0 +1,95 @@
+<section class="availability-hero py-5 bg-gradient-medical">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-8">
+        <h1 class="section-title mb-3">
+          My <span class="gradient-text">Availabilities</span>
+        </h1>
+        <p class="lead mb-0">Manage consultation slots</p>
+      </div>
+      <div class="col-lg-4 text-lg-end">
+        <a routerLink="/appointments" class="btn btn-outline-light btn-lg">
+          My Appointments
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-4">
+  <div class="container">
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-body p-4">
+        <h5 class="mb-3">
+          <i class="fas fa-plus-circle me-2"></i>
+          Add Availability Slot
+        </h5>
+
+        @if (error) {
+          <div class="alert alert-danger">{{ error }}</div>
+        }
+
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Date</label>
+            <input type="date" class="form-control" [(ngModel)]="selectedDate" name="date" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Start</label>
+            <input type="time" class="form-control" [(ngModel)]="startTime" name="startTime" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">End</label>
+            <input type="time" class="form-control" [(ngModel)]="endTime" name="endTime" />
+          </div>
+          <div class="col-md-2">
+            <label class="form-label fw-semibold">Capacity</label>
+            <input type="number" min="1" max="10" class="form-control" [(ngModel)]="capacity" name="capacity" />
+          </div>
+          <div class="col-md-1 d-flex align-items-end">
+            <button class="btn btn-primary w-100" [disabled]="loading" (click)="addSlot()">
+              Add
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LIST -->
+<section class="py-5">
+  <div class="container">
+    @if (loading) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;"></div>
+        <p class="mt-3">Loading...</p>
+      </div>
+    } @else if (!hasAvailabilities) {
+      <div class="text-center py-5">
+        <i class="fas fa-calendar-times fa-4x text-muted mb-4"></i>
+        <h5 class="text-muted">No slots defined</h5>
+        <p class="text-muted">Add your first availability slots</p>
+      </div>
+    } @else {
+      @for (slot of availabilities; track slot.id) {
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="d-flex justify-content-between">
+              <div>
+                <div><strong>{{ slot.date | date:'fullDate' }}</strong></div>
+                <div class="text-muted">{{ slot.startTime }} - {{ slot.endTime }}</div>
+              </div>
+              <button class="btn btn-outline-danger btn-sm"
+                      [disabled]="loading || slot.bookedSlots > 0"
+                      (click)="deleteSlot(slot.id)">
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    }
+  </div>
+</section>
