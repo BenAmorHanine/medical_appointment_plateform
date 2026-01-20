@@ -14,8 +14,8 @@ import { AppointmentService } from '../services/appointment.service';
   selector: 'app-book-appointment',
   standalone: true,
   imports: [CommonModule, RouterLink, FullCalendarModule],
-  templateUrl: './book-appointment.component.html',  
-  styleUrls: ['./book-appointment.component.scss'], 
+  templateUrl: './book-appointment.component.html',
+  styleUrls: ['./book-appointment.component.scss'],
 })
 export class BookAppointmentComponent implements OnInit {
   private route = inject(ActivatedRoute);
@@ -28,7 +28,7 @@ export class BookAppointmentComponent implements OnInit {
   doctorSpecialty = 'Specialty';
   patientId = '';
   loading = false;
-  selectedEvent: any = null;  
+  selectedEvent: any = null;
 
   calendarOptions: CalendarOptions = {
     plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
@@ -57,75 +57,70 @@ export class BookAppointmentComponent implements OnInit {
     this.loadAvailabilities();
   }
 
- loadAvailabilities() {
-  this.loading = true;
-  this.availabilityService.loadAvailabilitiesForDoctor(this.doctorId).subscribe({
-    next: (data) => {
-      const events = data.map(slot => ({
-        id: slot.id,
-        title: `${slot.startTime}-${slot.endTime} (${slot.capacity - slot.bookedSlots} slots left)`,
-        start: `${slot.date.split('T')[0]}T${slot.startTime}:00`,
-        end: `${slot.date.split('T')[0]}T${slot.endTime}:00`,
-        extendedProps: { 
-          capacity: slot.capacity, 
-          booked: slot.bookedSlots 
-        },
-        backgroundColor: slot.bookedSlots >= slot.capacity ? '#dc3545' : '#28a745',
-        borderColor: slot.bookedSlots >= slot.capacity ? '#dc3545' : '#28a745',
-      }));
+  loadAvailabilities() {
+    this.loading = true;
+    this.availabilityService.loadAvailabilitiesForDoctor(this.doctorId).subscribe({
+      next: (data) => {
+        const events = data.map(slot => {
+  // ✅ FIX DÉFINITIF CALENDRIER
+  const dateOnly = slot.date.split('T')[0];  // "2026-02-20"
+  return {
+    id: slot.id,
+    title: `${slot.startTime}-${slot.endTime} (${slot.capacity - slot.bookedSlots} slots left)`,
+    start: `${dateOnly}T${slot.startTime}:00`,  // ✅ PAS de new Date()
+    end: `${dateOnly}T${slot.endTime}:00`,
+            extendedProps: { 
+              capacity: slot.capacity, 
+              booked: slot.bookedSlots 
+            },
+            backgroundColor: slot.bookedSlots >= slot.capacity ? '#dc3545' : '#28a745',
+            borderColor: slot.bookedSlots >= slot.capacity ? '#dc3545' : '#28a745',
+          };
+        });
 
-      this.calendarOptions = { ...this.calendarOptions, events };
-      this.loading = false;
-    }
-  });
-}
-handleEventClick(clickInfo: any) {
-  const event = clickInfo.event;
-  
-
-  const bookedSlots = event.extendedProps.booked;
-  const capacity = event.extendedProps.capacity;
-  
-  console.log(' DEBUG - bookedSlots:', bookedSlots, 'capacity:', capacity);
-
-  if (bookedSlots < capacity) {
-    this.selectedEvent = event;
-    console.log(' Slot sélectionné:', event.id);
-  } else {
-    alert(`Ce créneau est complet ! (${bookedSlots}/${capacity})`);
-  }
-}
-
-
-bookAppointment() {
-  if (!this.selectedEvent || !this.patientId) {
-    alert('Sélectionne un créneau !');
-    return;
+        this.calendarOptions = { ...this.calendarOptions, events };
+        this.loading = false;
+      },
+      error: () => {
+        this.loading = false;
+      }
+    });
   }
 
-  const dto = {
-    patientId: this.patientId,
-    availabilityId: this.selectedEvent.id as string
-  };
+  handleEventClick(clickInfo: any) {
+    const event = clickInfo.event;
+    const bookedSlots = event.extendedProps.booked;
+    const capacity = event.extendedProps.capacity;
 
-  this.appointmentService.createAppointment(dto).subscribe({
-    next: (appointment) => {
-      console.log(' RDV créé:', appointment);
-      alert(" RDV réservé !");
-      
-      this.loadAvailabilities();
-      
-      setTimeout(() => {
-        window.location.href = '/appointments';
-      }, 1000);
-    },
-    error: (err: any) => {
-      console.error(' Erreur:', err);
-      alert(err.error?.message || "Erreur réservation");
+    if (bookedSlots < capacity) {
+      this.selectedEvent = event;
+    } else {
+      alert(`Ce créneau est complet ! (${bookedSlots}/${capacity})`);
     }
-  });
-}
+  }
 
+  bookAppointment() {
+    if (!this.selectedEvent || !this.patientId) {
+      alert('Sélectionne un créneau !');
+      return;
+    }
 
- 
+    const dto = {
+      patientId: this.patientId,
+      availabilityId: this.selectedEvent.id as string
+    };
+
+    this.appointmentService.createAppointment(dto).subscribe({
+      next: (appointment) => {
+        alert('RDV réservé !');
+        this.loadAvailabilities();
+        setTimeout(() => {
+          window.location.href = '/appointments';
+        }, 1000);
+      },
+      error: (err: any) => {
+        alert(err.error?.message || 'Erreur réservation');
+      }
+    });
+  }
 }

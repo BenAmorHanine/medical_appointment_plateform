@@ -13,7 +13,7 @@ import { AuthService } from '../../auth/services/auth.service';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './doctor-availability.component.html',
-  styleUrls: ['./doctor-availability.component.scss'],
+  styleUrls: ['./doctor-availability.component.css'],
 })
 export class DoctorAvailabilityComponent implements OnInit {
   private availabilityService = inject(AvailabilityService);
@@ -45,19 +45,16 @@ ngOnInit() {
 
 loadDoctorAvailabilities(userId: string) {
   this.loading = true;
-  console.log('🔍 Recherche profil pour userId:', userId);
+
 
   this.http.get<any>(`${this.apiUrl}/doctor-profiles/user/${userId}`).subscribe({
-    next: (doctorProfile) => {
-      console.log('✅ Doctor profile:', doctorProfile);
-      
+    next: (doctorProfile) => { 
       if (doctorProfile?.id) {
         this.doctorProfileId = doctorProfile.id;
-        console.log('🔍 Chargement slots pour doctorId:', this.doctorProfileId);
+
         
         this.availabilityService.loadAvailabilitiesForDoctor(this.doctorProfileId!).subscribe({
           next: (availabilities) => {
-            console.log(' Slots chargés:', availabilities);
             this.availabilities = availabilities || [];
             this.loading = false;
           },
@@ -74,7 +71,6 @@ loadDoctorAvailabilities(userId: string) {
       }
     },
     error: (err) => {
-      console.error(' Erreur profil:', err);
       this.error = `Erreur API: ${err.status}`;
       this.loading = false;
     }

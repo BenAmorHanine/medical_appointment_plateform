@@ -26,76 +26,57 @@ export class AppointmentsComponent implements OnInit {
   appointmentsWithPatientNames: Array<Appointment & { patientName?: string }> = [];
   loading = false;
 
- ngOnInit() {
+  ngOnInit() {
     const currentUser = this.authService.getCurrentUser();
-  if (currentUser?.role === 'doctor') {
-    this.loadDoctorAppointments(currentUser.id);
-  } else if (currentUser?.role === 'patient') {
-    this.loadPatientAppointments(currentUser.id);
+    if (currentUser?.role === 'doctor') {
+      this.loadDoctorAppointments(currentUser.id);
+    } else if (currentUser?.role === 'patient') {
+      this.loadPatientAppointments(currentUser.id);
+    }
   }
-}
 
-
-loadPatientAppointments(patientId: string) {
-  this.loading = true;
-  
-  this.appointmentService.getAppointmentsByPatient(patientId).subscribe({
-    next: (appointments) => {
-      console.log(' Patient RDV:', appointments);
-      this.appointments = appointments; 
-      console.log(' Patient appointments:', this.appointments.length);
-      this.loading = false;
-    },
-    error: (err) => {
-      console.error('Error:', err);
-      this.loading = false;
-    }
-  });
-}
-
-
-loadDoctorAppointments(userId: string) {
-  this.loading = true;
-  
-  this.http.get<any>(`${this.apiUrl}/doctor-profiles/user/${userId}`).subscribe({
-    next: (doctorProfile) => {
-      if (doctorProfile && doctorProfile.id) {
-        this.appointmentService.getAppointmentsByDoctor(doctorProfile.id).subscribe({
-          next: (allAppointments) => {
-            console.log(' TOUS RDV:', allAppointments);
-            
-            
-            this.appointments = allAppointments; 
-            
-            console.log(' Appointments loaded:', this.appointments.length);
-            this.loadPatientNames();
-            this.loading = false;
-          },
-          error: (err) => {
-            console.error('Error:', err);
-            this.loading = false;
-          }
-        });
+  loadPatientAppointments(patientId: string) {
+    this.loading = true;
+    
+    this.appointmentService.getAppointmentsByPatient(patientId).subscribe({
+      next: (appointments) => {
+        this.appointments = appointments; 
+        this.loading = false;
+      },
+      error: (err) => {
+        this.loading = false;
       }
-    }
-  });
-}
+    });
+  }
 
+  loadDoctorAppointments(userId: string) {
+    this.loading = true;
+    
+    this.http.get<any>(`${this.apiUrl}/doctor-profiles/user/${userId}`).subscribe({
+      next: (doctorProfile) => {
+        if (doctorProfile && doctorProfile.id) {
+          this.appointmentService.getAppointmentsByDoctor(doctorProfile.id).subscribe({
+            next: (allAppointments) => {
+              this.appointments = allAppointments; 
+              this.loading = false;
+            },
+            error: (err) => {
+              this.loading = false;
+            }
+          });
+        }
+      }
+    });
+  }
 
-get appointmentList(): Appointment[] {
-  const currentUser = this.authService.getCurrentUser();
-  
-  console.log('🔍 appointmentList - role:', currentUser?.role, 'count:', this.appointments.length);
-  
+  get appointmentList(): any[] {
   return this.appointments;
 }
 
-getDoctorName(appointment: any): string {
-  // Récupère nom docteur depuis availability ou fixe temporairement
-  return appointment.availability?.doctor?.user?.name || 'Nermine';
+
+  getDoctorName(appointment: any): string {
+  return appointment.doctorName || 'unknown' ;
 }
-
-
 
   get isLoading(): boolean {
     const currentUser = this.authService.getCurrentUser();
@@ -105,70 +86,39 @@ getDoctorName(appointment: any): string {
     return this.appointmentService.loading();
   }
 
-  loadPatientNames(): void {
-    this.appointmentsWithPatientNames = [];
-    this.appointments.forEach(appointment => {
-      this.patientService.getPatientName(appointment.patientId).subscribe({
-        next: (patientName) => {
-          this.appointmentsWithPatientNames.push({
-            ...appointment,
-            patientName: patientName
-          });
-        },
-        error: () => {
-          this.appointmentsWithPatientNames.push({
-            ...appointment,
-            patientName: `Patient ${appointment.patientId.substring(0, 8)}...`
-          });
-        }
-      });
-    });
-  }
 
-  getPatientName(patientId: string): string {
-    const appointment = this.appointmentsWithPatientNames.find(a => a.patientId === patientId);
-    return appointment?.patientName || `Patient ${patientId.substring(0, 8)}...`;
-  }
 
   get isDoctor(): boolean {
     return this.authService.getCurrentUser()?.role === 'doctor';
   }
 
-cancelAppointment(id: string) {
-  this.appointmentService.cancelAppointment(id).subscribe({
-    next: () => {
-      console.log(' RDV annulé:', id);
-      
-      const currentUser = this.authService.getCurrentUser();
-      if (currentUser?.role === 'doctor' && currentUser?.id) {
-        this.loadDoctorAppointments(currentUser.id);
-      } else if (currentUser?.role === 'patient' && currentUser?.id) {
-        this.loadPatientAppointments(currentUser.id);
+  cancelAppointment(id: string) {
+    this.appointmentService.cancelAppointment(id).subscribe({
+      next: () => {
+        const currentUser = this.authService.getCurrentUser();
+        if (currentUser?.role === 'doctor' && currentUser?.id) {
+          this.loadDoctorAppointments(currentUser.id);
+        } else if (currentUser?.role === 'patient' && currentUser?.id) {
+          this.loadPatientAppointments(currentUser.id);
+        }
+      },
+      error: (err) => {
+        alert('Error canceling appointment');
       }
-    },
-    error: (err) => {
-      console.error(' Erreur annulation:', err);
-      alert('Erreur lors de l\'annulation');
-    }
-  });
-}
-
+    });
+  }
 
   canCancel(appointment: any): boolean {
-  return appointment.status === 'reserved' || appointment.status === 'RESERVED';
-}
+    return appointment.status === 'reserved' || appointment.status === 'RESERVED';
+  }
 
 formatAppointmentDate(dateValue: any): string {
-  const date = typeof dateValue === 'string' ? new Date(dateValue) : new Date(dateValue);
-  
+  const date = new Date(dateValue.displayDate || dateValue);
   return date.toLocaleDateString('fr-TN', {
     weekday: 'long',
-    day: 'numeric', 
+    year: 'numeric',
     month: 'long',
-    timeZone: 'Africa/Tunis'
+    day: 'numeric'
   });
 }
-
-
-
 }

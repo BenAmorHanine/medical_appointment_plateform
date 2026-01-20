@@ -28,10 +28,8 @@ export class AppointmentService {
   }
 
   getAppointmentsByPatient(patientId: string): Observable<Appointment[]> {
-  console.log('🔍 Appel API patientId:', patientId); // DEBUG
-  return this.http.get<Appointment[]>(`${this.apiUrl}?patientId=${patientId}`);
-}
-
+    return this.http.get<Appointment[]>(`${this.apiUrl}?patientId=${patientId}`);
+  }
 
   createAppointment(dto: any): Observable<Appointment> {
     return this.http.post<Appointment>(this.apiUrl, dto);
@@ -42,7 +40,6 @@ export class AppointmentService {
   }
 
   loadAppointmentsForPatient(patientId: string) {
-    console.log('🔍 Loading patient appointments for:', patientId);
     this.loading.set(true);
     this.getAppointmentsByPatient(patientId).subscribe({
       next: (data) => {
@@ -55,6 +52,6 @@ export class AppointmentService {
       }
     });
   }
+  
 }
-export { Appointment };
-
+export { Appointment } from '../models/appointment.interface';

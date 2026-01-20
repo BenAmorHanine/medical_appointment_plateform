@@ -9,6 +9,7 @@ import {
   AppointmentCreatedEvent,
   AppointmentCancelledEvent,
 } from './events/appointment.events';
+
 @Injectable()
 export class AppointmentsService {
   constructor(
@@ -39,18 +40,39 @@ export class AppointmentsService {
     return { ...appointment, doctorId: availability.doctorId };
   }
 
-async findByDoctor(doctorId: string): Promise<AppointmentEntity[]> {
-  const availabilities = await this.availabilityRepository.find({ where: { doctorId } });
-  if (availabilities.length === 0) return [];
-  
-  const availabilityIds = availabilities.map(a => a.id);
-  const allAppointments = await this.repository.find({ 
-    where: { availabilityId: In(availabilityIds) } 
+async findByDoctor(doctorId: string): Promise<Array<AppointmentEntity & { doctorName: string, patientName: string }>> {
+  const availabilities = await this.availabilityRepository.find({ 
+    where: { doctorId },
+    relations: ['doctor', 'doctor.user']
   });
   
+  if (availabilities.length === 0) return [];
+
+  const availabilityIds = availabilities.map(a => a.id);
+  const appointments = await this.repository.find({ 
+    where: { availabilityId: In(availabilityIds) } 
+  });
+
+  const reserved: Array<AppointmentEntity & { doctorName: string, patientName: string }> = [];
+
+  for (const appointment of appointments.filter(a => a.status === AppointmentStatus.RESERVED)) {
+    const availability = await this.availabilityRepository.findOne({
+      where: { id: appointment.availabilityId },
+      relations: ['doctor', 'doctor.user']
+    });
+
   
-  const reserved = allAppointments.filter(a => a.status === AppointmentStatus.RESERVED);
-  console.log('🔍 RDV Docteur RESERVED:', reserved.length);
+    const patientName = `Patient ${appointment.patientId.substring(0, 8)}...`;
+    
+    if (availability && availability.doctor && availability.doctor.user) {
+      reserved.push({
+        ...appointment,
+        doctorName: availability.doctor.user.username,
+        patientName: patientName
+      });
+    }
+  }
+
   return reserved;
 }
 
@@ -68,12 +90,13 @@ async create(createDto: CreateAppointmentDto): Promise<AppointmentEntity> {
     throw new BadRequestException('Créneau complet');
   }
 
-  // ✅ FIX : COPIE + Midi Tunis (UTC+1)
+
   const appointmentDate = new Date(availability.date);
-  appointmentDate.setHours(12, 0, 0, 0); // ✅ NOUVEL objet !
+  appointmentDate.setUTCHours(0, 0, 0, 0); 
+  appointmentDate.setHours(12, 0, 0, 0); 
 
   const appointment = this.repository.create({
-    appointmentDate: appointmentDate,  // ✅ Date correcte !
+    appointmentDate,
     startTime: availability.startTime,
     endTime: availability.endTime,
     status: AppointmentStatus.RESERVED,
@@ -81,79 +104,82 @@ async create(createDto: CreateAppointmentDto): Promise<AppointmentEntity> {
     availabilityId: createDto.availabilityId,
   });
 
-  const saved = await this.repository.save(appointment);
-  
-  availability.bookedSlots++;
-  await this.availabilityRepository.save(availability);
 
-
-  console.log(' Emitting appointment.created event...');
-  console.log('Doctor userId:', availability.doctor.user.id);
-  this.eventEmitter.emit(
-    'appointment.created',
-    new AppointmentCreatedEvent(
-      saved.id,
-      saved.patientId,
-      availability.doctor.user.id, 
-      saved.appointmentDate,
-    ),
-  );
-
-  return saved;
-}
-    async cancel(appointmentId: string): Promise<AppointmentEntity> {
-  const appointment = await this.repository.findOne({ 
-    where: { id: appointmentId } 
-  });
-  
-  if (!appointment) throw new NotFoundException('RDV introuvable');
-  if (appointment.status === AppointmentStatus.DONE) {  
-    throw new BadRequestException('RDV terminé impossible à annuler');
-  }
-
-  appointment.status = AppointmentStatus.CANCELLED;    
-  await this.repository.save(appointment);
-
-  const availability = await this.availabilityRepository.findOne({
-    where: { id: appointment.availabilityId },
-    relations: ['doctor', 'doctor.user'], 
-  });
-
-  if (availability) {
-    availability.bookedSlots = Math.max(0, availability.bookedSlots - 1);
+    const saved = await this.repository.save(appointment);
+    
+    availability.bookedSlots++;
     await this.availabilityRepository.save(availability);
-    console.log('🚀 Emitting appointment.cancelled event...');
+
     this.eventEmitter.emit(
-      'appointment.cancelled',
-      new AppointmentCancelledEvent(
-        appointment.id,
-        appointment.patientId,
+      'appointment.created',
+      new AppointmentCreatedEvent(
+        saved.id,
+        saved.patientId,
         availability.doctor.user.id, 
+        saved.appointmentDate,
       ),
     );
+
+    return saved;
   }
 
-  return appointment;
+  async cancel(appointmentId: string): Promise<AppointmentEntity> {
+    const appointment = await this.repository.findOne({ 
+      where: { id: appointmentId } 
+    });
+    
+    if (!appointment) throw new NotFoundException('RDV introuvable');
+    if (appointment.status === AppointmentStatus.DONE) {  
+      throw new BadRequestException('RDV terminé impossible à annuler');
+    }
+
+    appointment.status = AppointmentStatus.CANCELLED;      
+    await this.repository.save(appointment);
+
+    const availability = await this.availabilityRepository.findOne({
+      where: { id: appointment.availabilityId },
+      relations: ['doctor', 'doctor.user'], 
+    });
+
+    if (availability) {
+      availability.bookedSlots = Math.max(0, availability.bookedSlots - 1);
+      await this.availabilityRepository.save(availability);
+      this.eventEmitter.emit(
+        'appointment.cancelled',
+        new AppointmentCancelledEvent(
+          appointment.id,
+          appointment.patientId,
+          availability.doctor.user.id, 
+        ),
+      );
+    }
+
+    return appointment;
+  }
+
+async findByPatient(patientId: string) {
+  const appointments = await this.repository.find({
+    where: { patientId },
+  });
+
+  const result: Array<AppointmentEntity & { doctorName: string }> = [];
+
+  for (const appointment of appointments) {
+    const availability = await this.availabilityRepository.findOne({
+      where: { id: appointment.availabilityId },
+      relations: ['doctor', 'doctor.user'],
+    });
+
+    if (availability && availability.doctor && availability.doctor.user) {
+      result.push({
+        ...appointment,
+        doctorName: availability.doctor.user.username, 
+      });
+    }
+  }
+
+  return result;
 }
-async findByPatient(patientId: string): Promise<AppointmentEntity[]> {
-  console.log('🔍 findByPatient patientId:', patientId);
-  
-  const allAppointments = await this.repository.find({ where: { patientId } });
-  console.log('🔍 TOUS:', allAppointments.map(a => ({id: a.id, status: a.status})));
-  
-  const reserved = allAppointments.filter(appointment => 
-    appointment.status === AppointmentStatus.RESERVED
-  );
-  
-  console.log('🔍 UNIQUEMENT RESERVED:', reserved.length);
-  return reserved;
-}
-
-
-
-
-
-
 
 
 }
