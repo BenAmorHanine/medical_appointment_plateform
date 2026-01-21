@@ -1,17 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, inject, OnInit ,OnDestroy} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../auth/services/auth.service';
-import { Router } from '@angular/router';
-import { inject } from '@angular/core';
-
-interface Doctor {
-  id: number;
-  name: string;
-  specialty: string;
-  image: string;
-  rating: number;
-}
+import { DoctorsService } from '../../doctors/services/doctors.service';
+import { Doctor } from '../../doctors/models/doctor.model';
+import { Subject, takeUntil } from 'rxjs';
 
 interface Testimonial {
   id: number;
@@ -32,19 +25,12 @@ interface Stat {
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
 })
-export class HomeComponent {
-
+export class HomeComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
+  
   authService = inject(AuthService);
   router = inject(Router);
-  
-  isAuthenticated$ = this.authService.isAuthenticated$;
-
-  logout() {
-    this.authService.logout();
-    this.router.navigate(['/']);
-  }
-
-// fake exemples for now
+  doctorsService = inject(DoctorsService);
 
   stats: Stat = {
     patients: 12500,
@@ -52,21 +38,55 @@ export class HomeComponent {
     appointments: 45000
   };
 
-
-  featuredDoctors: Doctor[] = [
-    { id: 1, name: 'Dr. Humour', specialty: 'Cardiology',  image: '/assets/images/doctor1.jpg', rating: 4.9 },
-    { id: 2, name: 'Dr. Jenni',  specialty: 'Neurology',   image: '/assets/images/doctor2.jpg', rating: 4.8 },
-    { id: 3, name: 'Dr. Morco',  specialty: 'Pediatrics',  image: '/assets/images/doctor3.jpg', rating: 4.9 },
-    { id: 4, name: 'Dr. Sarah',  specialty: 'Dermatology', image: '/assets/images/doctor4.jpg', rating: 4.7 }
-  ];
-
+  isAuthenticated$ = this.authService.isAuthenticated$;
+  
+  featuredDoctors: Doctor[] = [];
+  loadingDoctors = true;
+  
   testimonials: Testimonial[] = [
-    { id: 1, name: 'Morijorch',      text: 'Excellent service and professional care. Highly recommended!' },
-    { id: 2, name: 'Ahmed Ben Ali',  text: 'Best medical platform in Tunisia. Easy to use and very reliable.' },
-    { id: 3, name: 'Fatma Trabelsi', text: 'Clean design, clear information and great doctors.' }
+    { id: 1, name: 'Morijorch', text: 'Excellent service.' },
+    { id: 2, name: 'Ahmed Ben Ali', text: 'Best platform.' },
+    { id: 3, name: 'Fatma Trabelsi', text: 'Great doctors.' }
   ];
+
+  ngOnInit() {
+    this.loadFeaturedDoctors();
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  loadFeaturedDoctors() {
+    this.loadingDoctors = true;
+    this.doctorsService.getFeaturedDoctors().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (doctors) => {
+        this.featuredDoctors = doctors;
+        this.loadingDoctors = false;
+      },
+      error: () => {
+        this.loadingDoctors = false;
+      }
+    });
+  }
+
+  logout() {
+    this.authService.logout();
+    this.router.navigate(['/']);
+  }
 
   getDoctorImage(doctor: Doctor): string {
-    return doctor.image || '../assets/images/default-doctor.jpg';
+    return doctor.image || '/assets/images/default-doctor.jpg';
+  }
+
+  viewDoctor(doctor: Doctor) {
+    this.router.navigate(['/doctor', doctor.id]);
+  }
+
+  trackByDoctor(index: number, doctor: Doctor): number {
+    return doctor.id;
   }
 }

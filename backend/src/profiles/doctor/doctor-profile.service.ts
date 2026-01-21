@@ -85,4 +85,12 @@ export class DoctorProfileService {
     const profile = await this.findOne(id);
     return await this.repository.remove(profile);
   }
+
+  async findFeatured(): Promise<DoctorProfileEntity[]> {
+    return await this.repository.find({
+      relations: ['user'],        
+      take: 4,                     
+      order: { id: 'DESC' }        
+    });
+  }
 }

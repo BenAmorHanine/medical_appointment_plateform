@@ -26,6 +26,27 @@ export class DoctorProfileEntity {
   @Column({ nullable: true })
   phone: string;
 
+    @Column({ 
+    type: 'varchar', 
+    length: 500, 
+    default: '/assets/images/default-doctor.jpg' 
+  })
+  image: string;
+
+  @Column({ 
+    type: 'decimal', 
+    precision: 3, 
+    scale: 2, 
+    default: 4.50 
+  })
+  rating: number;
+
+  @Column({ 
+    type: 'boolean', 
+    default: true 
+  })
+  available: boolean;
+
   // Relation OneToOne avec User
   @OneToOne(() => UserEntity)
   @JoinColumn()

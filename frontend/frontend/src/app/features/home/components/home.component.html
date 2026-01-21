@@ -79,11 +79,24 @@
       Our Expert
       <span class="gradient-text">Doctors</span>
     </h2>
-    <div class="row g-4">
-      <div class="col-lg-3 col-md-6" *ngFor="let doctor of featuredDoctors">
-        <div class="doctor-card h-100 shadow-lg">
+    
+    <!-- LOADING STATE (NEW) -->
+    <div *ngIf="loadingDoctors" class="row g-4">
+      <div class="col-lg-3 col-md-6" *ngFor="let i of [1,2,3,4]">
+        <div class="doctor-card h-100 shadow-lg skeleton">
+          <div class="skeleton-image"></div>
+          <div class="skeleton-text"></div>
+        </div>
+      </div>
+    </div> 
+    
+    <!-- REAL DOCTORS (UPDATED) -->
+    <div class="row g-4" *ngIf="!loadingDoctors">
+      <div class="col-lg-3 col-md-6" *ngFor="let doctor of featuredDoctors; trackBy: trackByDoctor">
+        <div class="doctor-card h-100 shadow-lg" role="button" tabindex="0"
+             (click)="viewDoctor(doctor)" (keydown.enter)="viewDoctor(doctor)">
           <div class="doctor-image position-relative overflow-hidden">
-            <img [src]="getDoctorImage(doctor)" [alt]="doctor.name" class="img-fluid w-100">
+            <img [src]="getDoctorImage(doctor)" [alt]="doctor.name" class="img-fluid w-100" loading="lazy">
             <div class="doctor-overlay">
               <div class="rating mb-2">
                 <i class="fa fa-star text-warning"></i>
@@ -108,6 +121,7 @@
     </div>
   </div>
 </section>
+
 
 <!-- ABOUT / WHY CHOOSE US -->
 <section class="about-section py-5 bg-light">

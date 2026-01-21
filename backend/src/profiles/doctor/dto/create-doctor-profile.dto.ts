@@ -6,6 +6,9 @@ import {
   IsOptional,
   IsUUID,
   Min,
+  IsBoolean,
+  IsNumber,
+  Max,
 } from 'class-validator';
 
 export class CreateDoctorProfileDto {
@@ -24,6 +27,20 @@ export class CreateDoctorProfileDto {
   @IsOptional()
   @IsString()
   phone?: string;
+
+    @IsOptional()
+  @IsString()
+  image?: string;
+
+  @IsOptional()
+  @IsNumber({})
+  @Min(0)
+  @Max(5)
+  rating?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  available?: boolean;
 
   @IsNotEmpty()
   @IsUUID()
