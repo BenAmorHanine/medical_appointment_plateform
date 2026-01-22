@@ -24,3 +24,6 @@ node_modules/
 
 # Angular
 .angular/
+
+backend\package-lock.json
+frontend\frontend\package-lock.json

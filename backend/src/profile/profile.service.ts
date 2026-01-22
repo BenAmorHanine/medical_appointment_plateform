@@ -1,4 +1,3 @@
-// src/profile/profile.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
@@ -7,7 +6,6 @@ import { DoctorProfileEntity } from '../profiles/doctor/entities/doctor-profile.
 import { PatientProfileEntity } from '../profiles/patient/entities/patient-profile.entity';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 
-// src/profile/profile.service.ts
 @Injectable()
 export class ProfileService {
   constructor(

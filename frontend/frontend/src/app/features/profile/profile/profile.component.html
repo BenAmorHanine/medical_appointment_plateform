@@ -1,0 +1,151 @@
+<div class="container-fluid py-5 bg-light min-vh-100">
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-10 col-xl-8">
+
+      @if (user()) {
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+
+          <div class="card-header bg-dark text-white p-4 d-flex justify-content-between align-items-center border-0">
+            <div class="d-flex align-items-center">
+              <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;">
+                <h2 class="m-0">{{ user().firstName[0] }}{{ user().lastName[0] }}</h2>
+              </div>
+              <div>
+                <h2 class="m-0 h4">{{ user().firstName }} {{ user().lastName }}</h2>
+                <small class="text-info">Member since {{ user().createdAt | date:'mediumDate' }}</small>
+              </div>
+            </div>
+
+            <button class="btn btn-outline-light px-4 rounded-pill" (click)="toggleEdit()">
+              @if (!isEditing()) {
+                <i class="bi bi-pencil-square me-2"></i> Edit Profile
+              } @else {
+                <i class="bi bi-x-circle me-2"></i> Cancel
+              }
+            </button>
+          </div>
+
+          <div class="card-body p-5">
+
+            @if (!isEditing()) {
+              <div class="row g-5">
+                <div class="col-md-5 border-end">
+                  <h5 class="text-uppercase fw-bold text-muted mb-4 small">Account Information</h5>
+                  <div class="mb-4">
+                    <label class="d-block text-secondary small">Username</label>
+                    <p class="fs-5 fw-medium">{{ user().username }}</p>
+                  </div>
+                  <div class="mb-4">
+                    <label class="d-block text-secondary small">Email Address</label>
+                    <p class="fs-5 fw-medium">{{ user().email }}</p>
+                  </div>
+                  <div class="mb-4">
+                    <label class="d-block text-secondary small">Phone Number</label>
+                    <p class="fs-5 fw-medium">{{ user().phone || 'Not provided' }}</p>
+                  </div>
+                </div>
+
+                <div class="col-md-7">
+                  <div class="d-flex justify-content-between align-items-start mb-4">
+                    <h5 class="text-uppercase fw-bold text-muted small">
+                      {{ user().role === 'doctor' ? 'Professional Portfolio' : 'Medical File' }}
+                    </h5>
+                    <span class="badge rounded-pill px-3 py-2" [ngClass]="user().role === 'doctor' ? 'bg-primary' : 'bg-success'">
+                      {{ user().role | uppercase }}
+                    </span>
+                  </div>
+
+                  @if (user().role === 'doctor') {
+                    <div class="p-4 bg-primary bg-opacity-10 rounded-4 border border-primary border-opacity-25">
+                      <p><strong>Specialty:</strong> {{ user().profile?.specialty || 'N/A' }}</p>
+                      <p><strong>Office Location:</strong> {{ user().profile?.office || 'N/A' }}</p>
+                      <p class="mb-0"><strong>Bio:</strong> {{ user().profile?.bio || 'No bio provided yet.' }}</p>
+                    </div>
+                  }
+
+                  @if (user().role === 'patient') {
+                    <div class="p-4 bg-success bg-opacity-10 rounded-4 border border-success border-opacity-25">
+                      <div class="row">
+                        <div class="col-6 mb-3">
+                          <label class="d-block text-secondary small">Record Number</label>
+                          <p class="fw-bold">{{ user().profile?.medicalRecordNumber || 'Pending' }}</p>
+                        </div>
+                        <div class="col-6 mb-3">
+                          <label class="d-block text-secondary small">Age</label>
+                          <p class="fw-bold">{{ user().profile?.age ?? 'Unavailable' }}</p>
+                        </div>
+                        <div class="col-12">
+                          <label class="d-block text-secondary small">Gender</label>
+                          <p class="fw-bold m-0">{{ user().profile?.gender || 'Not specified' }}</p>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+
+            } @else {
+              <form #editForm="ngForm" (ngSubmit)="onSave(editForm.value)">
+                <div class="row g-4">
+                  <div class="col-md-6">
+                    <label class="form-label">First Name</label>
+                    <input type="text" name="firstName" [ngModel]="user().firstName" class="form-control form-control-lg">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Last Name</label>
+                    <input type="text" name="lastName" [ngModel]="user().lastName" class="form-control form-control-lg">
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label">Phone</label>
+                    <input type="text" name="phone" [ngModel]="user().phone" class="form-control form-control-lg">
+                  </div>
+
+                  <hr class="my-4">
+
+                  @if (user().role === 'doctor') {
+                    <div class="col-md-6">
+                      <label class="form-label text-primary">Specialty</label>
+                      <input type="text" name="specialty" [ngModel]="user().profile?.specialty" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label text-primary">Office</label>
+                      <input type="text" name="office" [ngModel]="user().profile?.office" class="form-control">
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label text-primary">Biography</label>
+                    </div>
+                  }
+
+                  @if (user().role === 'patient') {
+                    <div class="col-md-6">
+                      <label class="form-label text-success">Age</label>
+                      <input type="number" name="age" [ngModel]="user().profile?.age" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label text-success">Gender</label>
+                      <select name="gender" [ngModel]="user().profile?.gender" class="form-select">
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                      </select>
+                    </div>
+                  }
+
+                  <div class="col-12 mt-5 text-end">
+                    <button type="button" class="btn btn-light me-2 px-4" (click)="toggleEdit()">Cancel</button>
+                    <button type="submit" class="btn btn-primary px-5 shadow">Save Changes</button>
+                  </div>
+                </div>
+              </form>
+            }
+          </div>
+        </div>
+      } @else {
+        <div class="text-center py-5">
+          <div class="spinner-border text-primary" role="status"></div>
+          <p class="mt-3">Syncing data...</p>
+        </div>
+      }
+
+    </div>
+  </div>
+</div>

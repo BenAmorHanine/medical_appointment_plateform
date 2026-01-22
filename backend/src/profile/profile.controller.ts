@@ -1,4 +1,3 @@
-// src/profile/profile.controller.ts
 import { Controller, Get, Patch, Body, UseGuards, Req } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ProfileService } from './profile.service';
@@ -11,6 +10,7 @@ export class ProfileController {
 
   @Get()
   async getMyProfile(@Req() req) {
+    // req.user.id comme dans validate de jwt.strategy.ts
     return this.profileService.getProfile(req.user.id, req.user.role);
   }
 

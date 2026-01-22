@@ -7,7 +7,7 @@ import { DoctorsComponent } from './features/doctors/components/doctors.componen
 import { AppointmentsComponent } from './features/appointments/appointments.component';
 import { DoctorAvailabilityComponent } from './features/appointments/doctor-availability/doctor-availability.component';
 import { BookAppointmentComponent } from './features/appointments/book-appointment/book-appointment.component';
-
+import { ProfileComponent } from './features/profile/profile/profile.component';
 export const routes: Routes = [
   // PUBLIC ROUTES
   { path: '', component: HomeComponent },
@@ -37,6 +37,13 @@ export const routes: Routes = [
     path: 'patient-consultations/:patientId/:appointmentId',
     component: PatientConsultationsComponent,
     canActivate: [authGuard]
+  },
+
+  {
+    path: 'profile',
+    component: ProfileComponent,
+    canActivate: [authGuard]
+
   },
 
   // FALLBACKS

@@ -12,6 +12,7 @@ import { ConsultationsModule } from './consultations/consultations.module';
 import { AuthModule } from './auth/auth.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { ProfileModule } from './profile/profile.module';
 @Module({
   imports: [
     // Configuration globale
@@ -30,7 +31,7 @@ import { NotificationsModule } from './notifications/notifications.module';
         port: configService.get<number>('database.port'),
         username: configService.get<string>('database.username'),
         password: configService.get<string>('database.password'),
-        database: configService.get<string>('database.name'), // Attention : 'database.name' ici
+        database: configService.get<string>('database.name'),
         autoLoadEntities: true,
         synchronize: true,
       }),
@@ -46,6 +47,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     AuthModule, 
     DashboardModule, 
     NotificationsModule,
+    ProfileModule,
   ],
 })
 export class AppModule {}
