@@ -2,12 +2,13 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Appointment } from '../models/appointment.interface';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AppointmentService {
-  private apiUrl = 'http://localhost:3000/appointments';
+  private apiUrl = `${environment}/appointments`;
 
   loading = signal(false);
   error = signal<string | null>(null);
@@ -52,6 +53,6 @@ export class AppointmentService {
       }
     });
   }
-  
+
 }
 export { Appointment } from '../models/appointment.interface';
