@@ -58,7 +58,6 @@ export class DoctorProfileService {
       specialty: createDoctorProfileDto.specialty,
       consultationDuration: createDoctorProfileDto.consultationDuration,
       office: createDoctorProfileDto.office,
-      phone: createDoctorProfileDto.phone,
       user: user, // Assigner l'objet User, pas juste l'ID
     });
 

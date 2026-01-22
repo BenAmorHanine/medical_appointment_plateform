@@ -20,13 +20,15 @@ export class CreateDoctorProfileDto {
   @Min(15)
   consultationDuration: number;
 
+  @IsNumber()
+  @Min(0)
+  consultationFee: number;
+
   @IsOptional()
   @IsString()
   office?: string;
 
-  @IsOptional()
-  @IsString()
-  phone?: string;
+
 
     @IsOptional()
   @IsString()

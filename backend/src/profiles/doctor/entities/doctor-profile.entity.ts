@@ -20,11 +20,12 @@ export class DoctorProfileEntity {
   @Column({ type: 'int', default: 30 })
   consultationDuration: number;
 
+  @Column({ type: 'float', default: 50.0 })
+  consultationFee: number;
+
   @Column({ nullable: true })
   office: string; // Cabinet / localisation
 
-  @Column({ nullable: true })
-  phone: string;
 
     @Column({ 
     type: 'varchar', 

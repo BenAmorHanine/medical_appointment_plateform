@@ -8,7 +8,11 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { UserEntity } from '../../../users/entities/user.entity';
-
+export enum UserGender {
+  MALE = 'male',
+  FEMALE = 'female',
+  UNKNOWN = 'unknown',
+}
 @Entity('patient_profiles')
 export class PatientProfileEntity {
   @PrimaryGeneratedColumn('uuid')
@@ -17,8 +21,8 @@ export class PatientProfileEntity {
   @Column({ type: 'int', nullable: true })
   age: number;
 
-  @Column({ nullable: true })
-  phone: string;
+ @Column({type: 'enum', enum: UserGender, default: UserGender.UNKNOWN,})
+  gender: UserGender;
 
   @Column({ unique: true })
   medicalRecordNumber: string; // Numéro de dossier (auto-généré)

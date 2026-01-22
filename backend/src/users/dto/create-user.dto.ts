@@ -25,4 +25,8 @@ export class CreateUserDto {
 
   @IsEnum(UserRole)
   role: UserRole;
+
+  @IsString() firstName: string;
+  @IsString() lastName: string;
+  @IsString() phone: string;
 }

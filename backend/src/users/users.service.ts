@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserEntity } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -31,9 +30,8 @@ export class UsersService {
     const user = this.repository.create(createUserDto);
     return await this.repository.save(user);
   }
-
   // Mettre à jour un utilisateur
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<UserEntity> {
+  async update(id: string, updateUserDto: Partial<CreateUserDto>): Promise<UserEntity> {
     const user = await this.repository.preload({
       id,
       ...updateUserDto,
@@ -41,10 +39,10 @@ export class UsersService {
 
     if (!user) {
       throw new NotFoundException(`Utilisateur avec l'id ${id} introuvable`);
-    }
-
+    } 
     return await this.repository.save(user);
   }
+
 
   // Supprimer un utilisateur
   async remove(id: string): Promise<UserEntity> {

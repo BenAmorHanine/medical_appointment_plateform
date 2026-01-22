@@ -22,11 +22,21 @@ export class UserEntity {
   @Column({ unique: true, length: 50 })
   username: string;
 
+  @Column({ length: 100, nullable: true })
+  firstName: string;
+
+  @Column({ length: 100, nullable: true })
+  lastName: string;
+
+
   @Column()
   password: string;
 
   @Column({ unique: true })
   email: string;
+
+  @Column({ nullable: true })
+  phone: string;
 
   @Column({
     type: 'enum',
