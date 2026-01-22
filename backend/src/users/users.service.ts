@@ -1,14 +1,18 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UserEntity } from './entities/user.entity';
+import { UserEntity, UserRole } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
+import { DoctorProfileService } from '../profiles/doctor/doctor-profile.service';
+import { PatientProfileService } from '../profiles/patient/patient-profile.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(UserEntity)
     private readonly repository: Repository<UserEntity>,
+    private readonly doctorProfileService: DoctorProfileService,
+    private readonly patientProfileService: PatientProfileService,
   ) {}
 
   // Récupérer tous les utilisateurs
@@ -28,7 +32,24 @@ export class UsersService {
   // Créer un utilisateur
   async create(createUserDto: CreateUserDto): Promise<UserEntity> {
     const user = this.repository.create(createUserDto);
-    return await this.repository.save(user);
+    const savedUser = await this.repository.save(user);
+
+    // Créer automatiquement le profil selon le rôle
+    if (savedUser.role === UserRole.DOCTOR) {
+      await this.doctorProfileService.create({
+        userId: savedUser.id,
+        specialty: 'General Practitioner', // Valeur par défaut
+        consultationDuration: 30, // Valeur par défaut
+        consultationFee: 50.0, // Valeur par défaut
+        office: 'Unknown', // Valeur par défaut
+      });
+    } else if (savedUser.role === UserRole.PATIENT) {
+      await this.patientProfileService.create({
+        userId: savedUser.id,
+      });
+    }
+
+    return savedUser;
   }
   // Mettre à jour un utilisateur
   async update(id: string, updateUserDto: Partial<CreateUserDto>): Promise<UserEntity> {

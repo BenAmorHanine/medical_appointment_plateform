@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { UserEntity, UserRole } from '../users/entities/user.entity'; 
 import { RegisterDto } from './dto/register.dto';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class AuthService {
@@ -12,6 +13,7 @@ export class AuthService {
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
     private jwtService: JwtService,
+    private usersService: UsersService,
   ) {}
 
   async validateUser(email: string, pass: string): Promise<any> {
@@ -62,14 +64,16 @@ export class AuthService {
     throw new ConflictException('Username already exists');
     }
 
-    const user = this.userRepository.create({
+    const savedUser = await this.usersService.create({
       username: registerDto.username,
       email: registerDto.email,
       password: registerDto.password,
       role: registerDto.role,
+      firstName: registerDto.firstName,
+      lastName: registerDto.lastName,
+      phone: registerDto.phone,
     });
 
-    const savedUser = await this.userRepository.save(user);
     const { password, ...result } = savedUser;
 
     const payload = { sub: result.id, email: result.email, role: result.role };

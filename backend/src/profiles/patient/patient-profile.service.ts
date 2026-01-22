@@ -4,12 +4,15 @@ import { Repository } from 'typeorm';
 import { PatientProfileEntity } from './entities/patient-profile.entity';
 import { CreatePatientProfileDto } from './dto/create-patient-profile.dto';
 import { UpdatePatientProfileDto } from './dto/update-patient-profile.dto';
+import { UserEntity } from '../../users/entities/user.entity'; 
 
 @Injectable()
 export class PatientProfileService {
   constructor(
     @InjectRepository(PatientProfileEntity)
     private readonly repository: Repository<PatientProfileEntity>,
+    @InjectRepository(UserEntity) 
+    private readonly userRepository: Repository<UserEntity>,
   ) {}
 
   private generateMedicalRecordNumber(): string {
@@ -35,13 +38,27 @@ export class PatientProfileService {
     return profile;
   }
 
-  async create(
-    createPatientProfileDto: CreatePatientProfileDto,
-  ): Promise<PatientProfileEntity> {
-    const profile = this.repository.create(createPatientProfileDto);
-    profile.medicalRecordNumber = this.generateMedicalRecordNumber();
-    return await this.repository.save(profile);
+async create(
+  createPatientProfileDto: CreatePatientProfileDto,
+): Promise<PatientProfileEntity> {
+
+  const user = await this.userRepository.findOne({
+    where: { id: createPatientProfileDto.userId },
+  });
+
+  if (!user) {
+    throw new NotFoundException(`Utilisateur avec l'id ${createPatientProfileDto.userId} introuvable`);
   }
+
+  const profile = this.repository.create({
+    ...createPatientProfileDto,
+    medicalRecordNumber: this.generateMedicalRecordNumber(),
+    user: user,
+  });
+
+  return await this.repository.save(profile);
+}
+
 
   async update(
     id: string,

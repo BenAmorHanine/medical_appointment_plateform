@@ -30,7 +30,7 @@ export class CreateDoctorProfileDto {
 
 
 
-    @IsOptional()
+  @IsOptional()
   @IsString()
   image?: string;
 
