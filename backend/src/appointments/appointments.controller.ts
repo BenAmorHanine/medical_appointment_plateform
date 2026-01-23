@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UsePipes, ValidationPipe, Delete, Param, Query } from '@nestjs/common'; 
+import { Controller, Get, Post, Body, UsePipes, ValidationPipe, Delete, Param, Patch } from '@nestjs/common';
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 
@@ -12,12 +12,8 @@ export class AppointmentsController {
     return this.service.create(dto);
   }
 
-  
   @Get()
-  findAll(@Query('patientId') patientId?: string) {
-    if (patientId) {
-      return this.service.findByPatient(patientId);
-    }
+  findAll() {
     return this.service.findAll();
   }
 
@@ -31,10 +27,13 @@ export class AppointmentsController {
     return this.service.findOne(id);
   }
 
-  
-
   @Delete(':id')
   async cancel(@Param('id') id: string) {
     return await this.service.cancel(id);
+  }
+
+  @Patch(':id/done')
+  async markAsDone(@Param('id') id: string) {
+    return await this.service.markAsDone(id);
   }
 }

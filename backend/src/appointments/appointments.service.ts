@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
-import { EventEmitter2 } from '@nestjs/event-emitter'; 
+import { EventEmitter2 } from '@nestjs/event-emitter'; // ← AJOUTER
 import { AppointmentEntity, AppointmentStatus } from './entities/appointment.entity';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { AvailabilityEntity } from '../availability/entities/availability.entity';
@@ -9,7 +9,6 @@ import {
   AppointmentCreatedEvent,
   AppointmentCancelledEvent,
 } from './events/appointment.events';
-
 @Injectable()
 export class AppointmentsService {
   constructor(
@@ -24,6 +23,9 @@ export class AppointmentsService {
     return await this.repository.find();
   }
 
+  /**
+   * Récupère un rendez-vous par ID avec le doctorId (depuis l'availability)
+   */
   async findOne(id: string): Promise<AppointmentEntity & { doctorId: string }> {
     const appointment = await this.repository.findOne({
       where: { id },
@@ -40,47 +42,28 @@ export class AppointmentsService {
     return { ...appointment, doctorId: availability.doctorId };
   }
 
-async findByDoctor(doctorId: string): Promise<Array<AppointmentEntity & { doctorName: string, patientName: string }>> {
-  const availabilities = await this.availabilityRepository.find({ 
-    where: { doctorId },
-    relations: ['doctor', 'doctor.user']
-  });
-  
-  if (availabilities.length === 0) return [];
-
-  const availabilityIds = availabilities.map(a => a.id);
-  const appointments = await this.repository.find({ 
-    where: { availabilityId: In(availabilityIds) } 
-  });
-
-  const reserved: Array<AppointmentEntity & { doctorName: string, patientName: string }> = [];
-
-  for (const appointment of appointments.filter(a => a.status === AppointmentStatus.RESERVED)) {
-    const availability = await this.availabilityRepository.findOne({
-      where: { id: appointment.availabilityId },
-      relations: ['doctor', 'doctor.user']
+  async findByDoctor(doctorId: string): Promise<AppointmentEntity[]> {
+    // Récupérer les availabilities du médecin
+    const availabilities = await this.availabilityRepository.find({
+      where: { doctorId },
     });
-
-  
-    const patientName = `Patient ${appointment.patientId.substring(0, 8)}...`;
     
-    if (availability && availability.doctor && availability.doctor.user) {
-      reserved.push({
-        ...appointment,
-        doctorName: availability.doctor.user.username,
-        patientName: patientName
-      });
+    if (availabilities.length === 0) {
+      return [];
     }
+    
+    const availabilityIds = availabilities.map(a => a.id);
+    
+    return await this.repository.find({
+      where: { availabilityId: In(availabilityIds) },
+      order: { appointmentDate: 'ASC', startTime: 'ASC' },
+    });
   }
-
-  return reserved;
-}
-
-
-async create(createDto: CreateAppointmentDto): Promise<AppointmentEntity> {
+  async create(createDto: CreateAppointmentDto): Promise<AppointmentEntity> {
+  // Vérifier availability avec relations
   const availability = await this.availabilityRepository.findOne({
     where: { id: createDto.availabilityId },
-    relations: ['doctor', 'doctor.user'],
+    relations: ['doctor', 'doctor.user'], // ← Charger doctor + user
   });
   
   if (!availability) {
@@ -90,13 +73,9 @@ async create(createDto: CreateAppointmentDto): Promise<AppointmentEntity> {
     throw new BadRequestException('Créneau complet');
   }
 
-
-  const appointmentDate = new Date(availability.date);
-  appointmentDate.setUTCHours(0, 0, 0, 0); 
-  appointmentDate.setHours(12, 0, 0, 0); 
-
+  // Créer appointment
   const appointment = this.repository.create({
-    appointmentDate,
+    appointmentDate: availability.date,
     startTime: availability.startTime,
     endTime: availability.endTime,
     status: AppointmentStatus.RESERVED,
@@ -104,82 +83,81 @@ async create(createDto: CreateAppointmentDto): Promise<AppointmentEntity> {
     availabilityId: createDto.availabilityId,
   });
 
+  const saved = await this.repository.save(appointment);
+  
+  // Update availability
+  availability.bookedSlots++;
+  await this.availabilityRepository.save(availability);
 
-    const saved = await this.repository.save(appointment);
-    
-    availability.bookedSlots++;
-    await this.availabilityRepository.save(availability);
+  // 🔥 ÉMETTRE L'ÉVÉNEMENT avec userId du doctor
+  console.log('🚀 Emitting appointment.created event...');
+  console.log('📍 Doctor userId:', availability.doctor.user.id);
+  this.eventEmitter.emit(
+    'appointment.created',
+    new AppointmentCreatedEvent(
+      saved.id,
+      saved.patientId,
+      availability.doctor.user.id, // ← userId du doctor (pas doctorProfileId)
+      saved.appointmentDate,
+    ),
+  );
 
-    this.eventEmitter.emit(
-      'appointment.created',
-      new AppointmentCreatedEvent(
-        saved.id,
-        saved.patientId,
-        availability.doctor.user.id, 
-        saved.appointmentDate,
-      ),
-    );
-
-    return saved;
+  return saved;
+}
+    async cancel(appointmentId: string): Promise<AppointmentEntity> {
+  const appointment = await this.repository.findOne({ 
+    where: { id: appointmentId } 
+  });
+  
+  if (!appointment) throw new NotFoundException('RDV introuvable');
+  if (appointment.status === AppointmentStatus.DONE) {  
+    throw new BadRequestException('RDV terminé impossible à annuler');
   }
 
-  async cancel(appointmentId: string): Promise<AppointmentEntity> {
-    const appointment = await this.repository.findOne({ 
-      where: { id: appointmentId } 
+  appointment.status = AppointmentStatus.CANCELLED;    
+  await this.repository.save(appointment);
+
+  // Charger availability avec relations
+  const availability = await this.availabilityRepository.findOne({
+    where: { id: appointment.availabilityId },
+    relations: ['doctor', 'doctor.user'], // ← Ajouter relations
+  });
+
+  if (availability) {
+    // Libérer le créneau
+    availability.bookedSlots = Math.max(0, availability.bookedSlots - 1);
+    await this.availabilityRepository.save(availability);
+
+    // Émettre l'événement avec userId du doctor
+    console.log('🚀 Emitting appointment.cancelled event...');
+    this.eventEmitter.emit(
+      'appointment.cancelled',
+      new AppointmentCancelledEvent(
+        appointment.id,
+        appointment.patientId,
+        availability.doctor.user.id, // ← userId du doctor
+      ),
+    );
+  }
+
+  return appointment;
+}
+
+  /**
+   * Marque un rendez-vous comme terminé (done)
+   */
+  async markAsDone(appointmentId: string): Promise<AppointmentEntity> {
+    const appointment = await this.repository.findOne({
+      where: { id: appointmentId },
     });
-    
-    if (!appointment) throw new NotFoundException('RDV introuvable');
-    if (appointment.status === AppointmentStatus.DONE) {  
-      throw new BadRequestException('RDV terminé impossible à annuler');
+
+    if (!appointment) {
+      throw new NotFoundException('Rendez-vous introuvable');
     }
 
-    appointment.status = AppointmentStatus.CANCELLED;      
+    appointment.status = AppointmentStatus.DONE;
     await this.repository.save(appointment);
-
-    const availability = await this.availabilityRepository.findOne({
-      where: { id: appointment.availabilityId },
-      relations: ['doctor', 'doctor.user'], 
-    });
-
-    if (availability) {
-      availability.bookedSlots = Math.max(0, availability.bookedSlots - 1);
-      await this.availabilityRepository.save(availability);
-      this.eventEmitter.emit(
-        'appointment.cancelled',
-        new AppointmentCancelledEvent(
-          appointment.id,
-          appointment.patientId,
-          availability.doctor.user.id, 
-        ),
-      );
-    }
 
     return appointment;
   }
-
-async findByPatient(patientId: string) {
-  const appointments = await this.repository.find({
-    where: { patientId },
-  });
-
-  const result: Array<AppointmentEntity & { doctorName: string }> = [];
-
-  for (const appointment of appointments) {
-    const availability = await this.availabilityRepository.findOne({
-      where: { id: appointment.availabilityId },
-      relations: ['doctor', 'doctor.user'],
-    });
-
-    if (availability && availability.doctor && availability.doctor.user) {
-      result.push({
-        ...appointment,
-        doctorName: availability.doctor.user.username, 
-      });
-    }
-  }
-
-  return result;
-}
-
-
 }
