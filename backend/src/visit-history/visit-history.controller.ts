@@ -14,7 +14,7 @@ export class VisitHistoryController {
   @UseGuards(JwtAuthGuard)
   getMyHistory(@GetUser() user: any) {
     // userId vient du JWT (payload)
-    return this.visitHistoryService.getHistoryByUserId(user.userId);
+    return this.visitHistoryService.getHistoryByUserId(user.id);
   }
 
  
@@ -27,7 +27,7 @@ getPatientHistory(
 ) {
   return this.visitHistoryService.getHistoryForDoctor(
     patientId,
-    user.userId, 
+    user.id,  
   );
 }
 
