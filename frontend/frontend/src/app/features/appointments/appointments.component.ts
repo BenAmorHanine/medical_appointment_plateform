@@ -167,18 +167,19 @@ export class AppointmentsComponent implements OnInit {
     });
   }
 
-  markAppointmentAsDone(appointment: any) {
-    // Marquer comme "done" puis naviguer vers la page de consultation
-    this.appointmentService.markAsDone(appointment.id).subscribe({
-      next: () => {
-        // Naviguer vers la page de consultation
-        this.router.navigate(['/patient-consultations', appointment.patientId, appointment.id]);
-      },
-      error: (err) => {
-        console.error('Erreur lors de la mise à jour du statut:', err);
-        // Naviguer quand même vers la page de consultation
-        this.router.navigate(['/patient-consultations', appointment.patientId, appointment.id]);
-      }
+  navigateToConsultation(appointment: any) {
+    // Naviguer vers la page de consultation en utilisant le state pour passer l'appointment
+    // Cela évite d'exposer les IDs dans l'URL
+    console.log('Navigation vers consultation avec appointment:', appointment);
+    this.router.navigate(['/consultation'], {
+      state: { appointment }
+    });
+  }
+
+  navigateToDetails(appointment: any) {
+    // Naviguer vers les détails de consultation en utilisant le state
+    this.router.navigate(['/consultation'], {
+      state: { appointment }
     });
   }
 

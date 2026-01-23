@@ -168,10 +168,12 @@ export class ConsultationsService {
   async create(
     createConsultationDto: CreateConsultationDto,
   ): Promise<ConsultationEntity> {
+    // 1️⃣ Calculer la durée selon le type
     const duration =
       createConsultationDto.duration ||
       this.calculateDuration(createConsultationDto.type);
 
+    // 2️⃣ Créer l'objet consultation
     const consultation = this.repository.create({
       patientId: createConsultationDto.patientId,
       doctorId: createConsultationDto.doctorId,
@@ -182,22 +184,23 @@ export class ConsultationsService {
       joursRepos: createConsultationDto.joursRepos || null,
     });
 
+    // 3️⃣ Sauvegarder la consultation
     const savedConsultation = await this.repository.save(consultation);
 
-    // Générer les PDFs après la création
+    // 4️⃣ Générer les PDF
     const ordonnanceUrl = await this.generateOrdonnancePDF(savedConsultation);
     const certificatUrl = await this.generateCertificatPDF(savedConsultation);
-    
+
     savedConsultation.ordonnanceUrl = ordonnanceUrl;
     savedConsultation.certificatUrl = certificatUrl;
     await this.repository.save(savedConsultation);
 
-    // Mettre à jour le statut du rendez-vous en "done" si un appointmentId est fourni
+    // 5️⃣ ✅ MARQUER LE RENDEZ-VOUS COMME DONE
     if (createConsultationDto.appointmentId) {
       const appointment = await this.appointmentRepository.findOne({
         where: { id: createConsultationDto.appointmentId },
       });
-      
+
       if (appointment) {
         appointment.status = AppointmentStatus.DONE;
         await this.appointmentRepository.save(appointment);

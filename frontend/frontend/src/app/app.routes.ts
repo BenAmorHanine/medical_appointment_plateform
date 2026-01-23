@@ -40,7 +40,7 @@ export const routes: Routes = [
   canActivate: [authGuard],  // Patient connecté
 },
   {
-    path: 'patient-consultations/:patientId/:appointmentId',
+    path: 'consultation',
     component: PatientConsultationsComponent,
     canActivate: [authGuard]
   },
