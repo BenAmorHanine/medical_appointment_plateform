@@ -12,7 +12,7 @@ import { ConsultationType } from '../entities/consultation.entity';
 export class CreateConsultationDto {
   @IsNotEmpty()
   @IsUUID()
-  patientProfileId: string;
+  patientId: string;
 
   @IsNotEmpty()
   @IsUUID()

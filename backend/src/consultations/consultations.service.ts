@@ -169,7 +169,7 @@ export class ConsultationsService {
       }
 
       // Générer PDFs en parallèle
-      const names = await this.getNames(dto.doctorId, dto.patientProfileId);
+      const names = await this.getNames(dto.doctorId, dto.patientId);
       const [ordonnanceUrl, certificatUrl] = await Promise.all([
         this.createPDF(
           `ordonnance-${consultation.id}.pdf`,
@@ -213,9 +213,9 @@ export class ConsultationsService {
     });
   }
 
-  async findByPatient(patientProfileId: string) {
+  async findByPatient(patientId: string) {
     return this.repo.find({
-      where: { patientProfileId },
+      where: { patientId },
       order: { createdAt: 'DESC' },
     });
   }

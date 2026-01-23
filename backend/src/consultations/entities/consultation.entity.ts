@@ -18,7 +18,7 @@ export class ConsultationEntity {
   id: string;
 
   @Column({ type: 'uuid' })
-  patientProfileId: string;
+  patientId: string;
 
   @Column({ type: 'uuid' })
   doctorId: string;
