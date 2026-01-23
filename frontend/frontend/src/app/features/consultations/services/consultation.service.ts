@@ -40,7 +40,7 @@ export interface Consultation {
   providedIn: 'root',
 })
 export class ConsultationService {
-  private apiUrl = `${environment}/consultations`;
+  private apiUrl = `${environment.apiUrl}/consultations`;
 
   constructor(private http: HttpClient) {}
 

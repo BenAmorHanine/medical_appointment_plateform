@@ -25,7 +25,7 @@ export interface PatientProfile {
   providedIn: 'root',
 })
 export class PatientService {
-  private apiUrl = `${environment}/patient-profiles`;
+  private apiUrl = `${environment.apiUrl}/patient-profiles`;
 
   constructor(private http: HttpClient) {}
 

@@ -8,7 +8,7 @@ import { environment } from '../../../../environments/environment';
   providedIn: 'root',
 })
 export class AppointmentService {
-  private apiUrl = `${environment}/appointments`;
+  private apiUrl = `${environment.apiUrl}/appointments`;
 
   loading = signal(false);
   error = signal<string | null>(null);
