@@ -40,6 +40,10 @@ export class AppointmentService {
     return this.http.delete<Appointment>(`${this.apiUrl}/${id}`);
   }
 
+  markAsDone(id: string): Observable<Appointment> {
+    return this.http.patch<Appointment>(`${this.apiUrl}/${id}/done`, {});
+  }
+
   loadAppointmentsForPatient(patientId: string) {
     this.loading.set(true);
     this.getAppointmentsByPatient(patientId).subscribe({

@@ -5,7 +5,7 @@ export interface Appointment {
   appointmentDate: string;
   startTime: string;
   endTime: string;
-  status: 'RESERVED' | 'CANCELLED' | 'DONE';
+  status: 'reserved' | 'cancelled' | 'done' | 'RESERVED' | 'CANCELLED' | 'DONE'; // Backend renvoie en minuscules
   doctorId: string;
   createdAt: string;
 }
