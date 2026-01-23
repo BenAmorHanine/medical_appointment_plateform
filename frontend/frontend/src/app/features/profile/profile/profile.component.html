@@ -59,7 +59,6 @@
                     <div class="p-4 bg-primary bg-opacity-10 rounded-4 border border-primary border-opacity-25">
                       <p><strong>Specialty:</strong> {{ user().profile?.specialty || 'N/A' }}</p>
                       <p><strong>Office Location:</strong> {{ user().profile?.office || 'N/A' }}</p>
-                      <p class="mb-0"><strong>Bio:</strong> {{ user().profile?.bio || 'No bio provided yet.' }}</p>
                     </div>
                   }
 
@@ -111,9 +110,7 @@
                       <label class="form-label text-primary">Office</label>
                       <input type="text" name="office" [ngModel]="user().profile?.office" class="form-control">
                     </div>
-                    <div class="col-12">
-                      <label class="form-label text-primary">Biography</label>
-                    </div>
+
                   }
 
                   @if (user().role === 'patient') {

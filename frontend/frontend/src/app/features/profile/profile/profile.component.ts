@@ -33,7 +33,8 @@ export class ProfileComponent implements OnInit {
     this.isEditing.set(!this.isEditing());
   }
 
-  onSave(updatedData: any) {
+
+   onSave(updatedData: any) {
     this.profileService.updateProfile(updatedData).subscribe({
       next: (res) => {
         this.user.set(res);
@@ -42,5 +43,32 @@ export class ProfileComponent implements OnInit {
       error: (err) => alert('Update failed!')
     });
   }
+ /**
+  onSave(formValue: any) {
+
+    const payload = {
+      firstName: formValue.firstName,
+      lastName: formValue.lastName,
+      phone: formValue.phone,
+
+      profile: {
+        ...this.user().profile, // keep existing fields
+        image: formValue.image, // ✅ FIX
+        specialty: formValue.specialty,
+        office: formValue.office,
+        age: formValue.age,
+        gender: formValue.gender
+      }
+    };
+
+    this.profileService.updateProfile(payload).subscribe({
+      next: (res) => {
+        this.user.set(res);
+        this.isEditing.set(false);
+      },
+      error: () => alert('Update failed!')
+    });
+  }
+    */
 
 }
