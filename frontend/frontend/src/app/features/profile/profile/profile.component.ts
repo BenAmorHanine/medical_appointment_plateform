@@ -33,7 +33,46 @@ export class ProfileComponent implements OnInit {
     this.isEditing.set(!this.isEditing());
   }
 
+  // NEW
+private stripUndefined(obj: any) {
+  return Object.fromEntries(
+    Object.entries(obj).filter(
+      ([_, v]) => v !== undefined && v !== ''
+    )
+  );
+}
 
+// UPDATED onSave()
+onSave(formValue: any) {
+  const payload: any = {
+    firstName: formValue.firstName,
+    lastName: formValue.lastName,
+    phone: formValue.phone,
+  };
+
+  if (this.user().role === 'doctor') {
+    payload.specialty = formValue.specialty;
+    payload.office = formValue.office;
+    payload.consultationDuration = formValue.consultationDuration !== undefined ? Number(formValue.consultationDuration) : undefined;
+    payload.consultationFee = formValue.consultationFee !== undefined ? Number(formValue.consultationFee) : undefined;
+  } else {
+    payload.age = formValue.age !== undefined ? Number(formValue.age) : undefined;
+    payload.gender = formValue.gender;
+  }
+
+  this.profileService.updateProfile(payload).subscribe({
+    next: (res) => {
+      this.user.set(res);
+      this.isEditing.set(false);
+    },
+    error: (err) => {
+      console.error(err);
+      alert('Update failed');
+    },
+  });
+}
+
+/**
    onSave(updatedData: any) {
     this.profileService.updateProfile(updatedData).subscribe({
       next: (res) => {
@@ -43,6 +82,7 @@ export class ProfileComponent implements OnInit {
       error: (err) => alert('Update failed!')
     });
   }
+    */
  /**
   onSave(formValue: any) {
 
