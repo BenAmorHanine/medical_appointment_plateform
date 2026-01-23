@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal, computed } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { VisitHistoryService } from '../../service/visit-history.service';
-import { VisitHistoryResponse } from '../../model/visit-history.model';
+import { VisitHistoryResponse, VisitHistoryItem } from '../../model/visit-history.model';
 
 @Component({
   selector: 'app-visit-history',
@@ -8,35 +9,45 @@ import { VisitHistoryResponse } from '../../model/visit-history.model';
   styleUrls: ['./visit-history.component.css'],
 })
 export class VisitHistoryComponent implements OnInit {
-  loading = true;
-  error: string | null = null;
-  data?: VisitHistoryResponse;
 
-  constructor(private historyService: VisitHistoryService) {}
+  loading = signal(true);
+  error = signal<string | null>(null);
+  data = signal<VisitHistoryResponse | null>(null);
+
+  presentVisits = computed<VisitHistoryItem[]>(() =>
+    this.data()?.history.filter(h => h.status === 'EFFECTUE') ?? []
+  );
+
+  constructor(
+    private historyService: VisitHistoryService,
+    private route: ActivatedRoute
+  ) {}
 
   ngOnInit(): void {
-    this.historyService.getMyHistory().subscribe({
+    const patientId = this.route.snapshot.paramMap.get('patientId');
+
+    const request$ = patientId
+      ? this.historyService.getPatientHistory(patientId) //  doctor
+      : this.historyService.getMyHistory();              //  patient
+
+    request$.subscribe({
       next: (res) => {
-        this.data = res;
-        this.loading = false;
+        this.data.set(res);
+        this.loading.set(false);
       },
       error: (err) => {
-        this.error = err.error?.message || 'Failed to load history';
-        this.loading = false;
+        this.error.set(err.error?.message || 'Failed to load history');
+        this.loading.set(false);
       },
     });
   }
 
   statusClass(status: string): string {
     switch (status) {
-      case 'EFFECTUE':
-        return 'badge bg-success';
-      case 'ANNULE':
-        return 'badge bg-warning';
-      case 'ABSENT':
-        return 'badge bg-danger';
-      default:
-        return 'badge bg-secondary';
+      case 'EFFECTUE': return 'badge bg-success';
+      case 'ANNULE':   return 'badge bg-warning';
+      case 'ABSENT':   return 'badge bg-danger';
+      default:         return 'badge bg-secondary';
     }
   }
 }

@@ -1,41 +1,40 @@
 <section class="container py-5">
   <h2 class="mb-4 text-center">
-    My <span class="gradient-text">Visit History</span>
+    <span class="gradient-text">Visit History</span>
   </h2>
 
-  @if (loading) {
-    <!-- Loading -->
+  @if (loading()) {
     <div class="text-center">
       <div class="spinner-border text-primary"></div>
     </div>
   }
 
-  @else if (error) {
-    <!-- Error -->
+  @else if (error()) {
     <div class="alert alert-danger">
-      {{ error }}
+      {{ error() }}
     </div>
   }
 
-  @else if (data) {
+  @else if (data()) {
 
-    @if (data.blocked) {
+    @if (data()!.blocked) {
       <div class="alert alert-danger text-center fw-bold">
-        ⚠️ Your account is blocked due to repeated absences
+        ⚠️ Patient account is blocked due to repeated absences
       </div>
     }
 
     <p class="text-muted text-center">
-      Absences: {{ data.absenceCount }}
+      Absences: {{ data()!.absenceCount }}
     </p>
 
-    @if (data.history.length === 0) {
+    @if (data()!.history.length === 0) {
       <div class="alert alert-info text-center">
         No consultations found.
       </div>
     }
 
     @else {
+      <!-- ================= TABLE ================= -->
       <table class="table table-hover shadow-sm">
         <thead class="table-light">
           <tr>
@@ -46,9 +45,9 @@
         </thead>
 
         <tbody>
-          @for (item of data.history; track item.consultationId) {
+          @for (item of data()!.history; track item.consultationId) {
             <tr>
-              <td>{{ item.date | date: 'mediumDate' }}</td>
+              <td>{{ item.date | date:'mediumDate' }}</td>
               <td>{{ item.type | titlecase }}</td>
               <td>
                 <span [class]="statusClass(item.status)">
@@ -59,6 +58,40 @@
           }
         </tbody>
       </table>
+
+      <!-- ================= TIMELINE ================= -->
+      <h5 class="mt-5 mb-4 text-center">
+        Visits <span class="gradient-text">Timeline</span>
+      </h5>
+
+      @if (presentVisits().length === 0) {
+        <div class="alert alert-info text-center">
+          No completed visits yet.
+        </div>
+      }
+
+      @else {
+        <div class="timeline">
+          @for (item of presentVisits(); track item.consultationId) {
+            <div class="timeline-item d-flex align-items-start mb-4">
+
+              <div class="timeline-date me-4 fw-bold text-primary">
+                {{ item.date | date:'dd MMM yyyy' }}
+              </div>
+
+              <div class="timeline-dot me-3"></div>
+
+              <div class="timeline-content">
+                <strong class="text-capitalize">{{ item.type }}</strong>
+                <div class="text-success small">
+                  Consultation completed
+                </div>
+              </div>
+
+            </div>
+          }
+        </div>
+      }
     }
   }
 </section>

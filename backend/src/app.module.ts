@@ -13,6 +13,8 @@ import { AuthModule } from './auth/auth.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ProfileModule } from './profile/profile.module';
+import { VisitHistoryModule } from './visit-history/visit-history.module';
+
 @Module({
   imports: [
     // Configuration globale
@@ -48,6 +50,7 @@ import { ProfileModule } from './profile/profile.module';
     DashboardModule, 
     NotificationsModule,
     ProfileModule,
+    VisitHistoryModule,
   ],
 })
 export class AppModule {}

@@ -19,7 +19,12 @@ export const routes: Routes = [
     path: 'auth',
     loadChildren: () => import('./features/auth/auth-routing.module').then(m => m.AuthRoutingModule)
   },
-
+{
+    path: 'history',
+    loadChildren: () =>
+      import('./features/visit-history/visit-history.module')
+        .then(m => m.VisitHistoryModule),
+  },
   // PROTECTED ROUTES (Auth guard)
   { path: 'appointments', component: AppointmentsComponent },
     {

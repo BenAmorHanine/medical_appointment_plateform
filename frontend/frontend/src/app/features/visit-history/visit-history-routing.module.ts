@@ -8,7 +8,10 @@ const routes: Routes = [
   {
     path: '',
     component: VisitHistoryComponent,
-    canActivate: [authGuard],
+  },
+  {
+    path: 'patient/:patientId',
+    component: VisitHistoryComponent,
   },
 ];
 
