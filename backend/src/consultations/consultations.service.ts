@@ -1,305 +1,246 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { ConsultationEntity, ConsultationType } from './entities/consultation.entity';
+import { Repository, DataSource } from 'typeorm';
+import {
+  ConsultationEntity,
+  ConsultationType,
+} from './entities/consultation.entity';
 import { CreateConsultationDto } from './dto/create-consultation.dto';
-import { AppointmentEntity, AppointmentStatus } from '../appointments/entities/appointment.entity';
+import {
+  AppointmentEntity,
+  AppointmentStatus,
+} from '../appointments/entities/appointment.entity';
 import { DoctorProfileEntity } from '../profiles/doctor/entities/doctor-profile.entity';
 import { PatientProfileEntity } from '../profiles/patient/entities/patient-profile.entity';
 import * as fs from 'fs';
+import { promises as fsPromises } from 'fs';
 import * as path from 'path';
 import PDFDocument from 'pdfkit';
 
 @Injectable()
 export class ConsultationsService {
+  private readonly UPLOADS_DIR = path.join(
+    process.cwd(),
+    'uploads',
+    'consultations',
+  );
+  private readonly DURATIONS: Record<ConsultationType, number> = {
+    [ConsultationType.STANDARD]: 30,
+    [ConsultationType.CONTROLE]: 15,
+    [ConsultationType.URGENCE]: 45,
+  };
+
   constructor(
     @InjectRepository(ConsultationEntity)
-    private readonly repository: Repository<ConsultationEntity>,
+    private repo: Repository<ConsultationEntity>,
     @InjectRepository(AppointmentEntity)
-    private readonly appointmentRepository: Repository<AppointmentEntity>,
+    private appointmentRepo: Repository<AppointmentEntity>,
     @InjectRepository(DoctorProfileEntity)
-    private readonly doctorProfileRepository: Repository<DoctorProfileEntity>,
+    private doctorRepo: Repository<DoctorProfileEntity>,
     @InjectRepository(PatientProfileEntity)
-    private readonly patientProfileRepository: Repository<PatientProfileEntity>,
-  ) {}
+    private patientRepo: Repository<PatientProfileEntity>,
+    private dataSource: DataSource,
+  ) {
+    fsPromises
+      .mkdir(this.UPLOADS_DIR, { recursive: true })
+      .catch(console.error);
+  }
 
-  /**
-   * Calcule la durée de consultation selon le type
-   */
-  private calculateDuration(type: ConsultationType): number {
-    const durationMap: Record<ConsultationType, number> = {
-      [ConsultationType.STANDARD]: 30,
-      [ConsultationType.CONTROLE]: 15,
-      [ConsultationType.URGENCE]: 45,
+  // Charge les noms du médecin et patient en 1 requête
+  private async getNames(doctorId: string, patientId: string) {
+    const [doctor, patient] = await Promise.all([
+      this.doctorRepo.findOne({ where: { id: doctorId }, relations: ['user'] }),
+      this.patientRepo.findOne({
+        where: { id: patientId },
+        relations: ['user'],
+      }),
+    ]);
+    return {
+      doctor: doctor?.user?.username || 'Dr. Inconnu',
+      patient: patient?.user?.username || 'Patient Inconnu',
     };
-    return durationMap[type] || 30;
   }
 
-  /**
-   * Génère le PDF de l'ordonnance
-   */
-  private async generateOrdonnancePDF(consultation: ConsultationEntity): Promise<string> {
-    const uploadsDir = path.join(process.cwd(), 'uploads', 'consultations');
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
-    }
-
-    const pdfFileName = `ordonnance-${consultation.id}.pdf`;
-    const pdfPath = path.join(uploadsDir, pdfFileName);
-
-    // Récupérer les noms du médecin et du patient
-    const doctorProfile = await this.doctorProfileRepository.findOne({
-      where: { id: consultation.doctorId },
-      relations: ['user'],
-    });
-    const patientProfile = await this.patientProfileRepository.findOne({
-      where: { id: consultation.patientId },
-      relations: ['user'],
-    });
-
-    const doctorName = doctorProfile?.user?.username || 'Dr. Inconnu';
-    const patientName = patientProfile?.user?.username || 'Patient Inconnu';
-
+  // Générateur PDF générique
+  private async createPDF(
+    fileName: string,
+    builder: (doc: typeof PDFDocument) => void,
+  ): Promise<string> {
+    const filePath = path.join(this.UPLOADS_DIR, fileName);
     return new Promise((resolve, reject) => {
       const doc = new PDFDocument({ margin: 50 });
-      const stream = fs.createWriteStream(pdfPath);
+      const stream = fs.createWriteStream(filePath);
       doc.pipe(stream);
-
-      // En-tête
-      doc.fontSize(20).text('ORDONNANCE MÉDICALE', { align: 'center' });
-      doc.moveDown();
-
-      // Informations
-      doc.fontSize(12);
-      doc.text(`Date: ${consultation.createdAt.toLocaleDateString('fr-FR')}`);
-      doc.text(`Type de consultation: ${consultation.type}`);
-      doc.text(`Durée: ${consultation.duration} minutes`);
-      doc.moveDown();
-
-      doc.text(`Médecin: ${doctorName}`);
-      doc.text(`Patient: ${patientName}`);
-      doc.moveDown();
-
-      // Prescriptions
-      doc.fontSize(14).text('PRESCRIPTIONS:', { underline: true });
-      doc.fontSize(12);
-      if (consultation.medicament) {
-        doc.text(`- ${consultation.medicament}`);
-      } else {
-        doc.text('- Aucun médicament prescrit');
-      }
-      doc.moveDown();
-
-      // Signature
-      doc.text('Signature électronique', { align: 'right' });
-      doc.text(doctorName, { align: 'right' });
-
+      builder(doc);
       doc.end();
-      stream.on('finish', () => resolve(`/uploads/consultations/${pdfFileName}`));
+      stream.on('finish', () => resolve(`/uploads/consultations/${fileName}`));
       stream.on('error', reject);
     });
   }
 
-  /**
-   * Génère le PDF du certificat médical
-   */
-  private async generateCertificatPDF(consultation: ConsultationEntity): Promise<string> {
-    const uploadsDir = path.join(process.cwd(), 'uploads', 'consultations');
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
-    }
-
-    const pdfFileName = `certificat-${consultation.id}.pdf`;
-    const pdfPath = path.join(uploadsDir, pdfFileName);
-
-    // Récupérer les noms du médecin et du patient
-    const doctorProfile = await this.doctorProfileRepository.findOne({
-      where: { id: consultation.doctorId },
-      relations: ['user'],
-    });
-    const patientProfile = await this.patientProfileRepository.findOne({
-      where: { id: consultation.patientId },
-      relations: ['user'],
-    });
-
-    const doctorName = doctorProfile?.user?.username || 'Dr. Inconnu';
-    const patientName = patientProfile?.user?.username || 'Patient Inconnu';
-
-    return new Promise((resolve, reject) => {
-      const doc = new PDFDocument({ margin: 50 });
-      const stream = fs.createWriteStream(pdfPath);
-      doc.pipe(stream);
-
-      // En-tête
-      doc.fontSize(20).text('CERTIFICAT MÉDICAL', { align: 'center' });
-      doc.moveDown();
-
-      // Informations
-      doc.fontSize(12);
-      doc.text(`Je soussigné(e), ${doctorName}, certifie avoir examiné le patient:`);
-      doc.moveDown();
-      doc.text(`Nom du patient: ${patientName}`);
-      doc.text(`Date de consultation: ${consultation.createdAt.toLocaleDateString('fr-FR')}`);
-      doc.text(`Type de consultation: ${consultation.type}`);
-      doc.moveDown();
-
-      // Jours de repos
-      if (consultation.joursRepos) {
-        doc.fontSize(14).text('ARRÊT DE TRAVAIL', { underline: true });
-        doc.fontSize(12);
-        doc.text(`Je prescris un arrêt de travail de ${consultation.joursRepos} jour(s) à compter du ${consultation.createdAt.toLocaleDateString('fr-FR')}.`);
-        doc.moveDown();
-      }
-
-      // Signature
-      doc.text('Signature électronique', { align: 'right' });
-      doc.text(doctorName, { align: 'right' });
-      doc.text(`Date: ${consultation.createdAt.toLocaleDateString('fr-FR')}`, { align: 'right' });
-
-      doc.end();
-      stream.on('finish', () => resolve(`/uploads/consultations/${pdfFileName}`));
-      stream.on('error', reject);
-    });
+  // Ordonnance PDF
+  private buildOrdonnance(
+    c: ConsultationEntity,
+    names: { doctor: string; patient: string },
+  ) {
+    return (doc: typeof PDFDocument) => {
+      doc
+        .fontSize(20)
+        .text('ORDONNANCE MÉDICALE', { align: 'center' })
+        .moveDown();
+      doc
+        .fontSize(12)
+        .text(`Date: ${c.createdAt.toLocaleDateString('fr-FR')}`)
+        .text(`Type: ${c.type} | Durée: ${c.duration}min`)
+        .text(`Médecin: ${names.doctor} | Patient: ${names.patient}`)
+        .moveDown()
+        .fontSize(14)
+        .text('PRESCRIPTIONS:', { underline: true })
+        .fontSize(12)
+        .text(c.medicament ? `- ${c.medicament}` : '- Aucun')
+        .moveDown()
+        .text('Signature électronique', { align: 'right' })
+        .text(names.doctor, { align: 'right' });
+    };
   }
 
-  /**
-   * Crée une nouvelle consultation
-   */
-  async create(
-    createConsultationDto: CreateConsultationDto,
-  ): Promise<ConsultationEntity> {
-    // 1️⃣ Calculer la durée selon le type
-    const duration =
-      createConsultationDto.duration ||
-      this.calculateDuration(createConsultationDto.type);
+  // Certificat PDF
+  private buildCertificat(
+    c: ConsultationEntity,
+    names: { doctor: string; patient: string },
+  ) {
+    return (doc: typeof PDFDocument) => {
+      doc
+        .fontSize(20)
+        .text('CERTIFICAT MÉDICAL', { align: 'center' })
+        .moveDown();
+      doc
+        .fontSize(12)
+        .text(`Je soussigné(e), ${names.doctor}, certifie avoir examiné:`)
+        .text(`Patient: ${names.patient}`)
+        .text(
+          `Date: ${c.createdAt.toLocaleDateString('fr-FR')} | Type: ${c.type}`,
+        )
+        .moveDown();
 
-    // 2️⃣ Créer l'objet consultation
-    const consultation = this.repository.create({
-      patientId: createConsultationDto.patientId,
-      doctorId: createConsultationDto.doctorId,
-      type: createConsultationDto.type,
-      duration,
-      appointmentId: createConsultationDto.appointmentId || null,
-      medicament: createConsultationDto.medicament || null,
-      joursRepos: createConsultationDto.joursRepos || null,
-    });
-
-    // 3️⃣ Sauvegarder la consultation
-    const savedConsultation = await this.repository.save(consultation);
-
-    // 4️⃣ Générer les PDF
-    const ordonnanceUrl = await this.generateOrdonnancePDF(savedConsultation);
-    const certificatUrl = await this.generateCertificatPDF(savedConsultation);
-
-    savedConsultation.ordonnanceUrl = ordonnanceUrl;
-    savedConsultation.certificatUrl = certificatUrl;
-    await this.repository.save(savedConsultation);
-
-    // 5️⃣ ✅ MARQUER LE RENDEZ-VOUS COMME DONE
-    if (createConsultationDto.appointmentId) {
-      const appointment = await this.appointmentRepository.findOne({
-        where: { id: createConsultationDto.appointmentId },
-      });
-
-      if (appointment) {
-        appointment.status = AppointmentStatus.DONE;
-        await this.appointmentRepository.save(appointment);
+      if (c.joursRepos) {
+        doc
+          .fontSize(14)
+          .text('ARRÊT DE TRAVAIL', { underline: true })
+          .fontSize(12)
+          .text(
+            `${c.joursRepos} jour(s) à compter du ${c.createdAt.toLocaleDateString('fr-FR')}`,
+          )
+          .moveDown();
       }
-    }
 
-    return savedConsultation;
+      doc
+        .text('Signature électronique', { align: 'right' })
+        .text(names.doctor, { align: 'right' })
+        .text(`Date: ${c.createdAt.toLocaleDateString('fr-FR')}`, {
+          align: 'right',
+        });
+    };
   }
 
-  /**
-   * Récupère une consultation par son ID
-   */
+  // Création avec transaction
+  async create(dto: CreateConsultationDto): Promise<ConsultationEntity> {
+    const qr = this.dataSource.createQueryRunner();
+    await qr.connect();
+    await qr.startTransaction();
+
+    try {
+      const duration = (dto.duration || this.DURATIONS[dto.type]) ?? 30;
+
+      // Créer consultation
+      const consultation = await qr.manager.save(
+        this.repo.create({ ...dto, duration }),
+      );
+
+      // Marquer RDV comme terminé
+      if (dto.appointmentId) {
+        await qr.manager.update(AppointmentEntity, dto.appointmentId, {
+          status: AppointmentStatus.DONE,
+        });
+      }
+
+      // Générer PDFs en parallèle
+      const names = await this.getNames(dto.doctorId, dto.patientProfileId);
+      const [ordonnanceUrl, certificatUrl] = await Promise.all([
+        this.createPDF(
+          `ordonnance-${consultation.id}.pdf`,
+          this.buildOrdonnance(consultation, names),
+        ),
+        this.createPDF(
+          `certificat-${consultation.id}.pdf`,
+          this.buildCertificat(consultation, names),
+        ),
+      ]);
+
+      consultation.ordonnanceUrl = ordonnanceUrl;
+      consultation.certificatUrl = certificatUrl;
+
+      await qr.manager.save(consultation);
+      await qr.commitTransaction();
+
+      return consultation;
+    } catch (error) {
+      await qr.rollbackTransaction();
+      throw new InternalServerErrorException('Erreur création consultation');
+    } finally {
+      await qr.release();
+    }
+  }
+
   async findOne(id: string): Promise<ConsultationEntity> {
-    const consultation = await this.repository.findOne({
-      where: { id },
-    });
-
-    if (!consultation) {
-      throw new NotFoundException(
-        `Consultation avec l'id ${id} introuvable`,
-      );
-    }
-
-    return consultation;
+    const c = await this.repo.findOne({ where: { id } });
+    if (!c) throw new NotFoundException(`Consultation ${id} introuvable`);
+    return c;
   }
 
-  /**
-   * Récupère toutes les consultations
-   */
-  async findAll(): Promise<ConsultationEntity[]> {
-    return await this.repository.find();
+  async findAll() {
+    return this.repo.find({ order: { createdAt: 'DESC' } });
   }
 
-  /**
-   * Récupère toutes les consultations d'un médecin spécifique
-   */
-  async findByDoctor(doctorId: string): Promise<ConsultationEntity[]> {
-    return await this.repository.find({
+  async findByDoctor(doctorId: string) {
+    return this.repo.find({
       where: { doctorId },
-      order: { createdAt: 'DESC' }, // Plus récentes en premier
+      order: { createdAt: 'DESC' },
     });
   }
 
-  /**
-   * Récupère toutes les consultations d'un patient spécifique
-   */
-  async findByPatient(patientId: string): Promise<ConsultationEntity[]> {
-    return await this.repository.find({
-      where: { patientId },
-      order: { createdAt: 'DESC' }, // Plus récentes en premier
+  async findByPatient(patientProfileId: string) {
+    return this.repo.find({
+      where: { patientProfileId },
+      order: { createdAt: 'DESC' },
     });
   }
 
-  /**
-   * Récupère le chemin du fichier PDF de l'ordonnance
-   */
-  async getOrdonnancePath(id: string): Promise<string> {
-    const consultation = await this.findOne(id);
+  private async getPdfPath(
+    id: string,
+    field: 'ordonnanceUrl' | 'certificatUrl',
+  ): Promise<string> {
+    const c = await this.findOne(id);
+    if (!c[field]) throw new NotFoundException(`${field} non disponible`);
 
-    if (!consultation.ordonnanceUrl) {
-      throw new NotFoundException(
-        `Ordonnance non disponible pour la consultation ${id}`,
-      );
+    const pdfPath = path.join(process.cwd(), c[field].replace(/^\//, ''));
+    try {
+      await fsPromises.access(pdfPath);
+      return pdfPath;
+    } catch {
+      throw new NotFoundException('Fichier PDF introuvable');
     }
-
-    const pdfPath = path.join(
-      process.cwd(),
-      consultation.ordonnanceUrl.replace(/^\//, ''),
-    );
-
-    if (!fs.existsSync(pdfPath)) {
-      throw new NotFoundException(`Fichier PDF introuvable: ${pdfPath}`);
-    }
-
-    return pdfPath;
   }
 
-  /**
-   * Récupère le chemin du fichier PDF du certificat
-   */
-  async getCertificatPath(id: string): Promise<string> {
-    const consultation = await this.findOne(id);
+  async getOrdonnancePath(id: string) {
+    return this.getPdfPath(id, 'ordonnanceUrl');
+  }
 
-    if (!consultation.certificatUrl) {
-      throw new NotFoundException(
-        `Certificat non disponible pour la consultation ${id}`,
-      );
-    }
-
-    const pdfPath = path.join(
-      process.cwd(),
-      consultation.certificatUrl.replace(/^\//, ''),
-    );
-
-    if (!fs.existsSync(pdfPath)) {
-      throw new NotFoundException(`Fichier PDF introuvable: ${pdfPath}`);
-    }
-
-    return pdfPath;
+  async getCertificatPath(id: string) {
+    return this.getPdfPath(id, 'certificatUrl');
   }
 }
-
