@@ -27,6 +27,12 @@ export class AppointmentsController {
     return this.service.findOne(id);
   }
 
+  @Get('patient/:patientId')
+  findByPatient(@Param('patientId') patientId: string) {
+  return this.service.findByPatient(patientId);
+}
+
+
   @Delete(':id')
   async cancel(@Param('id') id: string) {
     return await this.service.cancel(id);

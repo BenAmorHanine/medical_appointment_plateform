@@ -81,7 +81,7 @@
                 </div>
               </div>
               <div class="col-md-6">
-                <h5 class="card-title mb-2">Patient: {{ appointment.patientName }}</h5>
+                <h5 class="card-title mb-2">Patient: {{ getPatientDisplayName(appointment) }}</h5>
                 <p class="card-text text-muted mb-1">Status: {{ appointment.status }}</p>
               </div>
               <div class="col-md-3 text-md-end">

@@ -1,0 +1,5 @@
+# Uploads - PDFs consultations
+backend/uploads/consultations/
+backend/uploads/consultations/*.pdf
+uploads/consultations/
+uploads/

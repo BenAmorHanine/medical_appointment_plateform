@@ -9,6 +9,10 @@ import {
   AppointmentCreatedEvent,
   AppointmentCancelledEvent,
 } from './events/appointment.events';
+import { Brackets } from 'typeorm'; 
+import { DataSource } from 'typeorm';
+import { PatientProfileEntity } from '../profiles/patient/entities/patient-profile.entity';
+import { DoctorProfileEntity } from '../profiles/doctor/entities/doctor-profile.entity';
 @Injectable()
 export class AppointmentsService {
   constructor(
@@ -16,16 +20,18 @@ export class AppointmentsService {
     private readonly repository: Repository<AppointmentEntity>,
     @InjectRepository(AvailabilityEntity)
     private readonly availabilityRepository: Repository<AvailabilityEntity>,
+    private dataSource: DataSource,
     private readonly eventEmitter: EventEmitter2,
+   
   ) {}
 
   async findAll(): Promise<AppointmentEntity[]> {
-    return await this.repository.find();
+    return await this.repository.find({
+      order: { appointmentDate: 'ASC', startTime: 'ASC' },
+    });
   }
 
-  /**
-   * Récupère un rendez-vous par ID avec le doctorId (depuis l'availability)
-   */
+  
   async findOne(id: string): Promise<AppointmentEntity & { doctorId: string }> {
     const appointment = await this.repository.findOne({
       where: { id },
@@ -42,28 +48,81 @@ export class AppointmentsService {
     return { ...appointment, doctorId: availability.doctorId };
   }
 
-  async findByDoctor(doctorId: string): Promise<AppointmentEntity[]> {
-    // Récupérer les availabilities du médecin
-    const availabilities = await this.availabilityRepository.find({
-      where: { doctorId },
+
+
+// rdv par patient
+  async findByPatient(patientId: string): Promise<(AppointmentEntity & { doctorName: string })[]> {
+    const appointments = await this.repository.find({
+      where: { patientId },
+      order: { appointmentDate: 'ASC', startTime: 'ASC' },
     });
-    
-    if (availabilities.length === 0) {
-      return [];
-    }
-    
+
+    if (appointments.length === 0) return [];
+
+    const uniqueAvailabilityIds = [...new Set(appointments.map(a => a.availabilityId))];
+    const availabilities = await this.availabilityRepository.find({
+      where: { id: In(uniqueAvailabilityIds) },
+      relations: ['doctor', 'doctor.user']
+    });
+
+    const doctorNameMap = new Map<string, string>();
+    availabilities.forEach(avail => {
+      const fullName = avail.doctor?.user 
+        ? `${avail.doctor.user.firstName || ''} ${avail.doctor.user.lastName || ''}`.trim() 
+        : 'Dr. Unknown';
+      doctorNameMap.set(avail.id, fullName);
+    });
+
+    return appointments.map(apt => ({
+      ...apt,
+      doctorName: doctorNameMap.get(apt.availabilityId) || 'Dr. Unknown'
+    }));
+}
+
+//rdv par doc
+  async findByDoctor(doctorId: string): Promise<(AppointmentEntity & { patientName: string })[]> {
+    const availabilities = await this.availabilityRepository.find({ where: { doctorId } });
+    if (availabilities.length === 0) return [];
+
     const availabilityIds = availabilities.map(a => a.id);
-    
-    return await this.repository.find({
+    const appointments = await this.repository.find({
       where: { availabilityId: In(availabilityIds) },
       order: { appointmentDate: 'ASC', startTime: 'ASC' },
     });
+
+    const uniquePatientIds = [...new Set(appointments.map(a => a.patientId).filter(Boolean))];
+    if (uniquePatientIds.length === 0) {
+      return appointments.map(apt => ({ ...apt, patientName: 'Patient inconnu' }));
+    }
+
+    //recurpérer les noms dpuis users
+    const users = await this.dataSource
+      .getRepository('users')
+      .createQueryBuilder('user')
+      .where('user.id IN (:...ids)', { ids: uniquePatientIds })
+      .select(['user.id', 'user.firstName', 'user.lastName'])
+      .getMany();
+
+    const patientNameMap = new Map<string, string>();
+    users.forEach(user => {
+      const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 
+        `Patient ${user.id.substring(0, 8)}...`;
+      patientNameMap.set(user.id, fullName);
+    });
+
+    return appointments.map(apt => ({
+      ...apt,
+      patientName: patientNameMap.get(apt.patientId!) || `Patient ${apt.patientId?.substring(0, 8)}...`,
+    }));
   }
+
+
+
   async create(createDto: CreateAppointmentDto): Promise<AppointmentEntity> {
-  // Vérifier availability avec relations
+ 
   const availability = await this.availabilityRepository.findOne({
     where: { id: createDto.availabilityId },
-    relations: ['doctor', 'doctor.user'], // ← Charger doctor + user
+    relations: ['doctor', 'doctor.user'], 
   });
   
   if (!availability) {
@@ -97,7 +156,7 @@ export class AppointmentsService {
     new AppointmentCreatedEvent(
       saved.id,
       saved.patientId,
-      availability.doctor.user.id, // ← userId du doctor (pas doctorProfileId)
+      availability.doctor.user.id, 
       saved.appointmentDate,
     ),
   );
@@ -120,7 +179,7 @@ export class AppointmentsService {
   // Charger availability avec relations
   const availability = await this.availabilityRepository.findOne({
     where: { id: appointment.availabilityId },
-    relations: ['doctor', 'doctor.user'], // ← Ajouter relations
+    relations: ['doctor', 'doctor.user'], 
   });
 
   if (availability) {

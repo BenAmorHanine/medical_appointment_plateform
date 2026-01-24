@@ -29,7 +29,7 @@ export class AppointmentService {
   }
 
   getAppointmentsByPatient(patientId: string): Observable<Appointment[]> {
-    return this.http.get<Appointment[]>(`${this.apiUrl}?patientId=${patientId}`);
+    return this.http.get<Appointment[]>(`${this.apiUrl}/patient/${patientId}`);
   }
 
   createAppointment(dto: any): Observable<Appointment> {

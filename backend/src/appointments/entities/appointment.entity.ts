@@ -35,4 +35,6 @@ export class AppointmentEntity {
 
   @CreateDateColumn()
   createdAt: Date;
+
+  
 }

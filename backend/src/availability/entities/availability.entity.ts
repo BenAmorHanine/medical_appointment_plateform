@@ -10,16 +10,15 @@ export class AvailabilityEntity {
   date: Date;
 
   @Column()
-  startTime: string; // "09:00"
+  startTime: string; 
 
   @Column()
-  endTime: string;   // "10:00"
+  endTime: string;   
 
   @Column({ default: 5 })
-  capacity: number;  // Places disponibles
-
+  capacity: number;  
   @Column({ default: 5 })
-  bookedSlots: number; // Places prises
+  bookedSlots: number; 
 
   @ManyToOne(() => DoctorProfileEntity)
   doctor: DoctorProfileEntity;
