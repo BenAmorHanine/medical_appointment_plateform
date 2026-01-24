@@ -10,7 +10,7 @@
     <!-- Desktop Menu -->
     <ul class="nav-menu" *ngIf="!isMobile">
       <li>
-        <a routerLink="/" routerLinkActive="active">
+        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
           Home
         </a>
       </li>
@@ -42,12 +42,12 @@
               Profile
             </a>
         </ng-container>
-        
+
 
         <!-- Patient links -->
         <ng-container *ngIf="isPatient">
           <a routerLink="/appointments" routerLinkActive="active" class="btn-history">
-            My Appointments 
+            My Appointments
           </a>
           <a routerLink="/profile" routerLinkActive="active" class="btn-history">
             My Profile
@@ -84,7 +84,9 @@
   <div class="mobile-menu" *ngIf="showMobileMenu">
     <ul>
       <li>
-        <a routerLink="/" routerLinkActive="active" (click)="toggleMobileMenu()">
+        <a routerLink="/" routerLinkActive="active" (click)="toggleMobileMenu()"
+           [routerLinkActiveOptions]="{ exact: true }"
+        >
           Home
         </a>
       </li>
@@ -127,7 +129,7 @@
         <ng-container *ngIf="isPatient">
           <li>
           <a routerLink="/appointments" (click)="toggleMobileMenu()">
-            My Appointments  
+            My Appointments
           </a>
         </li>
           <li>
