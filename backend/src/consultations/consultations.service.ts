@@ -193,6 +193,7 @@ export class ConsultationsService {
       return consultation;
     } catch (error) {
       await qr.rollbackTransaction();
+      console.error('Erreur détail:', error); // affiche l'erreur réelle
       throw new InternalServerErrorException('Erreur création consultation');
     } finally {
       await qr.release();
