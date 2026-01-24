@@ -1,0 +1,179 @@
+.dashboard-hero {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #1e40af 100%);
+  padding: 4rem 0 3rem;
+}
+
+.dashboard-hero .hero-title {
+  font-size: clamp(2.5rem, 5vw, 3.5rem);
+  font-weight: 800;
+  background: linear-gradient(135deg, #3b82f6 0%, white 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.dashboard-hero .hero-subtitle {
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.9);
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.dashboard-main {
+  padding: 3rem 0 4rem;
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.stat-card h3 {
+  margin: 0 0 0.5rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.stat-card p {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1f2933;
+}
+
+.charts-row {
+  margin-bottom: 2.5rem;
+}
+
+.chart-card {
+  background: white;
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+}
+
+.chart-placeholder {
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+.users-section,
+.notifications-section {
+  margin-top: 2.5rem;
+}
+
+.users-section h2,
+.notifications-section h2 {
+  margin-bottom: 1rem;
+  color: #111827;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 25px rgba(15, 23, 42, 0.06);
+}
+
+.users-table th,
+.users-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.users-table th {
+  background: #f9fafb;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.users-table tr:last-child td {
+  border-bottom: none;
+}
+
+.users-table select {
+  padding: 0.25rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 0.85rem;
+}
+
+.btn-secondary {
+  background: rgba(59, 130, 246, 0.08);
+  color: #1d4ed8;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: rgba(59, 130, 246, 0.15);
+  transform: translateY(-1px);
+}
+
+.notifications-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.notifications-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.notifications-list li {
+  background: white;
+  border-radius: 14px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+}
+
+.notif-title {
+  font-weight: 600;
+  color: #111827;
+}
+
+.notif-message {
+  font-size: 0.9rem;
+  color: #4b5563;
+  margin-top: 0.2rem;
+}
+
+.notif-date {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  margin-top: 0.2rem;
+}

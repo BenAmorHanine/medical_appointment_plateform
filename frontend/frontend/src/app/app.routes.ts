@@ -8,6 +8,7 @@ import { AppointmentsComponent } from './features/appointments/appointments.comp
 import { DoctorAvailabilityComponent } from './features/appointments/doctor-availability/doctor-availability.component';
 import { BookAppointmentComponent } from './features/appointments/book-appointment/book-appointment.component';
 import { ProfileComponent } from './features/profile/profile/profile.component';
+import { DashboardComponent } from './features/dashboard/components/dashboard.component';
 
 export const routes: Routes = [
   // PUBLIC ROUTES
@@ -49,6 +50,12 @@ export const routes: Routes = [
     component: ProfileComponent,
     canActivate: [authGuard]
 
+  },
+   // NEW: ADMIN DASHBOARD
+  {
+    path: 'dashboard',
+    component: DashboardComponent,
+    canActivate: [authGuard], // admin role checked inside component for now
   },
 
   // FALLBACKS
