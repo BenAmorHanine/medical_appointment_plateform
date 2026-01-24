@@ -16,7 +16,7 @@ export class CreateConsultationDto {
 
   @IsNotEmpty()
   @IsUUID()
-  doctorId: string;
+  doctorProfileId: string;
 
   @IsNotEmpty()
   @IsEnum(ConsultationType)

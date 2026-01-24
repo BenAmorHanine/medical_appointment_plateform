@@ -51,9 +51,12 @@ export class ConsultationsService {
   }
 
   // Charge les noms du médecin et patient en 1 requête
-  private async getNames(doctorId: string, patientId: string) {
+  private async getNames(doctorProfileId: string, patientId: string) {
     const [doctor, patient] = await Promise.all([
-      this.doctorRepo.findOne({ where: { id: doctorId }, relations: ['user'] }),
+      this.doctorRepo.findOne({
+        where: { id: doctorProfileId },
+        relations: ['user'],
+      }),
       this.patientRepo.findOne({
         where: { id: patientId },
         relations: ['user'],
@@ -169,7 +172,7 @@ export class ConsultationsService {
       }
 
       // Générer PDFs en parallèle
-      const names = await this.getNames(dto.doctorId, dto.patientId);
+      const names = await this.getNames(dto.doctorProfileId, dto.patientId);
       const [ordonnanceUrl, certificatUrl] = await Promise.all([
         this.createPDF(
           `ordonnance-${consultation.id}.pdf`,
@@ -206,9 +209,9 @@ export class ConsultationsService {
     return this.repo.find({ order: { createdAt: 'DESC' } });
   }
 
-  async findByDoctor(doctorId: string) {
+  async findByDoctor(doctorProfileId: string) {
     return this.repo.find({
-      where: { doctorId },
+      where: { doctorProfileId },
       order: { createdAt: 'DESC' },
     });
   }

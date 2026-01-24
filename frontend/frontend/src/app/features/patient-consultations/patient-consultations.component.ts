@@ -79,7 +79,7 @@ export class PatientConsultationsComponent implements OnInit {
         next: (doctorProfile) => {
           console.log('Doctor profile récupéré:', doctorProfile);
           console.log('Appointment doctorId:', appointment.doctorId);
-          
+
           if (!doctorProfile || !doctorProfile.id) {
             this.error = 'Profil médecin introuvable';
             setTimeout(() => {
@@ -196,7 +196,7 @@ export class PatientConsultationsComponent implements OnInit {
           medicament: null,
           joursRepos: null,
         });
-        
+
         // Marquer le rendez-vous comme "done" seulement après validation réussie du formulaire
         if (this.appointmentId) {
           this.appointmentService.markAsDone(this.appointmentId).subscribe({

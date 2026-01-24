@@ -21,7 +21,7 @@ export class ConsultationEntity {
   patientId: string;
 
   @Column({ type: 'uuid' })
-  doctorId: string;
+  doctorProfileId: string;
 
   @Column({
     type: 'enum',
