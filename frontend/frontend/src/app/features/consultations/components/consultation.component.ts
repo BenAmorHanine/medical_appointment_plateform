@@ -55,7 +55,7 @@ export class ConsultationComponent implements OnInit {
       const formValue = this.consultationForm.value;
       const dto: CreateConsultationDto = {
         patientId: formValue.patientId,
-        doctorId: formValue.doctorId,
+        doctorProfileId: formValue.doctorId,
         type: formValue.type,
         duration: formValue.duration || undefined,
         appointmentId: formValue.appointmentId || undefined,

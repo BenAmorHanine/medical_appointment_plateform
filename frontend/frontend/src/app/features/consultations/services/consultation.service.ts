@@ -12,7 +12,7 @@ export enum ConsultationType {
 
 export interface CreateConsultationDto {
   patientId: string;
-  doctorId: string;
+  doctorProfileId: string;
   type: ConsultationType;
   duration?: number;
   appointmentId?: string;
@@ -23,7 +23,7 @@ export interface CreateConsultationDto {
 export interface Consultation {
   id: string;
   patientId: string;
-  doctorId: string;
+  doctorProfileId: string;
   type: ConsultationType;
   duration: number;
   appointmentId: string | null;

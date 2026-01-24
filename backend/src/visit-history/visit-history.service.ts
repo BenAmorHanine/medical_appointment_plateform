@@ -46,7 +46,7 @@ async getHistoryByUserId(userId: string) {
   const hasConsulted = await this.consultationRepository.exist({
     where: {
       patientId,
-      doctorId: doctorProfile.id,
+      doctorProfileId: doctorProfile.id,
     },
   });
 
