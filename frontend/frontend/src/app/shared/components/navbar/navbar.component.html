@@ -29,6 +29,13 @@
     <!-- Auth / User Actions -->
     <div class="auth-actions">
       <ng-container *ngIf="isAuthenticated$ | async; else loginLinks">
+        <!-- Admin links -->
+        <ng-container *ngIf="isAdmin">
+          <a routerLink="/dashboard" routerLinkActive="active" class="btn-history">
+            Dashboard
+          </a>
+        </ng-container>
+
 
         <!-- Doctor links -->
         <ng-container *ngIf="isDoctor">

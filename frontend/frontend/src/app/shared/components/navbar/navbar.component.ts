@@ -47,6 +47,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
   get isPatient(): boolean {
     return this.currentUser?.role === 'patient';
   }
+  get isAdmin(): boolean {
+    return this.currentUser?.role === 'admin';
+  }
 
   checkMobile() {
     this.isMobile = window.innerWidth < 768;
