@@ -6,6 +6,7 @@ import { DoctorProfileEntity } from '../profiles/doctor/entities/doctor-profile.
 import { PatientProfileEntity } from '../profiles/patient/entities/patient-profile.entity';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 
+
 @Injectable()
 export class ProfileService {
   constructor(
@@ -133,4 +134,27 @@ export class ProfileService {
       await queryRunner.release();
     }
   }*/
+async updateProfileWithImage(
+  userId: string,
+  role: UserRole,
+  dto: UpdateProfileDto,
+  file?: Express.Multer.File,
+) {
+  // 1️⃣ Normal profile update (your existing logic)
+  await this.updateProfile(userId, role, dto);
+
+  // 2️⃣ Optional image update
+  if (file && role === UserRole.DOCTOR) {
+    const imagePath = `/uploads/doctors/${file.filename}`;
+
+    await this.doctorRepo.update(
+      { user: { id: userId } },
+      { image: imagePath },
+    );
+  }
+
+  return this.getProfile(userId, role);
+}
+
+
 }
