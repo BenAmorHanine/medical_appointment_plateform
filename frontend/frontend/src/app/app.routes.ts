@@ -36,8 +36,8 @@ export const routes: Routes = [
     canActivate: [authGuard], // et plus tard [authGuard, doctorRoleGuard]
   },
   {
-  path: 'book/:doctorId',
-  component: BookAppointmentComponent,  // Nouveau composant
+  path: 'book',
+  component: BookAppointmentComponent,  
   canActivate: [authGuard],  // Patient connecté
 },
   {

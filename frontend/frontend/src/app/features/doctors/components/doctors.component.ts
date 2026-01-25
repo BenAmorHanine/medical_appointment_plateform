@@ -44,9 +44,11 @@ export class DoctorsComponent implements OnInit {
     this.router.navigate(['/doctor', doctor.id]);
   }
 
-  bookNow(doctor: Doctor) {
-    this.router.navigate(['/book', doctor.id]);
-  }
+bookNow(doctor: Doctor) {
+  sessionStorage.setItem('selectedDoctor', JSON.stringify(doctor));
+  this.router.navigate(['/book']);  
+}
+
 
   getStars(rating: number): number[] {
     return Array(5).fill(0).map((_, i) => i < rating ? 1 : 0);

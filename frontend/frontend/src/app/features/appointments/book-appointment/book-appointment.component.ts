@@ -1,6 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute,Router, RouterLink } from '@angular/router';
 import { FullCalendarModule } from '@fullcalendar/angular';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -22,6 +22,7 @@ export class BookAppointmentComponent implements OnInit {
   private availabilityService = inject(AvailabilityService);
   private authService = inject(AuthService);
   private appointmentService = inject(AppointmentService);
+  private router = inject(Router); 
 
   doctorId = '';
   doctorName = 'Selected Doctor';
@@ -50,42 +51,61 @@ export class BookAppointmentComponent implements OnInit {
     eventTextColor: 'white',
   };
 
-  ngOnInit() {
-    this.doctorId = this.route.snapshot.paramMap.get('doctorId') || '';
+ngOnInit() {
+  const doctorData = sessionStorage.getItem('selectedDoctor');
+  if (doctorData) {
+    const doctor = JSON.parse(doctorData);
+    this.doctorId = doctor.id;
+    this.doctorName = doctor.name;
+    this.doctorSpecialty = doctor.specialty;
+    
     const currentUser = this.authService.getCurrentUser();
     this.patientId = currentUser?.id || '';
     this.loadAvailabilities();
+    
+    sessionStorage.removeItem('selectedDoctor');
+  } else {
+    this.router.navigate(['/doctors']);
   }
+}
 
-  loadAvailabilities() {
-    this.loading = true;
-    this.availabilityService.loadAvailabilitiesForDoctor(this.doctorId).subscribe({
-      next: (data) => {
-        const events = data.map(slot => {
-  // ✅ FIX DÉFINITIF CALENDRIER
-  const dateOnly = slot.date.split('T')[0];  // "2026-02-20"
-  return {
-    id: slot.id,
-    title: `${slot.startTime}-${slot.endTime} (${slot.capacity - slot.bookedSlots} slots left)`,
-    start: `${dateOnly}T${slot.startTime}:00`,  // ✅ PAS de new Date()
-    end: `${dateOnly}T${slot.endTime}:00`,
-            extendedProps: { 
-              capacity: slot.capacity, 
-              booked: slot.bookedSlots 
-            },
-            backgroundColor: slot.bookedSlots >= slot.capacity ? '#dc3545' : '#28a745',
-            borderColor: slot.bookedSlots >= slot.capacity ? '#dc3545' : '#28a745',
-          };
-        });
 
-        this.calendarOptions = { ...this.calendarOptions, events };
-        this.loading = false;
-      },
-      error: () => {
-        this.loading = false;
-      }
-    });
-  }
+
+
+
+loadAvailabilities() {
+  this.loading = true;
+  this.availabilityService.loadAvailabilitiesForDoctor(this.doctorId).subscribe({
+    next: (data) => {
+      const events = data.map(slot => {
+        const d = new Date(slot.date);
+        
+      
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        const dateString = `${year}-${month}-${day}`; 
+
+        return {
+          id: slot.id,
+          title: `${slot.startTime}-${slot.endTime} (${slot.capacity - slot.bookedSlots} slots left)`,
+          start: `${dateString}T${slot.startTime}:00`, 
+          end: `${dateString}T${slot.endTime}:00`,
+          extendedProps: { 
+            capacity: slot.capacity, 
+            booked: slot.bookedSlots 
+          },
+          backgroundColor: slot.bookedSlots >= slot.capacity ? '#dc3545' : '#28a745',
+          borderColor: slot.bookedSlots >= slot.capacity ? '#dc3545' : '#28a745',
+        };
+      });
+
+      this.calendarOptions = { ...this.calendarOptions, events };
+      this.loading = false;
+    },
+    error: () => this.loading = false
+  });
+}
 
   handleEventClick(clickInfo: any) {
     const event = clickInfo.event;
