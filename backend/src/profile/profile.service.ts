@@ -5,6 +5,7 @@ import { UserEntity, UserRole } from '../users/entities/user.entity';
 import { DoctorProfileEntity } from '../profiles/doctor/entities/doctor-profile.entity';
 import { PatientProfileEntity } from '../profiles/patient/entities/patient-profile.entity';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { BadRequestException } from '@nestjs/common';
 
 
 @Injectable()
@@ -31,11 +32,11 @@ export class ProfileService {
 
     return { ...user, profile: specificProfile };
   }
-  async updateProfile(userId: string, role: UserRole, dto: UpdateProfileDto) {
-  // ===== Step 0: Helper to remove undefined fields =====
-  function stripUndefined(obj: any) {
+async updateProfile(userId: string, role: UserRole, dto: UpdateProfileDto, file?: Express.Multer.File) {
+  // Helper to remove undefined or empty strings (common with FormData)
+  function stripClean(obj: any) {
     return Object.fromEntries(
-      Object.entries(obj).filter(([_, v]) => v !== undefined)
+      Object.entries(obj).filter(([_, v]) => v !== undefined && v !== null && v !== '')
     );
   }
 
@@ -44,62 +45,50 @@ export class ProfileService {
   await queryRunner.startTransaction();
 
   try {
-    // ===== Step 1: Update Identity (User table) =====
-    const {
-  specialty,
-  consultationDuration,
-  consultationFee,
-  office,
-  image,
-  available,
-  age,
-  gender,
-  ...identityData
-} = dto;
-    const cleanIdentityData = stripUndefined(identityData); // <-- remove undefined fields
+    // 1. Split the DTO data
+    const { specialty, consultationDuration, consultationFee, office, available, age, gender, ...identityData } = dto;
+
+    // 2. Update User (Identity) Table
+    const cleanIdentityData = stripClean(identityData);
     if (Object.keys(cleanIdentityData).length) {
       await queryRunner.manager.update(UserEntity, userId, cleanIdentityData);
     }
 
-    // ===== Step 2: Update Role-Specific Data =====
+    // 3. Update Specific Profile Table
     if (role === UserRole.DOCTOR) {
-      const doctorData = stripUndefined({
-    specialty,
-    consultationDuration,
-    consultationFee,
-    office,
-    image,
-    available,
-    });
+      const doctorData = stripClean({
+        specialty,
+        consultationDuration: consultationDuration ? Number(consultationDuration) : undefined,
+        consultationFee: consultationFee ? Number(consultationFee) : undefined,
+        office,
+        available: (dto.available as any) === 'true' || dto.available === true // Fix for FormData strings
+      });
 
-      
-      if (Object.keys(doctorData).length) { // <-- only update if there is something
-        await queryRunner.manager.update(
-          DoctorProfileEntity,
-          { user: { id: userId } },
-          doctorData
-        );
+      // Handle the file path if a new image was uploaded
+      if (file) {
+        doctorData.image = `uploads/doctors/${file.filename}`;
+      }
+
+      if (Object.keys(doctorData).length) {
+        await queryRunner.manager.update(DoctorProfileEntity, { user: { id: userId } }, doctorData);
       }
     } else {
-      const patientData = stripUndefined({ age, gender });
-      if (Object.keys(patientData).length) { // <-- only update if there is something
-        await queryRunner.manager.update(
-          PatientProfileEntity,
-          { user: { id: userId } },
-          patientData
-        );
+      const patientData = stripClean({ 
+        age: age ? Number(age) : undefined, 
+        gender 
+      });
+      if (Object.keys(patientData).length) {
+        await queryRunner.manager.update(PatientProfileEntity, { user: { id: userId } }, patientData);
       }
     }
 
-    // ===== Step 3: Commit transaction =====
     await queryRunner.commitTransaction();
-
-    // ===== Step 4: Return updated profile =====
     return this.getProfile(userId, role);
+
   } catch (err) {
-    // ===== Step 5: Safe catch to avoid instanceof error =====
     await queryRunner.rollbackTransaction();
-    throw new Error(err?.message || 'Unknown error while updating profile');
+    console.error("DATABASE ERROR:", err); // Check your terminal for the REAL error message
+    throw new BadRequestException(err?.message || 'Update failed');
   } finally {
     await queryRunner.release();
   }
@@ -140,21 +129,39 @@ async updateProfileWithImage(
   dto: UpdateProfileDto,
   file?: Express.Multer.File,
 ) {
+const queryRunner = this.dataSource.createQueryRunner();
+await queryRunner.connect();
+await queryRunner.startTransaction();
+
+try {
   // 1️⃣ Normal profile update (your existing logic)
   await this.updateProfile(userId, role, dto);
 
   // 2️⃣ Optional image update
   if (file && role === UserRole.DOCTOR) {
-    const imagePath = `/uploads/doctors/${file.filename}`;
+    const imagePath = `uploads/doctors/${file.filename}`;
 
-    await this.doctorRepo.update(
+    await queryRunner.manager.update(
+      DoctorProfileEntity,
       { user: { id: userId } },
       { image: imagePath },
     );
   }
 
+  // Commit transaction
+  await queryRunner.commitTransaction();
+
   return this.getProfile(userId, role);
+} catch (err) {
+  await queryRunner.rollbackTransaction();
+  console.error("REAL ERROR:", err); // Look at your terminal! This will show the actual issue.
+  
+  // Use a standard NestJS exception so the filter doesn't crash
+  throw new BadRequestException(err?.message || 'Update failed');
+} finally {
+  await queryRunner.release();
 }
 
 
+}
 }

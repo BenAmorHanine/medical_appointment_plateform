@@ -18,6 +18,7 @@ async function bootstrap() {
   app.useStaticAssets(join(process.cwd(), 'uploads'), {
     prefix: '/uploads',
   });
+  
 
   // Port
   const port = process.env.PORT || 3000;

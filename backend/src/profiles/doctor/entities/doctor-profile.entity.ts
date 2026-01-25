@@ -27,10 +27,10 @@ export class DoctorProfileEntity {
   office: string; // Cabinet / localisation
 
 
-    @Column({ 
-    type: 'varchar', 
-    length: 500, 
-    default: '/assets/images/default-doctor.jpg' 
+  @Column({
+    type: 'varchar',
+    length: 500,
+    default: 'assets/images/default-doctor.jpg'
   })
   image: string;
 

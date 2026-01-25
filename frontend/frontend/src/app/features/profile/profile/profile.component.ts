@@ -19,6 +19,10 @@ export class ProfileComponent implements OnInit {
   user = signal<any>(null);
   isEditing = signal<boolean>(false); // Toggle for Edit mode to switch between the "Display" and "Edit" views.
 
+  // These are needed for the image logic
+  selectedFile: File | null = null;
+  previewImage: string | null = null; // Declare this for the <img> preview
+
   ngOnInit() {
     this.profileService.getProfile().subscribe({
       next: (data) => {
@@ -31,6 +35,10 @@ export class ProfileComponent implements OnInit {
 
   toggleEdit() {
     this.isEditing.set(!this.isEditing());
+    if (!this.isEditing()) {
+      this.selectedFile = null;
+      this.previewImage = null;
+    }
   }
 
   // NEW
@@ -43,6 +51,8 @@ private stripUndefined(obj: any) {
 }
 
 // UPDATED onSave()
+//before the upload image
+/*
 onSave(formValue: any) {
   const payload: any = {
     firstName: formValue.firstName,
@@ -72,45 +82,51 @@ onSave(formValue: any) {
       alert('Update failed');
     },
   });
-}
+}*/onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.selectedFile = file;
 
-/**
-   onSave(updatedData: any) {
-    this.profileService.updateProfile(updatedData).subscribe({
-      next: (res) => {
-        this.user.set(res);
-        this.isEditing.set(false);
-      },
-      error: (err) => alert('Update failed!')
-    });
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.previewImage = reader.result as string;
+      };
+      reader.readAsDataURL(file);
+    }
   }
-    */
- /**
-  onSave(formValue: any) {
 
-    const payload = {
+  onSave(formValue: any) {
+    // 1. Build common identity data
+    const payload: any = {
       firstName: formValue.firstName,
       lastName: formValue.lastName,
       phone: formValue.phone,
-
-      profile: {
-        ...this.user().profile, // keep existing fields
-        image: formValue.image, // ✅ FIX
-        specialty: formValue.specialty,
-        office: formValue.office,
-        age: formValue.age,
-        gender: formValue.gender
-      }
     };
 
-    this.profileService.updateProfile(payload).subscribe({
+    // 2. Build role-specific data
+    if (this.user().role === 'doctor') {
+      payload.specialty = formValue.specialty;
+      payload.office = formValue.office;
+      payload.available = formValue.available; // Don't forget availability!
+      payload.consultationDuration = Number(formValue.consultationDuration);
+      payload.consultationFee = Number(formValue.consultationFee);
+    } else {
+      payload.age = Number(formValue.age);
+      payload.gender = formValue.gender;
+    }
+
+    // 3. Call service with the file
+    this.profileService.updateProfile(payload, this.selectedFile || undefined).subscribe({
       next: (res) => {
         this.user.set(res);
         this.isEditing.set(false);
+        this.selectedFile = null;
+        this.previewImage = null;
       },
-      error: () => alert('Update failed!')
+      error: (err) => {
+        console.error(err);
+        alert('Update failed!');
+      }
     });
   }
-    */
-
 }

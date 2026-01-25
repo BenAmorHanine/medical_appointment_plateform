@@ -12,8 +12,11 @@
               <h2 class="m-0 fw-bold">{{ user().firstName[0] }}{{ user().lastName[0] }}</h2>
             </div>
              -->
+            <!--[src]="user().profile?.image || '/assets/images/default-doctor.jpg'"-->
             <img
-            [src]="user().profile?.image || '/assets/images/default-doctor.jpg'"
+
+            [src]="user()?.profile?.image?.startsWith('uploads/') ? 'http://localhost:3000/' + user().profile.image : 'assets/images/default-doctor.jpg'"
+            (error)="$any($event.target).src = 'assets/images/default-doctor.jpg'"
             class="rounded-circle border border-2 border-primary shadow me-3"
             style="width: 70px; height: 70px; object-fit: cover;"
             alt="Doctor profile image"
@@ -187,6 +190,7 @@
 
                   <div class="col-md-12">
                   <label class="form-label small fw-bold">Profile Image URL</label>
+                  <!--
                   <input
                     type="text"
                     name="image"
@@ -194,6 +198,14 @@
                     class="form-control shadow-sm"
                     placeholder="https://..."
                   />
+                  -->
+                  <input
+                    type="file"
+                    (change)="onFileSelected($event)"
+                    accept="image/*"
+                    class="form-control mb-2"
+                  >
+
                 </div>
                 }
 
