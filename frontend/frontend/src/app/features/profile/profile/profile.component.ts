@@ -53,6 +53,8 @@ onSave(formValue: any) {
   if (this.user().role === 'doctor') {
     payload.specialty = formValue.specialty;
     payload.office = formValue.office;
+    payload.image = formValue.image;
+    payload.available = formValue.available;
     payload.consultationDuration = formValue.consultationDuration !== undefined ? Number(formValue.consultationDuration) : undefined;
     payload.consultationFee = formValue.consultationFee !== undefined ? Number(formValue.consultationFee) : undefined;
   } else {

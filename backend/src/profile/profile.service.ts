@@ -44,7 +44,17 @@ export class ProfileService {
 
   try {
     // ===== Step 1: Update Identity (User table) =====
-    const { specialty, consultationDuration, consultationFee, office, age, gender, ...identityData } = dto;
+    const {
+  specialty,
+  consultationDuration,
+  consultationFee,
+  office,
+  image,
+  available,
+  age,
+  gender,
+  ...identityData
+} = dto;
     const cleanIdentityData = stripUndefined(identityData); // <-- remove undefined fields
     if (Object.keys(cleanIdentityData).length) {
       await queryRunner.manager.update(UserEntity, userId, cleanIdentityData);
@@ -52,7 +62,16 @@ export class ProfileService {
 
     // ===== Step 2: Update Role-Specific Data =====
     if (role === UserRole.DOCTOR) {
-      const doctorData = stripUndefined({ specialty, consultationDuration, consultationFee, office });
+      const doctorData = stripUndefined({
+    specialty,
+    consultationDuration,
+    consultationFee,
+    office,
+    image,
+    available,
+    });
+
+      
       if (Object.keys(doctorData).length) { // <-- only update if there is something
         await queryRunner.manager.update(
           DoctorProfileEntity,
