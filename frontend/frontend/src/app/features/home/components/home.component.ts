@@ -89,4 +89,22 @@ export class HomeComponent implements OnInit, OnDestroy {
   trackByDoctor(index: number, doctor: Doctor): number {
     return doctor.id;
   }
+
+  goToMyHistory(): void {
+  const user = this.authService.getCurrentUser();
+
+  if (!user) {
+    this.router.navigate(['/auth/login']);
+    return;
+  }
+
+  if (user.role === 'doctor') {
+    // 👨‍⚕️ Liste des patients du médecin
+    this.router.navigate(['/history/doctor']);
+  } else {
+    // 👤 Historique du patient
+    this.router.navigate(['/history']);
+    // ou '/history/me' selon ta config
+  }
+}
 }

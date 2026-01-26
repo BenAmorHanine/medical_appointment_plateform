@@ -2,9 +2,11 @@ import { Component, OnInit, signal, computed } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { VisitHistoryResponse, VisitHistoryItem } from '../../model/visit-history.model';
 import { VisitHistoryService } from '../../service/visit-history.service';
-
+import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-visit-history',
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './visit-history.component.html',
   styleUrls: ['./visit-history.component.css'],
 })

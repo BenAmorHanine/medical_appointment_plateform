@@ -27,4 +27,14 @@ getPatientHistory(
   );
 }
 
+
+
+getDoctorPatients(page = 1, limit = 10) {
+  return this.http.get<any>(
+    `${this.API}/doctor/patients?page=${page}&limit=${limit}`,
+  );
+}
+
+
+
 }

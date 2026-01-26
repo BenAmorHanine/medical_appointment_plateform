@@ -58,22 +58,89 @@ async getHistoryByUserId(userId: string, page = 1, limit = 10) {
     where: { user: { id: doctorUserId } },
   });
 
-  const hasConsulted = await this.consultationRepository.exist({
-    where: {
-      patientId,
+  const qb = this.consultationRepository
+    .createQueryBuilder('c')
+    .where('c.patientId = :patientId', { patientId })
+    .andWhere('c.doctorProfileId = :doctorProfileId', {
       doctorProfileId: doctorProfile.id,
-    },
-  });
+    })
+    .orderBy('c.createdAt', 'DESC')
+    .skip((page - 1) * limit)
+    .take(limit);
 
-  if (!hasConsulted) {
-    throw new ForbiddenException(
-      'You are not allowed to view this patient history',
-    );
-  }
+  const [consultations, total] = await qb.getManyAndCount();
 
-  return this.getHistoryByPatient(patientId, page, limit);
+  let absenceCount = 0;
+
+  const history = consultations.map(c => ({
+    consultationId: c.id,
+    date: c.createdAt,
+    type: c.type,
+    status: 'EFFECTUE', // logique existante conservée
+    ordonnanceUrl: c.ordonnanceUrl || undefined,
+    certificatUrl: c.certificatUrl || undefined,
+  }));
+
+  return {
+    page,
+    limit,
+    total,
+    blocked: false,
+    absenceCount,
+    history,
+  };
 }
 
+
+
+async getPatientsOfDoctor(
+  doctorUserId: string,
+  page = 1,
+  limit = 10,
+) {
+  const doctorProfile = await this.doctorProfileRepository.findOneOrFail({
+    where: { user: { id: doctorUserId } },
+    select: { id: true },
+  });
+
+  const qb = this.consultationRepository
+    .createQueryBuilder('c')
+    .innerJoin(
+      PatientProfileEntity,
+      'p',
+      'p.id = c.patientId',
+    )
+    .innerJoin('p.user', 'u')
+    .where('c.doctorProfileId = :doctorId', {
+      doctorId: doctorProfile.id,
+    })
+    .groupBy('p.id')
+    .addGroupBy('u.firstName')
+    .addGroupBy('u.lastName')
+    .orderBy('MAX(c.createdAt)', 'DESC');
+
+  // ✅ total AVANT pagination
+  const total = await qb.getCount();
+
+  // ✅ pagination
+  const data = await qb
+    .select([
+      'p.id AS patientId',
+      "CONCAT(u.firstName, ' ', u.lastName) AS fullName",
+      'COUNT(c.id) AS visits',
+      'MAX(c.createdAt) AS lastVisit',
+    ])
+    .skip((page - 1) * limit)
+    .take(limit)
+    .getRawMany();
+
+  return {
+    page,
+    limit,
+    total,
+    data,
+  };
+}
 
 
 

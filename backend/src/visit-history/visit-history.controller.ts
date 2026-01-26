@@ -43,5 +43,21 @@ getPatientHistory(
   );
 }
 
+@Get('doctor/patients')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('doctor')
+getDoctorPatients(
+  @GetUser() user: any,
+  @Query('page') page = 1,
+  @Query('limit') limit = 10,
+) {
+  return this.visitHistoryService.getPatientsOfDoctor(
+    user.id,
+    Number(page),
+    Number(limit),
+  );
+}
+
+
 
 }

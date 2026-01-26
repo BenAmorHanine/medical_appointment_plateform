@@ -26,9 +26,9 @@
 
 <!-- Authenticated users see this instead -->
 <ng-template #authButtons>
-  <a routerLink="/history" class="btn btn-primary me-3">
+   <button class="btn btn-primary me-3" (click)="goToMyHistory()">
     My History
-  </a>
+  </button>
   <button class="btn btn-outline-light" (click)="logout()">
     Logout
   </button>
