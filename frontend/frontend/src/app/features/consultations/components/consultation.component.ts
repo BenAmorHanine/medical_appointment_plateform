@@ -1,32 +1,36 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ConsultationService, ConsultationType, CreateConsultationDto } from '../services/consultation.service';
 
 @Component({
   selector: 'app-consultation',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './consultation.component.html',
   styleUrl: './consultation.component.css',
 })
 export class ConsultationComponent implements OnInit {
-  consultationForm: FormGroup;
-  consultationTypes = ConsultationType;
-  consultationTypeKeys = Object.values(ConsultationType);
-  currentConsultation: any = null;
-  loading = false;
-  error: string | null = null;
+  // Injection moderne Angular 19
+  private readonly fb = inject(FormBuilder);
+  private readonly consultationService = inject(ConsultationService);
+
+  // Signals pour l'état réactif
+  readonly currentConsultation = signal<any>(null);
+  readonly loading = signal(false);
+  readonly error = signal<string | null>(null);
+
+  // Form
+  readonly consultationForm: FormGroup;
+  readonly consultationTypes = ConsultationType;
+  readonly consultationTypeKeys = Object.values(ConsultationType);
 
   // IDs fictifs pour les tests (à remplacer par de vrais IDs)
-  testPatientId = '00000000-0000-0000-0000-000000000001';
-  testDoctorId = '00000000-0000-0000-0000-000000000002';
-  testAppointmentId = '00000000-0000-0000-0000-000000000003';
+  private readonly testPatientId = '00000000-0000-0000-0000-000000000001';
+  private readonly testDoctorId = '00000000-0000-0000-0000-000000000002';
+  private readonly testAppointmentId = '00000000-0000-0000-0000-000000000003';
 
-  constructor(
-    private fb: FormBuilder,
-    private consultationService: ConsultationService,
-  ) {
+  constructor() {
     this.consultationForm = this.fb.group({
       patientId: [this.testPatientId, [Validators.required]],
       doctorId: [this.testDoctorId, [Validators.required]],
@@ -48,59 +52,64 @@ export class ConsultationComponent implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.consultationForm.valid) {
-      this.loading = true;
-      this.error = null;
-
-      const formValue = this.consultationForm.value;
-      const dto: CreateConsultationDto = {
-        patientId: formValue.patientId,
-        doctorProfileId: formValue.doctorId,
-        type: formValue.type,
-        duration: formValue.duration || undefined,
-        appointmentId: formValue.appointmentId || undefined,
-      };
-
-      this.consultationService.createConsultation(dto).subscribe({
-        next: (consultation) => {
-          this.currentConsultation = consultation;
-          this.loading = false;
-          console.log('Consultation créée:', consultation);
-        },
-        error: (err) => {
-          this.error = err.error?.message || 'Erreur lors de la création de la consultation';
-          this.loading = false;
-          console.error('Erreur:', err);
-        },
-      });
-    } else {
-      this.error = 'Veuillez remplir tous les champs requis';
+    if (!this.consultationForm.valid) {
+      this.error.set('Veuillez remplir tous les champs requis');
+      return;
     }
+
+    this.loading.set(true);
+    this.error.set(null);
+
+    const formValue = this.consultationForm.value;
+    const dto: CreateConsultationDto = {
+      patientId: formValue.patientId,
+      doctorProfileId: formValue.doctorId,
+      type: formValue.type,
+      duration: formValue.duration || undefined,
+      appointmentId: formValue.appointmentId || undefined,
+    };
+
+    this.consultationService.createConsultation(dto).subscribe({
+      next: (consultation) => {
+        this.currentConsultation.set(consultation);
+        this.loading.set(false);
+        console.log('Consultation créée:', consultation);
+      },
+      error: (err) => {
+        this.error.set(err.error?.message || 'Erreur lors de la création de la consultation');
+        this.loading.set(false);
+        console.error('Erreur:', err);
+      },
+    });
   }
 
   generatePDF(): void {
-    if (this.currentConsultation?.id) {
-      this.loading = true;
+    const consultation = this.currentConsultation();
+    if (consultation?.id) {
+      this.loading.set(true);
       // Le PDF est déjà généré lors de la création, on peut juste le télécharger
       this.downloadPDF();
     }
   }
 
   downloadPDF(): void {
-    if (this.currentConsultation?.id) {
-      this.consultationService.downloadPDF(this.currentConsultation.id);
+    const consultation = this.currentConsultation();
+    if (consultation?.id) {
+      this.consultationService.downloadPDF(consultation.id);
     }
   }
 
   viewPDF(): void {
-    if (this.currentConsultation?.id) {
-      this.consultationService.viewPDF(this.currentConsultation.id);
+    const consultation = this.currentConsultation();
+    if (consultation?.id) {
+      this.consultationService.viewPDF(consultation.id);
     }
   }
 
   printPDF(): void {
-    if (this.currentConsultation?.id) {
-      this.consultationService.getPDF(this.currentConsultation.id).subscribe({
+    const consultation = this.currentConsultation();
+    if (consultation?.id) {
+      this.consultationService.getPDF(consultation.id).subscribe({
         next: (blob) => {
           const url = window.URL.createObjectURL(blob);
           const iframe = document.createElement('iframe');
@@ -129,8 +138,7 @@ export class ConsultationComponent implements OnInit {
       duration: null,
       appointmentId: this.testAppointmentId,
     });
-    this.currentConsultation = null;
-    this.error = null;
+    this.currentConsultation.set(null);
+    this.error.set(null);
   }
 }
-

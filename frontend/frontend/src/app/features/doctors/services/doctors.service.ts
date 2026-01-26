@@ -33,7 +33,7 @@ export class DoctorsService {
     );
   }
 
-  getDoctor(id: number): Observable<Doctor| null> {
+  getDoctor(id: string): Observable<Doctor| null> {
     return this.http.get<Doctor>(`${this.apiUrl}/${id}`).pipe(
       catchError(() => of(null))
     );

@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { ConsultationService, Consultation, ConsultationType, CreateConsultationDto } from '../consultations/services/consultation.service';
@@ -10,33 +10,38 @@ import { AuthService } from '../auth/services/auth.service';
 @Component({
   selector: 'app-patient-consultations',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './patient-consultations.component.html',
   styleUrls: ['./patient-consultations.component.css'],
 })
 export class PatientConsultationsComponent implements OnInit {
-  patientId!: string;
-  appointmentId!: string;
-  doctorId!: string;
-  private apiUrl = 'http://localhost:3000';
+  // Injection moderne Angular 19
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly consultationService = inject(ConsultationService);
+  private readonly appointmentService = inject(AppointmentService);
+  private readonly authService = inject(AuthService);
+  private readonly http = inject(HttpClient);
+  private readonly fb = inject(FormBuilder);
 
-  patientConsultations: Consultation[] = [];
-  consultationForm: FormGroup;
-  consultationTypes = ConsultationType;
-  consultationTypeKeys = Object.values(ConsultationType);
-  currentConsultation: Consultation | null = null;
-  loading = false;
-  error: string | null = null;
+  // Signals pour l'état réactif
+  readonly patientConsultations = signal<Consultation[]>([]);
+  readonly currentConsultation = signal<Consultation | null>(null);
+  readonly loading = signal(false);
+  readonly error = signal<string | null>(null);
 
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    public consultationService: ConsultationService,
-    private appointmentService: AppointmentService,
-    private authService: AuthService,
-    private http: HttpClient,
-    private fb: FormBuilder
-  ) {
+  // Propriétés simples
+  patientId = '';
+  appointmentId = '';
+  doctorId = '';
+  private readonly apiUrl = 'http://localhost:3000';
+
+  // Form
+  readonly consultationForm: FormGroup;
+  readonly consultationTypes = ConsultationType;
+  readonly consultationTypeKeys = Object.values(ConsultationType);
+
+  constructor() {
     this.consultationForm = this.fb.group({
       type: [ConsultationType.STANDARD, [Validators.required]],
       duration: [null],
@@ -46,87 +51,76 @@ export class PatientConsultationsComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Récupérer l'appointment depuis le state de navigation
-    // getCurrentNavigation() ne fonctionne que pendant la navigation, donc on utilise window.history.state
-    let appointment = (window.history.state as any)?.appointment;
+    const appointment = (window.history.state as any)?.appointment;
+    const currentUser = this.authService.getCurrentUser();
 
     console.log('Appointment récupéré depuis history.state:', appointment);
-    console.log('Current user:', this.authService.getCurrentUser());
+    console.log('Current user:', currentUser);
 
-    if (!appointment || !appointment.id) {
-      // Si pas d'appointment dans le state, rediriger vers la liste des rendez-vous
-      console.error('Aucun appointment trouvé dans le state');
-      this.error = 'Rendez-vous non trouvé. Redirection...';
-      setTimeout(() => {
-        this.router.navigate(['/appointments']);
-      }, 2000);
+    if (!appointment?.id) {
+      this.handleError('Aucun appointment trouvé dans le state', '/appointments');
       return;
     }
 
-    // Utiliser l'utilisateur connecté pour vérifier les permissions
-    const currentUser = this.authService.getCurrentUser();
     if (!currentUser) {
-      this.error = 'Utilisateur non authentifié';
+      this.error.set('Utilisateur non authentifié');
       this.router.navigate(['/auth/login']);
       return;
     }
 
-    // Vérifier les permissions selon le rôle
     if (currentUser.role === 'doctor') {
-      // Pour un docteur, on récupère son doctorId depuis son profil
-      // Puis on vérifie que l'appointment appartient bien à ce docteur
-      this.http.get<any>(`${this.apiUrl}/doctor-profiles/user/${currentUser.id}`).subscribe({
-        next: (doctorProfile) => {
-          console.log('Doctor profile récupéré:', doctorProfile);
-          console.log('Appointment doctorId:', appointment.doctorId);
-
-          if (!doctorProfile || !doctorProfile.id) {
-            this.error = 'Profil médecin introuvable';
-            setTimeout(() => {
-              this.router.navigate(['/appointments']);
-            }, 2000);
-            return;
-          }
-
-          // Si l'appointment n'a pas de doctorId, le récupérer depuis l'appointment
-          if (!appointment.doctorId) {
-            console.log('Appointment sans doctorId, récupération depuis le backend...');
-            this.appointmentService.getAppointment(appointment.id).subscribe({
-              next: (fullAppointment: Appointment) => {
-                appointment.doctorId = fullAppointment.doctorId;
-                this.validateAndLoad(appointment, doctorProfile.id, currentUser);
-              },
-              error: (err) => {
-                console.error('Erreur lors de la récupération de l\'appointment:', err);
-                this.error = 'Erreur lors de la récupération du rendez-vous';
-              }
-            });
-          } else {
-            this.validateAndLoad(appointment, doctorProfile.id, currentUser);
-          }
-        },
-        error: (err) => {
-          console.error('Erreur lors de la récupération du profil médecin:', err);
-          this.error = 'Erreur lors de la vérification des permissions';
-        }
-      });
+      this.handleDoctorAccess(appointment, currentUser);
     } else {
-      // Pour un patient, vérifier que c'est bien son rendez-vous
-      if (appointment.patientId === currentUser.id) {
-        this.appointmentId = appointment.id;
-        this.patientId = appointment.patientId;
-        this.doctorId = appointment.doctorId || '';
-        this.loadPatientConsultations();
-      } else {
-        this.error = 'Vous n\'avez pas accès à ce rendez-vous';
-        setTimeout(() => {
-          this.router.navigate(['/appointments']);
-        }, 2000);
-      }
+      this.handlePatientAccess(appointment, currentUser);
     }
   }
 
-  private validateAndLoad(appointment: any, doctorProfileId: string, currentUser: any): void {
+  private handleDoctorAccess(appointment: any, currentUser: any): void {
+    this.http.get<any>(`${this.apiUrl}/doctor-profiles/user/${currentUser.id}`).subscribe({
+      next: (doctorProfile) => {
+        console.log('Doctor profile récupéré:', doctorProfile);
+        console.log('Appointment doctorId:', appointment.doctorId);
+
+        if (!doctorProfile?.id) {
+          this.handleError('Profil médecin introuvable', '/appointments');
+          return;
+        }
+
+        if (!appointment.doctorId) {
+          console.log('Appointment sans doctorId, récupération depuis le backend...');
+          this.appointmentService.getAppointment(appointment.id).subscribe({
+            next: (fullAppointment: Appointment) => {
+              appointment.doctorId = fullAppointment.doctorId;
+              this.validateAndLoad(appointment, doctorProfile.id);
+            },
+            error: (err) => {
+              console.error('Erreur lors de la récupération de l\'appointment:', err);
+              this.error.set('Erreur lors de la récupération du rendez-vous');
+            }
+          });
+        } else {
+          this.validateAndLoad(appointment, doctorProfile.id);
+        }
+      },
+      error: (err) => {
+        console.error('Erreur lors de la récupération du profil médecin:', err);
+        this.error.set('Erreur lors de la vérification des permissions');
+      }
+    });
+  }
+
+  private handlePatientAccess(appointment: any, currentUser: any): void {
+    if (appointment.patientId === currentUser.id) {
+      this.appointmentId = appointment.id;
+      this.patientId = appointment.patientId;
+      this.doctorId = appointment.doctorId || '';
+      this.loadPatientConsultations();
+    } else {
+      this.handleError('Vous n\'avez pas accès à ce rendez-vous', '/appointments');
+    }
+  }
+
+  private validateAndLoad(appointment: any, doctorProfileId: string): void {
     if (appointment.doctorId === doctorProfileId) {
       this.appointmentId = appointment.id;
       this.patientId = appointment.patientId;
@@ -137,21 +131,22 @@ export class PatientConsultationsComponent implements OnInit {
         doctorProfileId,
         appointmentDoctorId: appointment.doctorId
       });
-      this.error = 'Vous n\'avez pas accès à ce rendez-vous';
-      setTimeout(() => {
-        this.router.navigate(['/appointments']);
-      }, 2000);
+      this.handleError('Vous n\'avez pas accès à ce rendez-vous', '/appointments');
     }
+  }
+
+  private handleError(message: string, redirectPath: string): void {
+    console.error(message);
+    this.error.set(`${message}. Redirection...`);
+    setTimeout(() => this.router.navigate([redirectPath]), 2000);
   }
 
   loadPatientConsultations(): void {
     this.consultationService.getConsultationsByPatient(this.patientId).subscribe({
-      next: (consultations) => {
-        this.patientConsultations = consultations;
-      },
+      next: (consultations) => this.patientConsultations.set(consultations),
       error: (err) => {
         console.error('Erreur lors du chargement des consultations:', err);
-        this.error = 'Erreur lors du chargement des consultations';
+        this.error.set('Erreur lors du chargement des consultations');
       },
     });
   }
@@ -166,13 +161,15 @@ export class PatientConsultationsComponent implements OnInit {
   }
 
   onSubmit(): void {
-    if (!this.consultationForm.valid) return;
-    if (!this.doctorId) {
-      this.error = 'Médecin non identifié. Veuillez rafraîchir la page.';
+    if (!this.consultationForm.valid || !this.doctorId) {
+      if (!this.doctorId) {
+        this.error.set('Médecin non identifié. Veuillez rafraîchir la page.');
+      }
       return;
     }
-    this.loading = true;
-    this.error = null;
+
+    this.loading.set(true);
+    this.error.set(null);
 
     const formValue = this.consultationForm.value;
     const dto: CreateConsultationDto = {
@@ -187,8 +184,8 @@ export class PatientConsultationsComponent implements OnInit {
 
     this.consultationService.createConsultation(dto).subscribe({
       next: (consultation) => {
-        this.currentConsultation = consultation;
-        this.loading = false;
+        this.currentConsultation.set(consultation);
+        this.loading.set(false);
         this.loadPatientConsultations();
         this.consultationForm.reset({
           type: ConsultationType.STANDARD,
@@ -197,24 +194,35 @@ export class PatientConsultationsComponent implements OnInit {
           joursRepos: null,
         });
 
-        // Marquer le rendez-vous comme "done" seulement après validation réussie du formulaire
         if (this.appointmentId) {
           this.appointmentService.markAsDone(this.appointmentId).subscribe({
-            next: () => {
-              console.log('Rendez-vous marqué comme terminé');
-            },
-            error: (err) => {
-              console.error('Erreur lors de la mise à jour du statut du rendez-vous:', err);
-              // Ne pas bloquer l'utilisateur si cette mise à jour échoue
-            }
+            next: () => console.log('Rendez-vous marqué comme terminé'),
+            error: (err) => console.error('Erreur lors de la mise à jour du statut du rendez-vous:', err)
           });
         }
       },
       error: (err) => {
-        this.error = err.error?.message || 'Erreur lors de la création de la consultation';
-        this.loading = false;
+        this.error.set(err.error?.message || 'Erreur lors de la création de la consultation');
+        this.loading.set(false);
       },
     });
+  }
+
+  resetForm(): void {
+    this.consultationForm.patchValue({
+      type: this.consultationTypes.STANDARD,
+      duration: null,
+      medicament: null,
+      joursRepos: null
+    });
+  }
+
+  downloadOrdonnance(consultationId: string): void {
+    this.consultationService.downloadOrdonnance(consultationId);
+  }
+
+  downloadCertificat(consultationId: string): void {
+    this.consultationService.downloadCertificat(consultationId);
   }
 
   goBack(): void {

@@ -20,12 +20,11 @@
                   formControlName="patientId"
                   placeholder="UUID du patient"
                 />
-                <div
-                  *ngIf="consultationForm.get('patientId')?.invalid && consultationForm.get('patientId')?.touched"
-                  class="text-danger small"
-                >
-                  L'ID patient est requis
-                </div>
+                @if (consultationForm.get('patientId')?.invalid && consultationForm.get('patientId')?.touched) {
+                  <div class="text-danger small">
+                    L'ID patient est requis
+                  </div>
+                }
               </div>
 
               <div class="col-md-6 mb-3">
@@ -37,12 +36,11 @@
                   formControlName="doctorId"
                   placeholder="UUID du médecin"
                 />
-                <div
-                  *ngIf="consultationForm.get('doctorId')?.invalid && consultationForm.get('doctorId')?.touched"
-                  class="text-danger small"
-                >
-                  L'ID médecin est requis
-                </div>
+                @if (consultationForm.get('doctorId')?.invalid && consultationForm.get('doctorId')?.touched) {
+                  <div class="text-danger small">
+                    L'ID médecin est requis
+                  </div>
+                }
               </div>
             </div>
 
@@ -54,9 +52,11 @@
                   class="form-select"
                   formControlName="type"
                 >
-                  <option *ngFor="let type of consultationTypeKeys" [value]="type">
-                    {{ getTypeLabel(type) }}
-                  </option>
+                  @for (type of consultationTypeKeys; track type) {
+                    <option [value]="type">
+                      {{ getTypeLabel(type) }}
+                    </option>
+                  }
                 </select>
               </div>
 
@@ -88,105 +88,114 @@
               <button
                 type="submit"
                 class="btn btn-primary"
-                [disabled]="loading || consultationForm.invalid"
+                [disabled]="loading() || consultationForm.invalid"
               >
-                <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
-                {{ loading ? 'Création...' : 'Démarrer Consultation' }}
+                @if (loading()) {
+                  <span class="spinner-border spinner-border-sm me-2"></span>
+                }
+                {{ loading() ? 'Création...' : 'Démarrer Consultation' }}
               </button>
               <button
                 type="button"
                 class="btn btn-secondary"
                 (click)="resetForm()"
-                [disabled]="loading"
+                [disabled]="loading()"
               >
                 Réinitialiser
               </button>
             </div>
 
-            <div *ngIf="error" class="alert alert-danger mt-3">
-              {{ error }}
-            </div>
+            @if (error()) {
+              <div class="alert alert-danger mt-3">
+                {{ error() }}
+              </div>
+            }
           </form>
         </div>
       </div>
 
       <!-- Affichage de la consultation créée -->
-      <div *ngIf="currentConsultation" class="card">
-        <div class="card-header bg-success text-white">
-          <h4 class="mb-0">Consultation Créée avec Succès</h4>
-        </div>
-        <div class="card-body">
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <strong>ID Consultation:</strong>
-              <p class="text-muted">{{ currentConsultation.id }}</p>
-            </div>
-            <div class="col-md-6">
-              <strong>Type:</strong>
-              <p class="text-muted">{{ getTypeLabel(currentConsultation.type) }}</p>
-            </div>
+      @if (currentConsultation(); as consultation) {
+        <div class="card">
+          <div class="card-header bg-success text-white">
+            <h4 class="mb-0">Consultation Créée avec Succès</h4>
           </div>
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <strong>Durée:</strong>
-              <p class="text-muted">{{ currentConsultation.duration }} minutes</p>
+          <div class="card-body">
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <strong>ID Consultation:</strong>
+                <p class="text-muted">{{ consultation.id }}</p>
+              </div>
+              <div class="col-md-6">
+                <strong>Type:</strong>
+                <p class="text-muted">{{ getTypeLabel(consultation.type) }}</p>
+              </div>
             </div>
-            <div class="col-md-6">
-              <strong>Date de création:</strong>
-              <p class="text-muted">{{ currentConsultation.createdAt | date: 'dd/MM/yyyy HH:mm' }}</p>
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <strong>Durée:</strong>
+                <p class="text-muted">{{ consultation.duration }} minutes</p>
+              </div>
+              <div class="col-md-6">
+                <strong>Date de création:</strong>
+                <p class="text-muted">{{ consultation.createdAt | date: 'dd/MM/yyyy HH:mm' }}</p>
+              </div>
             </div>
-          </div>
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <strong>ID Patient:</strong>
-              <p class="text-muted">{{ currentConsultation.patientId }}</p>
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <strong>ID Patient:</strong>
+                <p class="text-muted">{{ consultation.patientId }}</p>
+              </div>
+              <div class="col-md-6">
+                <strong>ID Médecin:</strong>
+                <p class="text-muted">{{ consultation.doctorId }}</p>
+              </div>
             </div>
-            <div class="col-md-6">
-              <strong>ID Médecin:</strong>
-              <p class="text-muted">{{ currentConsultation.doctorId }}</p>
-            </div>
-          </div>
 
-          <div class="d-flex gap-2 mt-4">
-            <button
-              class="btn btn-success"
-              (click)="generatePDF()"
-              [disabled]="loading"
-            >
-              <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
-              Générer PDF
-            </button>
-            <button
-              class="btn btn-info"
-              (click)="viewPDF()"
-              [disabled]="loading || !currentConsultation.pdfUrl"
-            >
-              Visualiser PDF
-            </button>
-            <button
-              class="btn btn-primary"
-              (click)="downloadPDF()"
-              [disabled]="loading || !currentConsultation.pdfUrl"
-            >
-              Télécharger PDF
-            </button>
-            <button
-              class="btn btn-secondary"
-              (click)="printPDF()"
-              [disabled]="loading || !currentConsultation.pdfUrl"
-            >
-              Imprimer PDF
-            </button>
-          </div>
+            <div class="d-flex gap-2 mt-4">
+              <button
+                class="btn btn-success"
+                (click)="generatePDF()"
+                [disabled]="loading()"
+              >
+                @if (loading()) {
+                  <span class="spinner-border spinner-border-sm me-2"></span>
+                }
+                Générer PDF
+              </button>
+              <button
+                class="btn btn-info"
+                (click)="viewPDF()"
+                [disabled]="loading() || !consultation.pdfUrl"
+              >
+                Visualiser PDF
+              </button>
+              <button
+                class="btn btn-primary"
+                (click)="downloadPDF()"
+                [disabled]="loading() || !consultation.pdfUrl"
+              >
+                Télécharger PDF
+              </button>
+              <button
+                class="btn btn-secondary"
+                (click)="printPDF()"
+                [disabled]="loading() || !consultation.pdfUrl"
+              >
+                Imprimer PDF
+              </button>
+            </div>
 
-          <div *ngIf="currentConsultation.pdfUrl" class="mt-3">
-            <small class="text-muted">
-              PDF disponible: {{ currentConsultation.pdfUrl }}
-            </small>
+            @if (consultation.pdfUrl) {
+              <div class="mt-3">
+                <small class="text-muted">
+                  PDF disponible: {{ consultation.pdfUrl }}
+                </small>
+              </div>
+            }
           </div>
         </div>
-      </div>
+      }
     </div>
   </div>
 </div>
-
