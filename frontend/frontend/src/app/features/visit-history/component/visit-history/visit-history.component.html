@@ -83,6 +83,28 @@
           }
         </tbody>
       </table>
+      <!-- ================= PAGINATION ================= -->
+<div class="d-flex justify-content-center align-items-center gap-3 mt-4">
+
+  <button
+    class="btn btn-outline-secondary"
+    (click)="prevPage()"
+    [disabled]="page() === 1">
+    ◀ Previous
+  </button>
+
+  <span class="fw-bold">
+    Page {{ data()!.page }} / {{ data()!.totalPages }}
+  </span>
+
+  <button
+    class="btn btn-outline-secondary"
+    (click)="nextPage()"
+    [disabled]="page() === data()!.totalPages">
+    Next ▶
+  </button>
+
+</div>
 
       <!-- ================= TIMELINE ================= -->
       <h5 class="mt-5 mb-4 text-center">

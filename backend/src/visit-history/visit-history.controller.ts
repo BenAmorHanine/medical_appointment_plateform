@@ -1,4 +1,4 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query,UseGuards } from '@nestjs/common';
 import { VisitHistoryService } from './visit-history.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -10,11 +10,18 @@ export class VisitHistoryController {
   constructor(private readonly visitHistoryService: VisitHistoryService) {}
 
   //  PATIENT → voit uniquement SON historique
- @Get('me')
+@Get('me')
 @UseGuards(JwtAuthGuard)
-getMyHistory(@GetUser() user: any) {
-  console.log('🟡 JWT USER:', user);
-  return this.visitHistoryService.getHistoryByUserId(user.id);
+getMyHistory(
+  @GetUser() user: any,
+  @Query('page') page = 1,
+  @Query('limit') limit = 10,
+) {
+  return this.visitHistoryService.getHistoryByUserId(
+    user.id,
+    Number(page),
+    Number(limit),
+  );
 }
 
 
@@ -25,10 +32,14 @@ getMyHistory(@GetUser() user: any) {
 getPatientHistory(
   @Param('id') patientId: string,
   @GetUser() user: any,
+  @Query('page') page = 1,
+  @Query('limit') limit = 10,
 ) {
   return this.visitHistoryService.getHistoryForDoctor(
     patientId,
-    user.id,  
+    user.id,
+    Number(page),
+    Number(limit),
   );
 }
 

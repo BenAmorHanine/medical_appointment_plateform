@@ -2,6 +2,7 @@ import { Component, OnInit, signal, computed } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { VisitHistoryResponse, VisitHistoryItem } from '../../model/visit-history.model';
 import { VisitHistoryService } from '../../service/visit-history.service';
+
 @Component({
   selector: 'app-visit-history',
   templateUrl: './visit-history.component.html',
@@ -13,6 +14,10 @@ export class VisitHistoryComponent implements OnInit {
   error = signal<string | null>(null);
   data = signal<VisitHistoryResponse | null>(null);
 
+  // 🔽 Pagination state
+  page = signal(1);
+  limit = 5;
+
   presentVisits = computed<VisitHistoryItem[]>(() =>
     this.data()?.history.filter(h => h.status === 'EFFECTUE') ?? []
   );
@@ -23,11 +28,18 @@ export class VisitHistoryComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.loadHistory();
+  }
+
+  loadHistory(): void {
+    this.loading.set(true);
+    this.error.set(null);
+
     const patientId = this.route.snapshot.paramMap.get('patientId');
 
     const request$ = patientId
-      ? this.historyService.getPatientHistory(patientId) //  doctor
-      : this.historyService.getMyHistory();              //  patient
+      ? this.historyService.getPatientHistory(patientId, this.page(), this.limit)
+      : this.historyService.getMyHistory(this.page(), this.limit);
 
     request$.subscribe({
       next: (res) => {
@@ -39,6 +51,20 @@ export class VisitHistoryComponent implements OnInit {
         this.loading.set(false);
       },
     });
+  }
+
+  nextPage(): void {
+    if (this.data() && this.page() < this.data()!.totalPages) {
+      this.page.update(p => p + 1);
+      this.loadHistory();
+    }
+  }
+
+  prevPage(): void {
+    if (this.page() > 1) {
+      this.page.update(p => p - 1);
+      this.loadHistory();
+    }
   }
 
   statusClass(status: string): string {

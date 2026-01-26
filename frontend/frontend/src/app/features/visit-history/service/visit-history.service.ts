@@ -11,15 +11,20 @@ export class VisitHistoryService {
 
   constructor(private http: HttpClient) {}
 
-  // 👤 Patient
-  getMyHistory(): Observable<VisitHistoryResponse> {
-    return this.http.get<VisitHistoryResponse>(`${this.API}/me`);
-  }
+  getMyHistory(page = 1, limit = 10): Observable<VisitHistoryResponse> {
+  return this.http.get<VisitHistoryResponse>(
+    `${this.API}/me?page=${page}&limit=${limit}`
+  );
+}
 
-  // 👨‍⚕️ Doctor
-  getPatientHistory(patientId: string): Observable<VisitHistoryResponse> {
-    return this.http.get<VisitHistoryResponse>(
-      `${this.API}/patient/${patientId}`,
-    );
-  }
+getPatientHistory(
+  patientId: string,
+  page = 1,
+  limit = 10,
+): Observable<VisitHistoryResponse> {
+  return this.http.get<VisitHistoryResponse>(
+    `${this.API}/patient/${patientId}?page=${page}&limit=${limit}`
+  );
+}
+
 }

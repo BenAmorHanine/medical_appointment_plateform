@@ -25,25 +25,34 @@ export class VisitHistoryService {
     private readonly doctorProfileRepository: Repository<DoctorProfileEntity>
   ) {}
 
-async getHistoryByUserId(userId: string) {
+async getHistoryByUserId(userId: string, page = 1, limit = 10) {
   const patientProfile = await this.patientProfileRepository.findOne({
     where: { user: { id: userId } },
   });
 
   if (!patientProfile) {
-    // ⛔ patient créé après → pas d’historique
     return {
       blocked: false,
       absenceCount: 0,
+      page,
+      limit,
+      total: 0,
+      totalPages: 0,
       history: [],
     };
   }
 
-  return this.getHistoryByPatient(patientProfile.id);
+  return this.getHistoryByPatient(patientProfile.id, page, limit);
 }
 
 
- async getHistoryForDoctor(patientId: string, doctorUserId: string) {
+
+ async getHistoryForDoctor(
+  patientId: string,
+  doctorUserId: string,
+  page = 1,
+  limit = 10,
+) {
   const doctorProfile = await this.doctorProfileRepository.findOneOrFail({
     select: { id: true },
     where: { user: { id: doctorUserId } },
@@ -62,56 +71,68 @@ async getHistoryByUserId(userId: string) {
     );
   }
 
-  return this.getHistoryByPatient(patientId);
+  return this.getHistoryByPatient(patientId, page, limit);
 }
 
 
 
-  async getHistoryByPatient(patientId: string) {
-    const consultations = await this.consultationRepository.find({
+
+ async getHistoryByPatient(
+  patientId: string,
+  page = 1,
+  limit = 10,
+) {
+  const [consultations, total] =
+    await this.consultationRepository.findAndCount({
       where: { patientId },
       order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
     });
 
-    let absenceCount = 0;
-    const history: VisitHistoryDto[] = [];
+  let absenceCount = 0;
+  const history: VisitHistoryDto[] = [];
 
-    for (const consultation of consultations) {
-      let status: VisitStatus = 'EFFECTUE';
+  for (const consultation of consultations) {
+    let status: VisitStatus = 'EFFECTUE';
 
-      if (consultation.appointmentId) {
-        const appointment = await this.appointmentRepository.findOne({
-          where: { id: consultation.appointmentId },
-        });
+    if (consultation.appointmentId) {
+      const appointment = await this.appointmentRepository.findOne({
+        where: { id: consultation.appointmentId },
+      });
 
-        if (appointment) {
-          if (appointment.status === 'cancelled') {
-            status = 'ANNULE';
-          } else if (
-            appointment.status !== 'done' &&
-            consultation.createdAt < new Date()
-          ) {
-            status = 'ABSENT';
-            absenceCount++;
-          }
+      if (appointment) {
+        if (appointment.status === 'cancelled') {
+          status = 'ANNULE';
+        } else if (
+          appointment.status !== 'done' &&
+          consultation.createdAt < new Date()
+        ) {
+          status = 'ABSENT';
+          absenceCount++;
         }
       }
-
-      history.push({
-        consultationId: consultation.id,
-        date: consultation.createdAt,
-        type: consultation.type,
-        status,
-        ordonnanceUrl: consultation.ordonnanceUrl || undefined,
-        certificatUrl: consultation.certificatUrl || undefined,
-
-      });
     }
 
-    return {
-      blocked: absenceCount >= this.ABSENCE_LIMIT,
-      absenceCount,
-      history,
-    };
+    history.push({
+      consultationId: consultation.id,
+      date: consultation.createdAt,
+      type: consultation.type,
+      status,
+      ordonnanceUrl: consultation.ordonnanceUrl || undefined,
+      certificatUrl: consultation.certificatUrl || undefined,
+    });
   }
+
+  return {
+    blocked: absenceCount >= this.ABSENCE_LIMIT,
+    absenceCount,
+    page,
+    limit,
+    total,
+    totalPages: Math.ceil(total / limit),
+    history,
+  };
+}
+
 }

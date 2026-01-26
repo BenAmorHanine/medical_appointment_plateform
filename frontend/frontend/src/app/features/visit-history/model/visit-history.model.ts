@@ -5,12 +5,19 @@ export interface VisitHistoryItem {
   date: string;
   type: string;
   status: VisitStatus;
-    ordonnanceUrl?: string;
+  ordonnanceUrl?: string;
   certificatUrl?: string;
 }
 
 export interface VisitHistoryResponse {
   blocked: boolean;
   absenceCount: number;
+
   history: VisitHistoryItem[];
+
+  // 🔽 Pagination
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
 }
