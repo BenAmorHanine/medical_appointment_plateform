@@ -106,6 +106,11 @@ export class ConsultationService {
       responseType: 'blob',
     });
   }
+  getConsultationsByDoctor(doctorProfileId: string) {
+  return this.http.get<Consultation[]>(
+    `${this.apiUrl}/doctor/${doctorProfileId}`
+  );
+}
 
   downloadPDF(id: string): void {
     this.downloadOrdonnance(id);

@@ -34,6 +34,8 @@ export class PatientConsultationsComponent implements OnInit {
   patientId = '';
   appointmentId = '';
   doctorId = '';
+  patientProfileId = '';
+  doctorProfileId = '';
   private readonly apiUrl = 'http://localhost:3000';
 
   // Form
@@ -125,6 +127,9 @@ export class PatientConsultationsComponent implements OnInit {
       this.appointmentId = appointment.id;
       this.patientId = appointment.patientId;
       this.doctorId = appointment.doctorId;
+      this.patientProfileId = appointment.patientId;   // profileId (chez toi = même valeur)
+      this.doctorProfileId = doctorProfileId;   
+
       this.loadPatientConsultations();
     } else {
       console.error('IDs ne correspondent pas:', {
@@ -140,7 +145,7 @@ export class PatientConsultationsComponent implements OnInit {
     this.error.set(`${message}. Redirection...`);
     setTimeout(() => this.router.navigate([redirectPath]), 2000);
   }
-
+/*
   loadPatientConsultations(): void {
     this.consultationService.getConsultationsByPatient(this.patientId).subscribe({
       next: (consultations) => this.patientConsultations.set(consultations),
@@ -149,7 +154,29 @@ export class PatientConsultationsComponent implements OnInit {
         this.error.set('Erreur lors du chargement des consultations');
       },
     });
+  }*/
+ loadPatientConsultations(): void {
+  if (this.authService.getCurrentUser()?.role === 'doctor') {
+    this.consultationService
+      .getConsultationsByDoctor(this.doctorProfileId)
+      .subscribe({
+        next: (consultations) => this.patientConsultations.set(consultations),
+        error: () => {
+          this.error.set('Erreur lors du chargement des consultations');
+        },
+      });
+  } else {
+    this.consultationService
+      .getConsultationsByPatient(this.patientId)
+      .subscribe({
+        next: (consultations) => this.patientConsultations.set(consultations),
+        error: () => {
+          this.error.set('Erreur lors du chargement des consultations');
+        },
+      });
   }
+}
+
 
   getTypeLabel(type: ConsultationType): string {
     const labels: Record<ConsultationType, string> = {

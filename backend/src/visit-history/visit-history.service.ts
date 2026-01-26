@@ -26,16 +26,22 @@ export class VisitHistoryService {
   ) {}
 
 async getHistoryByUserId(userId: string) {
-  try {
-    const { id } = await this.patientProfileRepository.findOneOrFail({
-      where: { user: { id: userId } },
-    });
+  const patientProfile = await this.patientProfileRepository.findOne({
+    where: { user: { id: userId } },
+  });
 
-    return this.getHistoryByPatient(id);
-  } catch {
-    throw new NotFoundException('Patient profile not found');
+  if (!patientProfile) {
+    // ⛔ patient créé après → pas d’historique
+    return {
+      blocked: false,
+      absenceCount: 0,
+      history: [],
+    };
   }
+
+  return this.getHistoryByPatient(patientProfile.id);
 }
+
 
  async getHistoryForDoctor(patientId: string, doctorUserId: string) {
   const doctorProfile = await this.doctorProfileRepository.findOneOrFail({
@@ -96,6 +102,9 @@ async getHistoryByUserId(userId: string) {
         date: consultation.createdAt,
         type: consultation.type,
         status,
+        ordonnanceUrl: consultation.ordonnanceUrl || undefined,
+        certificatUrl: consultation.certificatUrl || undefined,
+
       });
     }
 

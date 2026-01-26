@@ -207,10 +207,43 @@ export class ConsultationsService implements OnModuleInit {
     try {
       const duration = dto.duration ?? this.durations[dto.type] ?? 30;
 
-      // Créer la consultation
+     /* // Créer la consultation
       const consultation = await queryRunner.manager.save(
         this.consultationRepo.create({ ...dto, duration }),
-      );
+      );*/
+       //1️⃣ Récupérer le patientProfile depuis le userId reçu
+const patientProfile = await this.patientRepo.findOne({
+  where: { user: { id: dto.patientId } },
+});
+
+
+const doctorProfile = await this.doctorRepo.findOne({
+  where: { id: dto.doctorProfileId },
+});
+
+
+if (!doctorProfile) {
+  throw new NotFoundException('Doctor profile not found');
+}
+
+
+
+
+if (!patientProfile) {
+  throw new NotFoundException('Patient profile not found');
+}
+
+
+// 2️⃣ Forcer l’ID correct
+const consultation = await queryRunner.manager.save(
+  this.consultationRepo.create({
+    ...dto,
+    patientId: patientProfile.id,
+    doctorProfileId: doctorProfile.id, // ✅ PROFILE ID
+    duration,
+  }),
+);
+
 
       // Marquer le rendez-vous comme terminé si présent
       if (dto.appointmentId) {

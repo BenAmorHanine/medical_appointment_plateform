@@ -34,25 +34,50 @@
     }
 
     @else {
+
       <!-- ================= TABLE ================= -->
       <table class="table table-hover shadow-sm">
         <thead class="table-light">
           <tr>
             <th>Date</th>
             <th>Type</th>
-            <th>Status</th>
+            <th>Status / Documents</th>
           </tr>
         </thead>
 
         <tbody>
           @for (item of data()!.history; track item.consultationId) {
             <tr>
-              <td>{{ item.date | date:'mediumDate' }}</td>
+              <td>{{ item.date | date:'dd/MM/yyyy HH:mm' }}</td>
+
               <td>{{ item.type | titlecase }}</td>
+
               <td>
                 <span [class]="statusClass(item.status)">
                   {{ item.status }}
                 </span>
+
+                <div class="mt-2 d-flex gap-2">
+                  @if (item.ordonnanceUrl) {
+                    <a
+                      class="btn btn-sm btn-outline-primary"
+                      [href]="'http://localhost:3000' + item.ordonnanceUrl"
+                      target="_blank"
+                    >
+                      Ordonnance
+                    </a>
+                  }
+
+                  @if (item.certificatUrl) {
+                    <a
+                      class="btn btn-sm btn-outline-success"
+                      [href]="'http://localhost:3000' + item.certificatUrl"
+                      target="_blank"
+                    >
+                      Certificat
+                    </a>
+                  }
+                </div>
               </td>
             </tr>
           }
@@ -76,15 +101,38 @@
             <div class="timeline-item d-flex align-items-start mb-4">
 
               <div class="timeline-date me-4 fw-bold text-primary">
-                {{ item.date | date:'dd MMM yyyy' }}
+                {{ item.date | date:'dd MMM yyyy HH:mm' }}
               </div>
 
               <div class="timeline-dot me-3"></div>
 
               <div class="timeline-content">
                 <strong class="text-capitalize">{{ item.type }}</strong>
+
                 <div class="text-success small">
                   Consultation completed
+                </div>
+
+                <div class="mt-2 d-flex gap-2">
+                  @if (item.ordonnanceUrl) {
+                    <a
+                      class="btn btn-sm btn-outline-primary"
+                      [href]="'http://localhost:3000' + item.ordonnanceUrl"
+                      target="_blank"
+                    >
+                      Ordonnance
+                    </a>
+                  }
+
+                  @if (item.certificatUrl) {
+                    <a
+                      class="btn btn-sm btn-outline-success"
+                      [href]="'http://localhost:3000' + item.certificatUrl"
+                      target="_blank"
+                    >
+                      Certificat
+                    </a>
+                  }
                 </div>
               </div>
 
@@ -92,6 +140,7 @@
           }
         </div>
       }
+
     }
   }
 </section>
