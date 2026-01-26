@@ -61,6 +61,11 @@ export class ConsultationService {
   getConsultationsByPatient(patientId: string): Observable<Consultation[]> {
     return this.http.get<Consultation[]>(`${this.apiUrl}/patient/${patientId}`);
   }
+getConsultationsByDoctor(doctorProfileId: string) {
+  return this.http.get<Consultation[]>(
+    `${this.apiUrl}/doctor/${doctorProfileId}`
+  );
+}
 
   downloadOrdonnance(id: string): void {
     this.http.get(`${this.apiUrl}/${id}/ordonnance`, {

@@ -7,6 +7,8 @@ export class VisitHistoryDto {
   date: Date;
   type: ConsultationType;
   status: VisitStatus;
+  ordonnanceUrl?: string;
+  certificatUrl?: string;
 }
 
 

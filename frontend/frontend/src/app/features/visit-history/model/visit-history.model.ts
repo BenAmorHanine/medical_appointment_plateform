@@ -5,6 +5,8 @@ export interface VisitHistoryItem {
   date: string;
   type: string;
   status: VisitStatus;
+    ordonnanceUrl?: string;
+  certificatUrl?: string;
 }
 
 export interface VisitHistoryResponse {

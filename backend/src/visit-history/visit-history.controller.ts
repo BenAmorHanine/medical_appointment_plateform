@@ -10,12 +10,13 @@ export class VisitHistoryController {
   constructor(private readonly visitHistoryService: VisitHistoryService) {}
 
   //  PATIENT → voit uniquement SON historique
-  @Get('me')
-  @UseGuards(JwtAuthGuard)
-  getMyHistory(@GetUser() user: any) {
-    // userId vient du JWT (payload)
-    return this.visitHistoryService.getHistoryByUserId(user.id);
-  }
+ @Get('me')
+@UseGuards(JwtAuthGuard)
+getMyHistory(@GetUser() user: any) {
+  console.log('🟡 JWT USER:', user);
+  return this.visitHistoryService.getHistoryByUserId(user.id);
+}
+
 
  
 @Get('patient/:id')

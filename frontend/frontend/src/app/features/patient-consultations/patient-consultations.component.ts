@@ -18,6 +18,9 @@ export class PatientConsultationsComponent implements OnInit {
   patientId!: string;
   appointmentId!: string;
   doctorId!: string;
+  patientProfileId!: string;
+  doctorProfileId!: string;
+
   private apiUrl = 'http://localhost:3000';
 
   patientConsultations: Consultation[] = [];
@@ -125,12 +128,15 @@ export class PatientConsultationsComponent implements OnInit {
       }
     }
   }
-
+// badelt fi hedhi
   private validateAndLoad(appointment: any, doctorProfileId: string, currentUser: any): void {
     if (appointment.doctorId === doctorProfileId) {
       this.appointmentId = appointment.id;
       this.patientId = appointment.patientId;
       this.doctorId = appointment.doctorId;
+      this.patientProfileId = appointment.patientId;   
+      this.doctorProfileId = doctorProfileId;
+
       this.loadPatientConsultations();
     } else {
       console.error('IDs ne correspondent pas:', {
@@ -143,7 +149,7 @@ export class PatientConsultationsComponent implements OnInit {
       }, 2000);
     }
   }
-
+  /*
   loadPatientConsultations(): void {
     this.consultationService.getConsultationsByPatient(this.patientId).subscribe({
       next: (consultations) => {
@@ -154,7 +160,20 @@ export class PatientConsultationsComponent implements OnInit {
         this.error = 'Erreur lors du chargement des consultations';
       },
     });
-  }
+  }*/
+loadPatientConsultations(): void {
+  this.consultationService
+    .getConsultationsByDoctor(this.doctorProfileId)
+    .subscribe({
+      next: (consultations: Consultation[]) => {
+        this.patientConsultations = consultations;
+      },
+      error: (err: any) => {
+        console.error('Erreur chargement historique médecin:', err);
+        this.error = 'Erreur lors du chargement des consultations';
+      },
+    });
+}
 
   getTypeLabel(type: ConsultationType): string {
     const labels: Record<ConsultationType, string> = {

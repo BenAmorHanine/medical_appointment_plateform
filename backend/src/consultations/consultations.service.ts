@@ -158,11 +158,39 @@ export class ConsultationsService {
 
     try {
       const duration = (dto.duration || this.DURATIONS[dto.type]) ?? 30;
-
+/*
       // Créer consultation
       const consultation = await qr.manager.save(
         this.repo.create({ ...dto, duration }),
-      );
+      );*/
+      //1️⃣ Récupérer le patientProfile depuis le userId reçu
+const patientProfile = await this.patientRepo.findOne({
+  where: { user: { id: dto.patientId } },
+});
+
+const doctorProfile = await this.doctorRepo.findOne({
+  where: { id: dto.doctorProfileId },
+});
+
+if (!doctorProfile) {
+  throw new NotFoundException('Doctor profile not found');
+}
+
+
+if (!patientProfile) {
+  throw new NotFoundException('Patient profile not found');
+}
+
+// 2️⃣ Forcer l’ID correct
+const consultation = await qr.manager.save(
+  this.repo.create({
+    ...dto,
+    patientId: patientProfile.id,
+    doctorProfileId: doctorProfile.id, // ✅ PROFILE ID
+    duration,
+  }),
+);
+
 
       // Marquer RDV comme terminé
       if (dto.appointmentId) {
@@ -172,7 +200,8 @@ export class ConsultationsService {
       }
 
       // Générer PDFs en parallèle
-      const names = await this.getNames(dto.doctorProfileId, dto.patientId);
+      const names = await this.getNames(consultation.doctorProfileId,
+  consultation.patientId,);
       const [ordonnanceUrl, certificatUrl] = await Promise.all([
         this.createPDF(
           `ordonnance-${consultation.id}.pdf`,
