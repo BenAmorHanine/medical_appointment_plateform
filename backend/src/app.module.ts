@@ -14,6 +14,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ProfileModule } from './profile/profile.module';
 import { VisitHistoryModule } from './visit-history/visit-history.module';
+import { ContactModule } from './contact/contact.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { VisitHistoryModule } from './visit-history/visit-history.module';
     NotificationsModule,
     ProfileModule,
     VisitHistoryModule,
+    ContactModule,
   ],
 })
 export class AppModule {}
