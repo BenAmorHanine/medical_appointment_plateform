@@ -55,4 +55,23 @@ async sendContactEmail(dto: ContactEmailDto) {
   }
 }
 
+async sendNotificationEmail(dto: any) {
+    const domain = this.configService.get<string>('MAILGUN_DOMAIN');
+    
+    const messageData = {
+      from: `MedWin Platform <support@${domain}>`,
+      to: dto.recipientEmail, // Sending TO the user
+      subject: `MedWin Notification: ${dto.subject}`,
+      html: `
+        <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee;">
+        <h2 style="color: #0056b3;">MedWin Notification</h2>
+        <p>Dear ${dto.name},</p>
+        <p>${dto.message}</p>
+        <br>
+        <p><i>Role-specific update for: ${dto.role}</i></p>
+      </div>
+    `
+    };
+    return this.mailgun.messages.create(domain, messageData);
+  }
 }
