@@ -3,29 +3,14 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-
-export interface PatientProfile {
-  id: string;
-  age?: number;
-  phone?: string;
-  medicalRecordNumber: string;
-  address?: string;
-  user?: {
-    id: string;
-    username: string;
-    email: string;
-    firstName?: string;
-    lastName?: string;
-  };
-  createdAt: string;
-  updatedAt: string;
-}
-
+import { PatientProfile } from '../models/patient.model';
 @Injectable({
   providedIn: 'root',
 })
 export class PatientService {
   private apiUrl = `${environment.apiUrl}/patient-profiles`;
+  private adminPatientsUrl = `${environment.apiUrl}/patients`;
+
 
   constructor(private http: HttpClient) {}
 
@@ -44,6 +29,9 @@ export class PatientService {
         return 'Patient inconnu';
       })
     );
+  }
+   getAllPatients(): Observable<PatientProfile[]> {
+    return this.http.get<PatientProfile[]>(this.adminPatientsUrl);
   }
 }
 
