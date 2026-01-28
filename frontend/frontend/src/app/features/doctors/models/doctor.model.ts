@@ -1,9 +1,18 @@
 export interface Doctor {
   id: number;
-  name: string;
   specialty: string;
-  image: string;     
+  image: string;
   rating: number;
-  phone?: string;      
-  available?: boolean; 
+  available?: boolean;
+  consultationFee: number;
+  consultationDuration: number;
+  office: string;
+  user?: {
+    email: string;
+    firstname: string;
+    lastname: string;
+    phone: string;
+  };
+
+
 }
