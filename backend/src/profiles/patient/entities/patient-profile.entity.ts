@@ -17,6 +17,7 @@ export enum UserGender {
 export class PatientProfileEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+  
 
   @Column({ type: 'int', nullable: true })
   age: number;

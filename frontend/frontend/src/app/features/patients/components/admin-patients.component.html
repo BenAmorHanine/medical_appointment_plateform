@@ -1,0 +1,95 @@
+<!-- HERO SECTION -->
+<section class="doctors-hero">
+  <div class="container">
+    <div class="hero-content">
+      <h1 class="hero-title">Our Patients</h1>
+      <p class="hero-subtitle">
+        Registered patients on the MedWin platform
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- GRID SECTION -->
+<section class="doctors-grid-section">
+  <div class="container">
+
+    <!-- LOADING -->
+    @if (loading) {
+      <div class="text-center py-5">
+        <div
+          class="spinner-border text-primary"
+          style="width: 3rem; height: 3rem;"
+        ></div>
+        <p class="mt-3">Loading patients...</p>
+      </div>
+    }
+
+    <!-- EMPTY -->
+    @else if (patients.length === 0) {
+      <p class="text-center text-muted py-5">
+        No patients found.
+      </p>
+    }
+
+    <!-- PATIENTS GRID -->
+    @else {
+      <div class="doctors-grid">
+
+        @for (patient of patients; track patient.id) {
+          <div class="doctor-card">
+
+            <!-- Avatar -->
+            <div class="doctor-avatar">
+              <img
+                src="assets/images/default-patient.jpg"
+                alt="Patient avatar"
+              />
+
+              <div class="doctor-status available">
+                Patient
+              </div>
+            </div>
+
+            <!-- Info -->
+            <div class="doctor-info">
+
+              <h3>
+                {{ patient.user?.username || 'Unknown Patient' }}
+              </h3>
+
+              <div class="specialty">
+                Record # {{ patient.medicalRecordNumber }}
+              </div>
+
+              <div class="contact">
+                <i class="fas fa-envelope"></i>
+                {{ patient.user?.email || 'No email' }}
+              </div>
+
+              <div class="contact">
+                <i class="fas fa-location-dot"></i>
+                {{ patient.address || 'No address provided' }}
+              </div>
+
+              <div class="contact">
+                <i class="fas fa-calendar"></i>
+                Joined {{ patient.createdAt | date:'mediumDate' }}
+              </div>
+
+              <div class="actions">
+                <button class="btn-secondary">
+                  <i class="fas fa-eye"></i>
+                  View Profile
+                </button>
+              </div>
+
+            </div>
+          </div>
+        }
+
+      </div>
+    }
+
+  </div>
+</section>

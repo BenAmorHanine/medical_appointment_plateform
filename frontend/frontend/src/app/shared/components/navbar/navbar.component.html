@@ -19,11 +19,21 @@
           Doctors
         </a>
       </li>
-      <li>
+
+            <!-- For non-admin users: show Contact -->
+      <li *ngIf="!isAdmin">
         <a routerLink="/contact" routerLinkActive="active">
           Contact
         </a>
       </li>
+
+      <!-- For admin: show Patients -->
+      <li *ngIf="isAdmin">
+        <a routerLink="/patients" routerLinkActive="active">
+          Patients
+        </a>
+      </li>
+
     </ul>
 
     <!-- Auth / User Actions -->
@@ -102,9 +112,16 @@
           Doctors
         </a>
       </li>
-      <li>
+     <li *ngIf="!isAdmin">
         <a routerLink="/contact" (click)="toggleMobileMenu()">
           Contact
+        </a>
+      </li>
+
+      <!-- For admin: show Patients -->
+      <li *ngIf="isAdmin">
+        <a routerLink="/patients" (click)="toggleMobileMenu()">
+          Patients
         </a>
       </li>
 
