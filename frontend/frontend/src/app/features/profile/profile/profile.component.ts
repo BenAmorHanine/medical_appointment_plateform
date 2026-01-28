@@ -17,9 +17,9 @@ export class ProfileComponent implements OnInit {
   // The "user" signal will hold all the info (email, role, and the nested profile)
 
   user = signal<any>(null);
-  isEditing = signal<boolean>(false); // Toggle for Edit mode to switch between the "Display" and "Edit" views.
+  isEditing = signal<boolean>(false); //switch between the "Display" and "Edit" views.
 
-  // These are needed for the image logic
+  //image logic
   selectedFile: File | null = null;
   previewImage: string | null = null; // Declare this for the <img> preview
 
@@ -41,7 +41,6 @@ export class ProfileComponent implements OnInit {
     }
   }
 
-  // NEW
 private stripUndefined(obj: any) {
   return Object.fromEntries(
     Object.entries(obj).filter(
@@ -50,39 +49,7 @@ private stripUndefined(obj: any) {
   );
 }
 
-// UPDATED onSave()
-//before the upload image
-/*
-onSave(formValue: any) {
-  const payload: any = {
-    firstName: formValue.firstName,
-    lastName: formValue.lastName,
-    phone: formValue.phone,
-  };
-
-  if (this.user().role === 'doctor') {
-    payload.specialty = formValue.specialty;
-    payload.office = formValue.office;
-    payload.image = formValue.image;
-    payload.available = formValue.available;
-    payload.consultationDuration = formValue.consultationDuration !== undefined ? Number(formValue.consultationDuration) : undefined;
-    payload.consultationFee = formValue.consultationFee !== undefined ? Number(formValue.consultationFee) : undefined;
-  } else {
-    payload.age = formValue.age !== undefined ? Number(formValue.age) : undefined;
-    payload.gender = formValue.gender;
-  }
-
-  this.profileService.updateProfile(payload).subscribe({
-    next: (res) => {
-      this.user.set(res);
-      this.isEditing.set(false);
-    },
-    error: (err) => {
-      console.error(err);
-      alert('Update failed');
-    },
-  });
-}*/onFileSelected(event: any) {
+onFileSelected(event: any) {
     const file = event.target.files[0];
     if (file) {
       this.selectedFile = file;
@@ -107,7 +74,7 @@ onSave(formValue: any) {
     if (this.user().role === 'doctor') {
       payload.specialty = formValue.specialty;
       payload.office = formValue.office;
-      payload.available = formValue.available; // Don't forget availability!
+      payload.available = formValue.available;
       payload.consultationDuration = Number(formValue.consultationDuration);
       payload.consultationFee = Number(formValue.consultationFee);
     } else {

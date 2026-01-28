@@ -1,7 +1,9 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
-import { ContactService } from '../services/contact.service'; // Ensure path is correct
+import { ContactService } from '../services/contact.service';
+import { inject, OnInit } from '@angular/core';
+import { AuthService } from '../../auth/services/auth.service';
 
 @Component({
   selector: 'app-contact',
@@ -10,43 +12,60 @@ import { ContactService } from '../services/contact.service'; // Ensure path is 
   templateUrl: './contact.component.html',
   styleUrls: ['./contact.component.scss']
 })
-export class ContactComponent {
-  contactForm: FormGroup;
+export class ContactComponent implements OnInit {
+  private fb = inject(FormBuilder);
+  private contactService = inject(ContactService);
+  private authService = inject(AuthService);
+
+  contactForm: FormGroup = this.fb.group({
+    name: ['', [Validators.required]],
+    email: ['', [Validators.required, Validators.email]],
+    phone: [''],
+    role: [''],
+    subject: ['', Validators.required],
+    message: ['', [Validators.required, Validators.minLength(10)]]
+  });
+
   isSubmitting = false;
   submitted = false;
 
-  constructor(
-    private fb: FormBuilder,
-    private contactService: ContactService // Injecting your service
-  ) {
-    this.contactForm = this.fb.group({
-      name: ['', [Validators.required, Validators.minLength(2)]],
-      email: ['', [Validators.required, Validators.email]],
-      phone: ['', [Validators.pattern(/^\+216[0-9]{8}$/)]],
-      subject: ['', Validators.required],
-      message: ['', [Validators.required, Validators.minLength(10)]]
-    });
+  ngOnInit() {
+    this.autoFillUserData();
   }
 
-  onSubmit() {
-    if (this.contactForm.valid) {
-      this.isSubmitting = true;
+  autoFillUserData() {
+    const user = this.authService.getCurrentUser();
 
-      this.contactService.sendContactEmail(this.contactForm.value).subscribe({
-        next: (response) => {
-          this.isSubmitting = false;
-          this.submitted = true;
-          this.contactForm.reset();
-
-          // Hide success message after 5 seconds
-          setTimeout(() => this.submitted = false, 5000);
-        },
-        error: (err) => {
-          this.isSubmitting = false;
-          console.error('Submission error:', err);
-          alert('Failed to send message. Please ensure the backend is running.');
-        }
+    if (user) {
+      this.contactForm.patchValue({
+        name: user.username,
+        email: user.email,
+        phone: user.phone,
+        role: user.role
       });
+
+      this.contactForm.get('name')?.disable();
+      this.contactForm.get('email')?.disable();
+      this.contactForm.get('phone')?.disable();
     }
   }
+
+onSubmit() {
+  // We use getRawValue() because name, email, and phone are DISABLED
+  const payload = this.contactForm.getRawValue();
+
+  console.log('Attempting to post to:', `${this.contactService['apiUrl']}/contact-us-email`);
+
+  this.contactService.sendContactEmail(payload).subscribe({
+    next: (res) => {
+      this.submitted = true;
+      this.contactForm.get('subject')?.reset();
+      this.contactForm.get('message')?.reset();
+    },
+    error: (err) => {
+      console.error('404 Debug - Full URL tried:', err.url); // THIS WILL SHOW THE WRONG URL
+      alert(`Error 404: The route ${err.url} does not exist on the server.`);
+    }
+  });
+}
 }

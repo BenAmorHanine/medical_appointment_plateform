@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Mailgun from 'mailgun.js';
 import formData from 'form-data';
-import { SendContactEmailDto } from '../dto/send-contact-email.dto';
+import { ContactEmailDto } from '../dto/contact-email.dto';
+import { InternalServerErrorException } from '@nestjs/common';
 
 @Injectable()
 export class ContactService {
@@ -24,42 +25,34 @@ export class ContactService {
     });
   }
 
-  async sendContactEmail(dto: SendContactEmailDto) {
-    const messageData = {
-      from: `Contact Form <noreply@${this.domain}>`,
-      to: this.companyEmail,
-      subject: `Contact Form: ${dto.subject}`,
-      text: `
-Name: ${dto.name}
-Email: ${dto.email}
-Phone: ${dto.phone || 'Not provided'}
 
-Message:
-${dto.message}
-      `,
-      html: `
-<div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-  <h2 style="color: #007bff;">New Contact Form Submission</h2>
-  <p><strong>Name:</strong> ${dto.name}</p>
-  <p><strong>Email:</strong> ${dto.email}</p>
-  <p><strong>Phone:</strong> ${dto.phone || 'Not provided'}</p>
-  <p><strong>Subject:</strong> ${dto.subject}</p>
-  <hr>
-  <h3>Message:</h3>
-  <p style="background: #f4f4f4; padding: 15px; border-radius: 5px;">
-    ${dto.message.replace(/\n/g, '<br>')}
-  </p>
-</div>
-      `,
-    };
+async sendContactEmail(dto: ContactEmailDto) {
+  const { name, email, subject, message } = dto;
 
-    try {
-      const result = await this.mailgun.messages.create(this.domain, messageData);
-      return { success: true, messageId: result.id };
-    } catch (error: any) {
-      // Log the actual error to your console for debugging
-      console.error('Mailgun Error:', error);
-      throw new Error(`Failed to send email: ${error.message}`);
-    }
+  const data = {
+    from: `${name} <noreply@${this.domain}>`, 
+    to: this.companyEmail,
+    subject: `Contact Form: ${subject}`,
+    // This ensures clicking "Reply" goes to the user
+    'h:Reply-To': email, 
+    html: `
+      <div style="font-family: Arial, sans-serif; border: 1px solid #eee; padding: 20px;">
+        <h2 style="color: #2c3e50;">New Message from ${name}</h2>
+        <p><strong>Sender Email:</strong> ${email}</p>
+        <hr />
+        <p><strong>Subject:</strong> ${subject}</p>
+        <p><strong>Message:</strong></p>
+        <p style="background: #f9f9f9; padding: 15px; border-left: 4px solid #3498db; fontsize:18">${message}</p>
+      </div>
+    `,
+  };
+
+  try {
+    const result = await this.mailgun.messages.create(this.domain, data);
+    return { success: true, messageId: result.id };
+  } catch (error) {
+    throw new InternalServerErrorException('Email failed to send');
   }
+}
+
 }
