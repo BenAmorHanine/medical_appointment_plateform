@@ -96,7 +96,7 @@
         <div class="doctor-card h-100 shadow-lg" role="button" tabindex="0"
              (click)="viewDoctor(doctor)" (keydown.enter)="viewDoctor(doctor)">
           <div class="doctor-image position-relative overflow-hidden">
-            <img [src]="getDoctorImage(doctor)" [alt]="doctor.name" class="img-fluid w-100" loading="lazy">
+            <img [src]="getDoctorImage(doctor)" [alt]="getDoctorName(doctor)" class="img-fluid w-100" loading="lazy">
             <div class="doctor-overlay">
               <div class="rating mb-2">
                 <i class="fa fa-star text-warning"></i>
@@ -108,7 +108,7 @@
             </div>
           </div>
           <div class="doctor-info p-4">
-            <h5 class="doctor-name mb-1">{{ doctor.name }}</h5>
+            <h5 class="doctor-name mb-1">{{ getDoctorName(doctor) }}</h5>
             <p class="doctor-specialty text-muted mb-3">{{ doctor.specialty }}</p>
             <div class="social-links">
               <a href="#" class="me-2"><i class="fab fa-facebook-f"></i></a>

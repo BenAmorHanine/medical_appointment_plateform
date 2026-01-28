@@ -82,6 +82,11 @@ export class HomeComponent implements OnInit, OnDestroy {
     return doctor.image || '/assets/images/default-doctor.jpg';
   }
 
+  getDoctorName(doctor: Doctor): string {
+  return doctor.user ? `${doctor.user.firstname} ${doctor.user.lastname}`.trim() : 'Doctor';
+  }
+
+
   viewDoctor(doctor: Doctor) {
     this.router.navigate(['/doctor', doctor.id]);
   }
