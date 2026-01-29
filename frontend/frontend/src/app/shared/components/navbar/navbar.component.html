@@ -75,10 +75,46 @@
           </a>
         }
 
-        <!-- Notification icon -->
-        <button class="btn-icon notification-btn" (click)="goToNotifications()">
-          <i class="fas fa-bell"></i>
-        </button>
+        <!-- Notification icon + dropdown (keeps existing behavior + adds badge/dropdown) -->
+        <div class="notif-wrapper">
+          <!-- Desktop bell -->
+          <button class="btn-icon notification-btn" (click)="toggleNotificationsDropdown()">
+            <i class="fas fa-bell"></i>
+
+            @if (unreadCount > 0) {
+              <span class="notif-badge">{{ unreadCount }}</span>
+            }
+          </button>
+
+          @if (showNotifDropdown) {
+            <div class="notif-dropdown">
+              <div class="notif-dropdown-header">
+                <strong>Notifications</strong>
+                <button class="notif-link" (click)="markAllNotificationsRead()">
+                  Mark all read
+                </button>
+              </div>
+
+              @if (notifications.length === 0) {
+                <div class="notif-empty">No notifications</div>
+              } @else {
+                <ul class="notif-list">
+                  @for (n of notifications; track n.id) {
+                    <li class="notif-item" [class.unread]="!n.read" (click)="markOneAsRead(n)">
+                      <div class="notif-title">{{ n.title }}</div>
+                      <div class="notif-message">{{ n.message }}</div>
+                      <div class="notif-date">{{ n.createdAt | date:'short' }}</div>
+                    </li>
+                  }
+                </ul>
+
+                <div class="notif-footer">
+                  <button class="notif-link" (click)="goToNotifications()">View all</button>
+                </div>
+              }
+            </div>
+          }
+        </div>
 
         <button class="btn-logout" (click)="logout()">
           <i class="fas fa-sign-out-alt"></i> Logout
@@ -137,9 +173,13 @@
 
         @if (isAuthenticated$ | async) {
 
-          <li>
+          <!-- Mobile notifications (same target, but can also show unread badge) -->
+          <li class="mobile-notif-row">
             <button class="btn-icon" (click)="goToNotifications()">
               <i class="fas fa-bell"></i> Notifications
+              @if (unreadCount > 0) {
+                <span class="notif-badge mobile">{{ unreadCount }}</span>
+              }
             </button>
           </li>
 

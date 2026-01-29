@@ -16,6 +16,10 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { NotificationsService } from './notifications.service';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { UserRole } from '../users/entities/user.entity';
+
 
 @ApiTags('Notifications')
 @ApiBearerAuth()
@@ -27,11 +31,17 @@ export class NotificationsController {
   @Get()
   @ApiOperation({ summary: 'Get all user notifications' })
   @ApiResponse({ status: 200, description: 'Notifications retrieved' })
-  getUserNotifications(@GetUser() user: any) {  // ✅ user complet
-    const userId = user.sub || user.userId;    // ✅ Extrait ID
-    console.log('🔍 Extracted userId:', userId);
-    return this.service.findByUser(userId);
-  }
+  getUserNotifications(@GetUser() user: any) {
+  console.log('JWT user object =', user);
+  console.log('sub =', user?.sub);
+  console.log('userId =', user?.userId);
+  console.log('id =', user?.id);
+
+  const userId = user?.sub || user?.userId || user?.id;
+  console.log('EXTRACTED userId =', userId);
+
+  return this.service.findByUser(userId);
+}
 
   @Get('unread-count')
   @ApiOperation({ summary: 'Get unread notifications count' })
@@ -65,4 +75,29 @@ export class NotificationsController {
     const userId = user.sub || user.userId;
     return this.service.deleteNotification(id, userId);
   }
+    // ✅ ADMIN: list ALL notifications (no userId filter)
+  @Get('admin')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
+  getAllNotificationsForAdmin() {
+    return this.service.findAllForAdmin();
+  }
+
+  // ✅ ADMIN: unread count for ALL notifications
+  @Get('admin/unread-count')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async getUnreadCountForAdmin() {
+    const count = await this.service.getUnreadCountForAdmin();
+    return { count };
+  }
+
+  // ✅ ADMIN: mark ALL notifications as read
+  @Patch('admin/mark-all-read')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
+  markAllReadForAdmin() {
+    return this.service.markAllReadForAdmin();
+  }
+
 }

@@ -8,27 +8,37 @@ import { PatientProfile } from '../models/patient.model';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './patients.component.html',
-  styleUrls: [
-    '../../doctors/components/doctors.component.scss'
-  ],
+  styleUrls: ['../../doctors/components/doctors.component.scss'],
 })
 export class AdminPatientsComponent implements OnInit {
   patients: PatientProfile[] = [];
   loading = false;
 
+  selectedPatient: PatientProfile | null = null; 
+
   constructor(private patientService: PatientService) {}
 
   ngOnInit(): void {
-    this.loading = true;
+    this.loadPatients();
+  }
 
+  loadPatients() {
+    this.loading = true;
     this.patientService.getAllPatients().subscribe({
       next: (res) => {
         this.patients = res;
         this.loading = false;
       },
-      error: () => {
-        this.loading = false;
-      },
+      error: () => (this.loading = false),
     });
+  }
+
+  viewProfile(patient: PatientProfile) {
+    this.selectedPatient = patient;
+    window.scrollTo(0, 0);
+  }
+
+  closeProfile() {
+    this.selectedPatient = null;
   }
 }

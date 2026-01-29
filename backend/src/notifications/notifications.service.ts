@@ -13,10 +13,13 @@ export class NotificationsService {
   async findByUser(userId: string) {
   console.log('🔍 Service cherche userId:', userId);
   
-  return this.repo.createQueryBuilder('notification')
-    .where('notification.userId = :userId', { userId })
-    .orderBy('notification.createdAt', 'DESC')
-    .getMany();
+  const result = await this.repo.find({
+    where: { userId },
+    order: { createdAt: 'DESC' },
+  });
+
+  console.log('✅ Found notifications:', result.length);
+  return result;
 }
 
 
@@ -65,4 +68,19 @@ export class NotificationsService {
     await this.repo.remove(notification);
     return { message: 'Notification deleted' };
   }
+  async findAllForAdmin() {
+    return this.repo.find({
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async getUnreadCountForAdmin(): Promise<number> {
+    return this.repo.count({ where: { read: false } });
+  }
+
+  async markAllReadForAdmin() {
+    await this.repo.update({ read: false }, { read: true });
+    return { message: 'All notifications marked as read (admin)' };
+  }
+
 }

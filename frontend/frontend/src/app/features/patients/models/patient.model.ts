@@ -1,7 +1,9 @@
+export type UserGender = 'male' | 'female' | 'unknown';
 export interface PatientProfile {
   id: string;
   age?: number;
   phone?: string;
+  gender?: UserGender;
   medicalRecordNumber: string;
   address?: string;
   user?: {

@@ -20,7 +20,8 @@ interface DashboardUser {
 
 @Injectable({ providedIn: 'root' })
 export class DashboardService {
-  private baseUrl = 'http://localhost:3000/dashboard'; // replace with environment.apiUrl if needed
+  private baseUrl = 'http://localhost:3000/dashboard'; 
+  private apiUrl = 'http://localhost:3000/';
 
   constructor(private http: HttpClient) {}
 
@@ -36,7 +37,9 @@ export class DashboardService {
     return this.http.patch<DashboardUser>(`${this.baseUrl}/users/${userId}/role`, { role });
   }
 
-  deleteUser(userId: string): Observable<{ message: string }> {
-    return this.http.delete<{ message: string }>(`${this.baseUrl}/users/${userId}`);
+   deleteUser(userId: string): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(
+      `${this.baseUrl}/users/${userId}`
+    );
   }
 }

@@ -11,25 +11,21 @@ interface NotificationDto {
   userId: string;
   createdAt: string;
 }
-
 @Injectable({ providedIn: 'root' })
 export class NotificationCenterService {
-  private baseUrl = 'http://localhost:3000/notifications'; // same remark as above
+  private baseUrl = 'http://localhost:3000/notifications';
 
   constructor(private http: HttpClient) {}
 
   getNotifications(): Observable<NotificationDto[]> {
-    return this.http.get<NotificationDto[]>(this.baseUrl);
+    return this.http.get<NotificationDto[]>(`${this.baseUrl}/admin`);
   }
 
   getUnreadCount(): Observable<{ count: number }> {
-    return this.http.get<{ count: number }>(`${this.baseUrl}/unread-count`);
+    return this.http.get<{ count: number }>(`${this.baseUrl}/admin/unread-count`);
   }
 
   markAllRead(): Observable<{ message: string }> {
-    return this.http.patch<{ message: string }>(
-      `${this.baseUrl}/mark-all-read`,
-      {},
-    );
+    return this.http.patch<{ message: string }>(`${this.baseUrl}/admin/mark-all-read`, {});
   }
 }

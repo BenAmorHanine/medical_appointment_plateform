@@ -3,6 +3,8 @@
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/swagger": "^11.2.3",
+    "chart.js": "^4.5.1",
+    "ng2-charts": "^6.0.1",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0"

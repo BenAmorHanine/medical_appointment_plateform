@@ -22,8 +22,8 @@
 
     .logo-gradient {
       background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 50%, #1e40af 100%);
-      background-clip: text;         
-      -webkit-background-clip: text; 
+      background-clip: text;
+      -webkit-background-clip: text;
       color: transparent;
       -webkit-text-fill-color: transparent;
 
@@ -120,6 +120,150 @@
     }
   }
 
+  /* 🔔 Notifications dropdown (ADD THIS INSIDE .navbar) */
+  .notif-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .notif-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: #ef4444;
+    color: #fff;
+    border-radius: 999px;
+    padding: 0 6px;
+    height: 18px;
+    min-width: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    font-weight: 800;
+    line-height: 1;
+    box-shadow: 0 6px 18px rgba(239, 68, 68, 0.35);
+  }
+
+  /* mobile badge (inside the mobile button) */
+  .notif-badge.mobile {
+    position: static;
+    margin-left: 0.5rem;
+    transform: none;
+  }
+
+  .notif-dropdown {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 12px);
+    width: 360px;
+    max-height: 420px;
+    overflow: auto;
+
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(18px);
+    border: 1px solid rgba(229, 231, 235, 0.75);
+    border-radius: 16px;
+    box-shadow: 0 18px 50px rgba(15, 23, 42, 0.18);
+    z-index: 1200;
+  }
+
+  /* little arrow */
+  .notif-dropdown::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    right: 18px;
+    width: 14px;
+    height: 14px;
+    background: rgba(255, 255, 255, 0.98);
+    border-left: 1px solid rgba(229, 231, 235, 0.75);
+    border-top: 1px solid rgba(229, 231, 235, 0.75);
+    transform: rotate(45deg);
+  }
+
+  .notif-dropdown-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(229, 231, 235, 0.75);
+
+    strong {
+      color: #0f172a;
+      font-size: 0.95rem;
+    }
+  }
+
+  .notif-link {
+    background: transparent;
+    border: none;
+    color: #3b82f6;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba(59, 130, 246, 0.12);
+      color: #1d4ed8;
+    }
+  }
+
+  .notif-empty {
+    padding: 14px;
+    color: #64748b;
+    font-weight: 500;
+  }
+
+  .notif-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .notif-item {
+    padding: 12px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(229, 231, 235, 0.6);
+    transition: background 0.2s ease;
+
+    &:hover {
+      background: rgba(59, 130, 246, 0.06);
+    }
+
+    &.unread {
+      background: rgba(59, 130, 246, 0.10);
+    }
+  }
+
+  .notif-title {
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 3px;
+    font-size: 0.95rem;
+  }
+
+  .notif-message {
+    color: #475569;
+    font-size: 0.9rem;
+    line-height: 1.25rem;
+  }
+
+  .notif-date {
+    margin-top: 6px;
+    color: #94a3b8;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+
+  .notif-footer {
+    padding: 10px 14px;
+  }
+  /* 🔔 end notifications dropdown */
+
   .btn-history {
     color: #3b82f6;
     font-weight: 600;
@@ -179,12 +323,7 @@
       left: -100%;
       width: 100%;
       height: 100%;
-      background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(255, 255, 255, 0.3),
-        transparent
-      );
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
       transition: left 0.5s;
     }
 
@@ -314,5 +453,11 @@
 
   .navbar-logo .logo-gradient {
     font-size: 1.5rem;
+  }
+
+  /* ✅ dropdown fits on phones */
+  .navbar .notif-dropdown {
+    width: calc(100vw - 24px);
+    right: 12px;
   }
 }

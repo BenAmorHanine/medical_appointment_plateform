@@ -15,7 +15,10 @@
   <div class="container">
 
     <!-- Stats cards -->
-    @if (stats) {
+    @if (loadingStats) {
+      <p class="text-muted">Loading stats...</p>
+    }
+    @else if (stats) {
       <div class="stats-grid">
         <div class="stat-card">
           <h3>Total patients</h3>
@@ -48,7 +51,10 @@
     <div class="users-section">
       <h2>Users management</h2>
 
-      @if (users.length) {
+      @if (loadingUsers) {
+        <p class="text-muted">Loading users...</p>
+      }
+      @else if (users && users.length) {
         <table class="users-table">
           <thead>
             <tr>
@@ -60,7 +66,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (u of users; track u) {
+            @for (u of users; track u.id) {
               <tr>
                 <td>{{ u.username }}</td>
                 <td>{{ u.email }}</td>
@@ -80,8 +86,7 @@
           </tbody>
         </table>
       }
-
-      @if (!users.length && !loadingUsers) {
+      @else {
         <p>No users found.</p>
       }
     </div>
@@ -90,28 +95,39 @@
     <div class="notifications-section">
       <div class="notifications-header">
         <h2>Notifications center</h2>
-        <button class="btn-secondary" (click)="onMarkAllRead()">
+        <button
+          class="btn-secondary"
+          (click)="onMarkAllRead()"
+          [disabled]="loadingNotifications || unreadCount === 0"
+        >
           Mark all as read ({{ unreadCount }} unread)
         </button>
       </div>
 
-      @if (notifications.length) {
+      @if (loadingNotifications) {
+        <p class="text-muted">Loading notifications...</p>
+      }
+      @else if (notifications && notifications.length) {
         <ul class="notifications-list">
-          @for (n of notifications; track n) {
+          @for (n of notifications; track n.id) {
             <li>
-              <div class="notif-title">{{ n.title }}</div>
+              <div class="notif-title">
+                {{ n.title }}
+                @if (!n.read) {
+                  <span style="margin-left: 10px;" class="badge bg-primary">New</span>
+                }
+              </div>
+
               <div class="notif-message">{{ n.message }}</div>
               <div class="notif-date">{{ n.createdAt | date:'short' }}</div>
             </li>
           }
         </ul>
       }
-
-      @if (!notifications.length && !loadingNotifications) {
-        <p>
-          No notifications yet.
-        </p>
+      @else {
+        <p>No notifications yet.</p>
       }
     </div>
+
   </div>
 </section>
