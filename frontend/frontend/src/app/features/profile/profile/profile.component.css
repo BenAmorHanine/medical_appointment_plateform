@@ -1,0 +1,33 @@
+/* Container & card */
+.profile-container {
+  min-height: 100vh;
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+  background-color: #f8f9fa; /* bg-light */
+}
+
+.profile-header {
+  padding: 1.5rem;
+  background-color: #212529; /* bg-dark */
+  color: #fff;
+}
+
+/* Avatar image */
+.profile-avatar {
+  width: 70px;
+  height: 70px;
+  object-fit: cover;
+}
+
+/* Doctor profile info box */
+.profile-info-box {
+  padding: 1rem;
+  background-color: #f8f9fa; /* bg-light */
+  border-left-width: 0.25rem;
+}
+
+/* Patient profile box */
+.profile-patient-box {
+  padding: 1rem;
+  background-color: rgba(25, 135, 84, 0.1); /* bg-success bg-opacity-10 */
+}
