@@ -25,25 +25,19 @@ export class ContactService {
     });
   }
 
-
-// backend/src/contact/services/contact.service.ts
-
 async sendContactEmail(dto: ContactEmailDto, user: any) {
-  // 1. Prioritize data from the authenticated user for security
+
   const senderName = `${user.firstName} ${user.lastName}`;
   const senderEmail = user.email;
   
-  // 2. Data from the DTO (the parts the user actually typed)
   const { subject, message } = dto;
 
   const data = {
-    // The "from" should use your verified domain to avoid spam filters
     from: `${senderName} <postmaster@${this.domain}>`, 
     to: this.companyEmail,
     subject: `Contact Form: ${subject}`,
     
-    // Crucial: This makes sure when you hit "Reply" in your inbox, 
-    // it goes to the user's real email address.
+    //makes sure when you hit "Reply" in your inbox,it goes to the user's real email address.
     'h:Reply-To': senderEmail, 
     
     html: `
@@ -71,7 +65,6 @@ async sendContactEmail(dto: ContactEmailDto, user: any) {
     const result = await this.mailgun.messages.create(this.domain, data);
     return { success: true, messageId: result.id };
   } catch (error) {
-    // Log the actual error in the terminal for debugging (Mailgun credentials, etc.)
     console.error('Mailgun Error:', error);
     throw new InternalServerErrorException('Email failed to send');
   }
@@ -82,7 +75,7 @@ async sendNotificationEmail(dto: any) {
     
     const messageData = {
       from: `MedWin Platform <support@${domain}>`,
-      to: dto.recipientEmail, // Sending TO the user
+      to: dto.recipientEmail,
       subject: `MedWin Notification: ${dto.subject}`,
       html: `
         <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee;">

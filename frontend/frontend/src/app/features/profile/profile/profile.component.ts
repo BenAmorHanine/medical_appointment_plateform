@@ -13,10 +13,8 @@ import { CommonModule } from '@angular/common';
 export class ProfileComponent implements OnInit {
   private profileService = inject(ProfileService);
 
-  // Use a signal to store user data
-  // The "user" signal will hold all the info (email, role, and the nested profile)
 
-  user = signal<any>(null);
+  user = signal<any>(null);//"user" signal to hold user info (email, role, and the nested profile)
   isEditing = signal<boolean>(false); //switch between the "Display" and "Edit" views.
 
   //image logic
@@ -63,14 +61,14 @@ onFileSelected(event: any) {
   }
 
   onSave(formValue: any) {
-    // 1. Build common identity data
+    //Build common identity data
     const payload: any = {
       firstName: formValue.firstName,
       lastName: formValue.lastName,
       phone: formValue.phone,
     };
 
-    // 2. Build role-specific data
+    // Build role-specific data
     if (this.user().role === 'doctor') {
       payload.specialty = formValue.specialty;
       payload.office = formValue.office;
@@ -82,7 +80,7 @@ onFileSelected(event: any) {
       payload.gender = formValue.gender;
     }
 
-    // 3. Call service with the file
+    //Call service with the file
     this.profileService.updateProfile(payload, this.selectedFile || undefined).subscribe({
       next: (res) => {
         this.user.set(res);

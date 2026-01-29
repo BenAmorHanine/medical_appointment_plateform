@@ -44,7 +44,6 @@ sendMessage() {
       message: this.message()
     };
 
-    // Chapter 13: HTTP POST Request
     this.contactService.sendContactEmail(payload).subscribe({
       next: () => {
         this.submitted.set(true);

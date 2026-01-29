@@ -20,11 +20,6 @@ export class ProfileController {
     return this.profileService.getProfile(req.user.id, req.user.role);
   }
 
-  /*@Patch()
-  async updateMyProfile(@Req() req, @Body() updateDto: UpdateProfileDto) {
-    return this.profileService.updateProfile(req.user.id, req.user.role, updateDto);
-  }*/
- // UPDATED: add the image upload
   @Patch()
   @UseInterceptors(
     FileInterceptor('image', {

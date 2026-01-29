@@ -14,7 +14,7 @@ export class ProfileService {
   updateProfile(payload: any, file?: File): Observable<any> {
     const formData = new FormData();
 
-    // 1. Append the text fields (firstName, phone, specialty, etc.)
+    //Append the text fields: firstName, phone, specialty..
     Object.keys(payload).forEach(key => {
       if (payload[key] !== undefined && payload[key] !== null) {
         formData.append(key, payload[key]);
