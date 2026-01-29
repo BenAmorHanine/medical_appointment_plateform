@@ -7,7 +7,7 @@ import { PatientProfile } from '../models/patient.model';
   selector: 'app-admin-patients',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './admin-patients.component.html',
+  templateUrl: './patients.component.html',
   styleUrls: [
     '../../doctors/components/doctors.component.scss'
   ],

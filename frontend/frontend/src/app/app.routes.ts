@@ -11,7 +11,7 @@ import { DoctorAvailabilityComponent } from './features/appointments/doctor-avai
 import { BookAppointmentComponent } from './features/appointments/book-appointment/book-appointment.component';
 import { ProfileComponent } from './features/profile/profile/profile.component';
 import { DashboardComponent } from './features/dashboard/components/dashboard.component';
-import { AdminPatientsComponent } from './features/patients/components/admin-patients.component';
+import { AdminPatientsComponent } from './features/patients/components/patients.component';
 
 export const routes: Routes = [
   // PUBLIC ROUTES
