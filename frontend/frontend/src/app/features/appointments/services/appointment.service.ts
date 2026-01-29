@@ -17,31 +17,31 @@ export class AppointmentService {
   constructor(private http: HttpClient) {}
 
   getAppointmentsByDoctor(doctorId: string): Observable<Appointment[]> {
-    return this.http.get<Appointment[]>(`${this.apiUrl}/doctor/${doctorId}`);
+    return this.http.get<Appointment[]>(`${this.apiUrl}/doctor/${doctorId}`, { withCredentials: true });
   }
 
   getAppointment(id: string): Observable<Appointment> {
-    return this.http.get<Appointment>(`${this.apiUrl}/${id}`);
+    return this.http.get<Appointment>(`${this.apiUrl}/${id}`, { withCredentials: true });
   }
 
   getAllAppointments(): Observable<Appointment[]> {
-    return this.http.get<Appointment[]>(this.apiUrl);
+    return this.http.get<Appointment[]>(this.apiUrl, { withCredentials: true });
   }
 
   getAppointmentsByPatient(patientId: string): Observable<Appointment[]> {
-    return this.http.get<Appointment[]>(`${this.apiUrl}/patient/${patientId}`);
+    return this.http.get<Appointment[]>(`${this.apiUrl}/patient/${patientId}`, { withCredentials: true });
   }
 
   createAppointment(dto: any): Observable<Appointment> {
-    return this.http.post<Appointment>(this.apiUrl, dto);
+    return this.http.post<Appointment>(this.apiUrl, dto, { withCredentials: true });
   }
 
   cancelAppointment(id: string): Observable<Appointment> {
-    return this.http.delete<Appointment>(`${this.apiUrl}/${id}`);
+    return this.http.delete<Appointment>(`${this.apiUrl}/${id}`, { withCredentials: true });
   }
 
   markAsDone(id: string): Observable<Appointment> {
-    return this.http.patch<Appointment>(`${this.apiUrl}/${id}/done`, {});
+    return this.http.patch<Appointment>(`${this.apiUrl}/${id}/done`, {}, { withCredentials: true });
   }
 
   loadAppointmentsForPatient(patientId: string) {

@@ -2,6 +2,8 @@ import { Routes } from '@angular/router';
 import { HomeComponent } from './features/home/components/home.component';
 import { PatientConsultationsComponent } from './features/patient-consultations/patient-consultations.component';
 import { authGuard } from './features/auth/guards/auth.guard';
+import { doctorGuard } from './features/auth/guards/doctor.guard';
+import { patientGuard } from './features/auth/guards/patient.guard';
 import { ContactComponent } from './features/contact/components/contact.component';
 import { DoctorsComponent } from './features/doctors/components/doctors.component';
 import { AppointmentsComponent } from './features/appointments/appointments.component';
@@ -23,49 +25,54 @@ export const routes: Routes = [
     loadChildren: () => import('./features/auth/auth-routing.module').then(m => m.AuthRoutingModule)
   },
 
-   { path: 'history',
+  { path: 'history',
     loadChildren: () =>
       import('./features/visit-history/visit-history.module')
         .then(m => m.VisitHistoryModule),
   },
 
-  // PROTECTED ROUTES (Auth guard)
-  { path: 'appointments', component: AppointmentsComponent },
+  // PROTECTED ROUTES - Patient & Doctor
   {
-    path: 'doctor/availability',
-    component: DoctorAvailabilityComponent,
-    canActivate: [authGuard], // et plus tard [authGuard, doctorRoleGuard]
+    path: 'appointments',
+    component: AppointmentsComponent,
+    canActivate: [authGuard]
   },
   {
-  path: 'book',
-  component: BookAppointmentComponent,  
-  canActivate: [authGuard],  // Patient connecté
-},
+    path: 'book',
+    component: BookAppointmentComponent,
+    canActivate: [authGuard, patientGuard]
+  },
   {
     path: 'consultation',
     component: PatientConsultationsComponent,
-    canActivate: [authGuard]
+    canActivate: [authGuard, patientGuard]
   },
-   {
+
+  // PROTECTED ROUTES - Doctor Only
+  {
+    path: 'doctor/availability',
+    component: DoctorAvailabilityComponent,
+    canActivate: [authGuard, doctorGuard]
+  },
+
+  // PROTECTED ROUTES - All Authenticated Users
+  {
     path: 'profile',
     component: ProfileComponent,
     canActivate: [authGuard]
-
   },
-   // NEW: ADMIN DASHBOARD
+
+  // PROTECTED ROUTES - Admin Only
   {
     path: 'dashboard',
     component: DashboardComponent,
-    canActivate: [authGuard], // admin role checked inside component for now
+    canActivate: [authGuard]
   },
   {
     path: 'patients',
-    component: AdminPatientsComponent, 
-    canActivate: [authGuard],
+    component: AdminPatientsComponent,
+    canActivate: [authGuard]
   },
-
-  
-
 
   // FALLBACKS
   { path: '**', redirectTo: '/' }
