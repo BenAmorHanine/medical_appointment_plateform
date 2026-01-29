@@ -13,26 +13,25 @@
               Modern medical platform. 
               Connect with trusted doctors, read about treatments and manage your health in one place.
             </p>
-<!-- Home page buttons -->
-<ng-container *ngIf="!(isAuthenticated$ | async); else authButtons">
-  <!-- Show ONLY when NOT authenticated -->
-  <a routerLink="/auth/register" class="btn btn-primary me-3">
-    Create Account
-  </a>
-  <a routerLink="/auth/login" class="btn btn-outline-light">
-    Sign In
-  </a>
-</ng-container>
 
-<!-- Authenticated users see this instead -->
-<ng-template #authButtons>
-   <button class="btn btn-primary me-3" (click)="goToMyHistory()">
-    My History
-  </button>
-  <button class="btn btn-outline-light" (click)="logout()">
-    Logout
-  </button>
-</ng-template>
+            <!-- Home page buttons -->
+            @if (!(isAuthenticated$ | async)) {
+              <!-- Show ONLY when NOT authenticated -->
+              <a routerLink="/auth/register" class="btn btn-primary me-3">
+                Create Account
+              </a>
+              <a routerLink="/auth/login" class="btn btn-outline-light">
+                Sign In
+              </a>
+            } @else {
+              <!-- Authenticated users see this instead -->
+              <button class="btn btn-primary me-3" (click)="goToMyHistory()">
+                My History
+              </button>
+              <button class="btn btn-outline-light" (click)="logout()">
+                Logout
+              </button>
+            }
           </div>
         </div>
 
@@ -80,48 +79,55 @@
       <span class="gradient-text">Doctors</span>
     </h2>
     
-    <!-- LOADING STATE (NEW) -->
-    <div *ngIf="loadingDoctors" class="row g-4">
-      <div class="col-lg-3 col-md-6" *ngFor="let i of [1,2,3,4]">
-        <div class="doctor-card h-100 shadow-lg skeleton">
-          <div class="skeleton-image"></div>
-          <div class="skeleton-text"></div>
-        </div>
-      </div>
-    </div> 
-    
-    <!-- REAL DOCTORS (UPDATED) -->
-    <div class="row g-4" *ngIf="!loadingDoctors">
-      <div class="col-lg-3 col-md-6" *ngFor="let doctor of featuredDoctors; trackBy: trackByDoctor">
-        <div class="doctor-card h-100 shadow-lg" role="button" tabindex="0"
-             (click)="viewDoctor(doctor)" (keydown.enter)="viewDoctor(doctor)">
-          <div class="doctor-image position-relative overflow-hidden">
-            <img [src]="getDoctorImage(doctor)" [alt]="getDoctorName(doctor)" class="img-fluid w-100" loading="lazy">
-            <div class="doctor-overlay">
-              <div class="rating mb-2">
-                <i class="fa fa-star text-warning"></i>
-                {{ doctor.rating }}/5
-              </div>
-              <a routerLink="/doctors" class="btn btn-sm btn-outline-light">
-                View Profile
-              </a>
+    <!-- LOADING STATE -->
+    @if (loadingDoctors) {
+      <div class="row g-4">
+        @for ( i of [1,2,3,4]; track i) {
+          <div class="col-lg-3 col-md-6">
+            <div class="doctor-card h-100 shadow-lg skeleton">
+              <div class="skeleton-image"></div>
+              <div class="skeleton-text"></div>
             </div>
           </div>
-          <div class="doctor-info p-4">
-            <h5 class="doctor-name mb-1">{{ getDoctorName(doctor) }}</h5>
-            <p class="doctor-specialty text-muted mb-3">{{ doctor.specialty }}</p>
-            <div class="social-links">
-              <a href="#" class="me-2"><i class="fab fa-facebook-f"></i></a>
-              <a href="#" class="me-2"><i class="fab fa-twitter"></i></a>
-              <a href="#"><i class="fab fa-linkedin-in"></i></a>
-            </div>  
-          </div>
-        </div>
+        }
       </div>
-    </div>
+    }
+
+    <!-- REAL DOCTORS -->
+    @if (!loadingDoctors) {
+      <div class="row g-4">
+        @for (doctor of featuredDoctors; track trackByDoctor) {
+          <div class="col-lg-3 col-md-6">
+            <div class="doctor-card h-100 shadow-lg" role="button" tabindex="0"
+                 (click)="viewDoctor(doctor)" (keydown.enter)="viewDoctor(doctor)">
+              <div class="doctor-image position-relative overflow-hidden">
+                <img [src]="getDoctorImage(doctor)" [alt]="getDoctorName(doctor)" class="img-fluid w-100" loading="lazy">
+                <div class="doctor-overlay">
+                  <div class="rating mb-2">
+                    <i class="fa fa-star text-warning"></i>
+                    {{ doctor.rating }}/5
+                  </div>
+                  <a routerLink="/doctors" class="btn btn-sm btn-outline-light">
+                    View Profile
+                  </a>
+                </div>
+              </div>
+              <div class="doctor-info p-4">
+                <h5 class="doctor-name mb-1">{{ getDoctorName(doctor) }}</h5>
+                <p class="doctor-specialty text-muted mb-3">{{ doctor.specialty }}</p>
+                <div class="social-links">
+                  <a href="#" class="me-2"><i class="fab fa-facebook-f"></i></a>
+                  <a href="#" class="me-2"><i class="fab fa-twitter"></i></a>
+                  <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                </div>  
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
   </div>
 </section>
-
 
 <!-- ABOUT / WHY CHOOSE US -->
 <section class="about-section py-5 bg-light">
@@ -144,7 +150,7 @@
         <ul class="about-list">
           <li><i class="fa fa-check-circle text-primary me-2"></i> Clean UI for healthcare.</li>
           <li><i class="fa fa-check-circle text-primary me-2"></i> Consistent styling with your login and register pages.</li>
-          <li><i class="fa fa-check-circle text-primary me-2"></i> Mobile‑friendly layout for all devices.</li>
+          <li><i class="fa fa-check-circle text-primary me-2"></i> Mobile-friendly layout for all devices.</li>
         </ul>
       </div>
     </div>
@@ -159,22 +165,24 @@
       <span class="gradient-text-white">Say</span>
     </h2>
     <div class="row g-4">
-      <div class="col-lg-4 col-md-6" *ngFor="let testimonial of testimonials">
-        <div class="testimonial-card bg-white shadow-lg p-4 rounded-4 h-100">
-          <div class="stars mb-3">
-            <i class="fa fa-star text-warning"></i>
-            <i class="fa fa-star text-warning"></i>
-            <i class="fa fa-star text-warning"></i>
-            <i class="fa fa-star text-warning"></i>
-            <i class="fa fa-star text-warning"></i>
-          </div>
-          <p class="testimonial-text mb-4">"{{ testimonial.text }}"</p>
-          <div class="patient-info">
-            <h6 class="patient-name mb-0">{{ testimonial.name }}</h6>
-            <span class="patient-role text-muted">Patient</span>
+      @for (testimonial of testimonials; track testimonial) {
+        <div class="col-lg-4 col-md-6">
+          <div class="testimonial-card bg-white shadow-lg p-4 rounded-4 h-100">
+            <div class="stars mb-3">
+              <i class="fa fa-star text-warning"></i>
+              <i class="fa fa-star text-warning"></i>
+              <i class="fa fa-star text-warning"></i>
+              <i class="fa fa-star text-warning"></i>
+              <i class="fa fa-star text-warning"></i>
+            </div>
+            <p class="testimonial-text mb-4">"{{ testimonial.text }}"</p>
+            <div class="patient-info">
+              <h6 class="patient-name mb-0">{{ testimonial.name }}</h6>
+              <span class="patient-role text-muted">Patient</span>
+            </div>
           </div>
         </div>
-      </div>
+      }
     </div>
   </div>
 </section>

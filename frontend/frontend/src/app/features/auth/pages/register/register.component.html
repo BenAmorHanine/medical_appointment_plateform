@@ -18,9 +18,11 @@
             class="form-control"
             [class.is-invalid]="registerForm.get('firstName')?.invalid && registerForm.get('firstName')?.touched"
             placeholder="Enter first name">
-          <div *ngIf="registerForm.get('firstName')?.invalid && registerForm.get('firstName')?.touched" class="invalid-feedback">
-            First name is required
-          </div>
+          @if (registerForm.get('firstName')?.invalid && registerForm.get('firstName')?.touched) {
+            <div class="invalid-feedback">
+              First name is required
+            </div>
+          }
         </div>
 
         <div class="form-group col-md-6">
@@ -32,26 +34,31 @@
             class="form-control"
             [class.is-invalid]="registerForm.get('lastName')?.invalid && registerForm.get('lastName')?.touched"
             placeholder="Enter last name">
-          <div *ngIf="registerForm.get('lastName')?.invalid && registerForm.get('lastName')?.touched" class="invalid-feedback">
-            Last name is required
-          </div>
+          @if (registerForm.get('lastName')?.invalid && registerForm.get('lastName')?.touched) {
+            <div class="invalid-feedback">
+              Last name is required
+            </div>
+          }
         </div>
       </div>
 
       <!-- Username -->
-    <div class="form-group">
-    <label for="username">Username</label>
-    <input 
-        id="username"
-        type="text" 
-        formControlName="username"
-        class="form-control"
-        [class.is-invalid]="registerForm.get('username')?.invalid && registerForm.get('username')?.touched"
-        placeholder="Enter username">
-    <div *ngIf="registerForm.get('username')?.invalid && registerForm.get('username')?.touched" class="invalid-feedback">
-        Username is required
-    </div>
-    </div>
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input 
+          id="username"
+          type="text" 
+          formControlName="username"
+          class="form-control"
+          [class.is-invalid]="registerForm.get('username')?.invalid && registerForm.get('username')?.touched"
+          placeholder="Enter username">
+        @if (registerForm.get('username')?.invalid && registerForm.get('username')?.touched) {
+          <div class="invalid-feedback">
+            Username is required
+          </div>
+        }
+      </div>
+
       <!-- Email -->
       <div class="form-group">
         <label for="email">Email</label>
@@ -62,9 +69,11 @@
           class="form-control"
           [class.is-invalid]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched"
           placeholder="Enter your email">
-        <div *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched" class="invalid-feedback">
-          Please enter a valid email
-        </div>
+        @if (registerForm.get('email')?.invalid && registerForm.get('email')?.touched) {
+          <div class="invalid-feedback">
+            Please enter a valid email
+          </div>
+        }
       </div>
 
       <!-- Phone -->
@@ -77,9 +86,11 @@
           class="form-control"
           [class.is-invalid]="registerForm.get('phone')?.invalid && registerForm.get('phone')?.touched"
           placeholder="Enter your phone">
-        <div *ngIf="registerForm.get('phone')?.invalid && registerForm.get('phone')?.touched" class="invalid-feedback">
-          Phone number is required
-        </div>
+        @if (registerForm.get('phone')?.invalid && registerForm.get('phone')?.touched) {
+          <div class="invalid-feedback">
+            Phone number is required
+          </div>
+        }
       </div>
 
       <!-- Role -->
@@ -94,9 +105,11 @@
           <option value="patient">Patient</option>
           <option value="doctor">Doctor</option>
         </select>
-        <div *ngIf="registerForm.get('role')?.invalid && registerForm.get('role')?.touched" class="invalid-feedback">
-          Please select account type
-        </div>
+        @if (registerForm.get('role')?.invalid && registerForm.get('role')?.touched) {
+          <div class="invalid-feedback">
+            Please select account type
+          </div>
+        }
       </div>
 
       <!-- Password -->
@@ -109,9 +122,11 @@
           class="form-control"
           [class.is-invalid]="registerForm.get('password')?.invalid && registerForm.get('password')?.touched"
           placeholder="Enter your password">
-        <div *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched" class="invalid-feedback">
-          Password must be at least 8 characters
-        </div>
+        @if (registerForm.get('password')?.invalid && registerForm.get('password')?.touched) {
+          <div class="invalid-feedback">
+            Password must be at least 8 characters
+          </div>
+        }
       </div>
 
       <!-- Submit Button -->
@@ -119,12 +134,16 @@
         type="submit" 
         class="btn-primary"
         [disabled]="isLoading || registerForm.invalid">
-        <span *ngIf="isLoading" class="spinner"></span>
+        @if (isLoading) {
+          <span class="spinner"></span>
+        }
         {{ isLoading ? 'Creating Account...' : 'Create Account' }}
       </button>
     </form>
 
-    <div *ngIf="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
+    @if (errorMessage) {
+      <div class="alert alert-danger">{{ errorMessage }}</div>
+    }
 
     <div class="auth-footer">
       <p>Already have an account? <a routerLink="../login">Sign in</a></p>

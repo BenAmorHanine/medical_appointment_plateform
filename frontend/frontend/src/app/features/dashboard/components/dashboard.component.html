@@ -15,24 +15,26 @@
   <div class="container">
 
     <!-- Stats cards -->
-    <div class="stats-grid" *ngIf="stats">
-      <div class="stat-card">
-        <h3>Total patients</h3>
-        <p>{{ stats.totalPatients }}</p>
+    @if (stats) {
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h3>Total patients</h3>
+          <p>{{ stats.totalPatients }}</p>
+        </div>
+        <div class="stat-card">
+          <h3>Total doctors</h3>
+          <p>{{ stats.totalDoctors }}</p>
+        </div>
+        <div class="stat-card">
+          <h3>Total appointments</h3>
+          <p>{{ stats.totalAppointments }}</p>
+        </div>
+        <div class="stat-card">
+          <h3>Total consultations</h3>
+          <p>{{ stats.totalConsultations }}</p>
+        </div>
       </div>
-      <div class="stat-card">
-        <h3>Total doctors</h3>
-        <p>{{ stats.totalDoctors }}</p>
-      </div>
-      <div class="stat-card">
-        <h3>Total appointments</h3>
-        <p>{{ stats.totalAppointments }}</p>
-      </div>
-      <div class="stat-card">
-        <h3>Total consultations</h3>
-        <p>{{ stats.totalConsultations }}</p>
-      </div>
-    </div>
+    }
 
     <!-- Charts placeholder -->
     <div class="charts-row">
@@ -46,36 +48,42 @@
     <div class="users-section">
       <h2>Users management</h2>
 
-      <table class="users-table" *ngIf="users.length">
-        <thead>
-          <tr>
-            <th>Username</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Created</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let u of users">
-            <td>{{ u.username }}</td>
-            <td>{{ u.email }}</td>
-            <td>
-              <select [ngModel]="u.role" (ngModelChange)="onChangeRole(u, $event)">
-                <option value="patient">patient</option>
-                <option value="doctor">doctor</option>
-                <option value="admin">admin</option>
-              </select>
-            </td>
-            <td>{{ u.createdAt | date:'short' }}</td>
-            <td>
-              <button class="btn-secondary" (click)="onDeleteUser(u)">Delete</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      @if (users.length) {
+        <table class="users-table">
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (u of users; track u) {
+              <tr>
+                <td>{{ u.username }}</td>
+                <td>{{ u.email }}</td>
+                <td>
+                  <select [ngModel]="u.role" (ngModelChange)="onChangeRole(u, $event)">
+                    <option value="patient">patient</option>
+                    <option value="doctor">doctor</option>
+                    <option value="admin">admin</option>
+                  </select>
+                </td>
+                <td>{{ u.createdAt | date:'short' }}</td>
+                <td>
+                  <button class="btn-secondary" (click)="onDeleteUser(u)">Delete</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
 
-      <p *ngIf="!users.length && !loadingUsers">No users found.</p>
+      @if (!users.length && !loadingUsers) {
+        <p>No users found.</p>
+      }
     </div>
 
     <!-- Notification center -->
@@ -87,17 +95,23 @@
         </button>
       </div>
 
-      <ul class="notifications-list" *ngIf="notifications.length">
-        <li *ngFor="let n of notifications">
-          <div class="notif-title">{{ n.title }}</div>
-          <div class="notif-message">{{ n.message }}</div>
-          <div class="notif-date">{{ n.createdAt | date:'short' }}</div>
-        </li>
-      </ul>
+      @if (notifications.length) {
+        <ul class="notifications-list">
+          @for (n of notifications; track n) {
+            <li>
+              <div class="notif-title">{{ n.title }}</div>
+              <div class="notif-message">{{ n.message }}</div>
+              <div class="notif-date">{{ n.createdAt | date:'short' }}</div>
+            </li>
+          }
+        </ul>
+      }
 
-      <p *ngIf="!notifications.length && !loadingNotifications">
-        No notifications yet.
-      </p>
+      @if (!notifications.length && !loadingNotifications) {
+        <p>
+          No notifications yet.
+        </p>
+      }
     </div>
   </div>
 </section>
