@@ -45,17 +45,7 @@ export class PasswordResetNewComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    const navigation = this.router.getCurrentNavigation();
-    this.token = navigation?.extras?.state?.['token'] || '';
-    
-    if (!this.token) {
-      this.token = this.activatedRoute.snapshot.queryParamMap.get('token') || '';
-    }
-
-    if (!this.token) {
-      const historyState = (window.history as any).state;
-      this.token = historyState?.token || '';
-    }
+    this.token = sessionStorage.getItem('resetToken') || '';
     
     if (!this.token) {
       this.router.navigate(['/auth/password-reset-request']);
@@ -132,6 +122,7 @@ export class PasswordResetNewComponent implements OnInit {
       finalize(() => this.isLoading = false)
     ).subscribe({
       next: (response) => {
+        sessionStorage.removeItem('resetToken');
         this.successMessage = response.message;
         this.router.navigate(['/auth/login']);
       },

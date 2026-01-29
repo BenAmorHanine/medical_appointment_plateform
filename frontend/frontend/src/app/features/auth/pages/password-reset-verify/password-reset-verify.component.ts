@@ -93,10 +93,8 @@ export class PasswordResetVerifyComponent implements OnInit, OnDestroy {
       finalize(() => this.isLoading = false)
     ).subscribe({
       next: (response) => {
-        this.router.navigate(['/auth/password-reset-new'], { 
-          state: { token: response.token },
-          queryParams: { token: response.token }
-        });
+        sessionStorage.setItem('resetToken', response.token);
+        this.router.navigate(['/auth/password-reset-new']);
       },
       error: (error) => {
         this.errorMessage = error.error?.message || 'Invalid or expired code. Please try again.';
