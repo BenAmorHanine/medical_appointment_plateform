@@ -27,7 +27,7 @@ interface Stat {
 })
 export class HomeComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  
+
   authService = inject(AuthService);
   router = inject(Router);
   doctorsService = inject(DoctorsService);
@@ -39,10 +39,10 @@ export class HomeComponent implements OnInit, OnDestroy {
   };
 
   isAuthenticated$ = this.authService.isAuthenticated$;
-  
+
   featuredDoctors: Doctor[] = [];
   loadingDoctors = true;
-  
+
   testimonials: Testimonial[] = [
     { id: 1, name: 'Morijorch', text: 'Excellent service.' },
     { id: 2, name: 'Ahmed Ben Ali', text: 'Best platform.' },
@@ -83,7 +83,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   getDoctorName(doctor: Doctor): string {
-  return doctor.user ? `${doctor.user.firstname} ${doctor.user.lastname}`.trim() : 'Doctor';
+  return doctor.user ? `${doctor.user.firstName} ${doctor.user.lastName}`.trim() : 'Doctor';
   }
 
 

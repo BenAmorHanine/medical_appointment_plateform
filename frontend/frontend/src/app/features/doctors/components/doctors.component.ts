@@ -1,8 +1,8 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { Doctor } from '../../doctors/models/doctor.model';
-import { DoctorsService } from '../../doctors/services/doctors.service';
+import { Doctor } from '../models/doctor.model';
+import { DoctorsService } from '../services/doctors.service';
 
 @Component({
   selector: 'app-doctors',

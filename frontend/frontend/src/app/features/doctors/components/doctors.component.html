@@ -31,7 +31,7 @@
                    class="rounded-circle border border-3 border-white shadow-sm"
                    style="width: 120px; height: 120px; object-fit: cover;">
               <div class="ms-md-4 mt-3 mt-md-0">
-                <h2 class="mb-1 text-white">Dr. {{ selectedDoctor.user?.firstname }} {{ selectedDoctor.user?.lastname }}</h2>
+                <h2 class="mb-1 text-white">Dr. {{ selectedDoctor.user?.firstName }} {{ selectedDoctor.user?.lastName }}</h2>
                 <p class="mb-0 opacity-75 fw-light">{{ selectedDoctor.specialty }}</p>
               </div>
               <div class="ms-auto mt-3 mt-lg-0">
@@ -97,14 +97,14 @@
         @for (doctor of doctors; track doctor.id) {
           <div class="doctor-card">
             <div class="doctor-avatar">
-              <img [src]="doctor.image.startsWith('uploads/') ? 'http://localhost:3000/' + doctor.image : doctor.image" [alt]="doctor.user?.firstname" />
+              <img [src]="doctor.image.startsWith('uploads/') ? 'http://localhost:3000/' + doctor.image : doctor.image" [alt]="doctor.user?.firstName" />
               <div class="doctor-status" [class.available]="doctor.available">
                 {{ doctor.available ? 'Available' : 'Busy' }}
               </div>
             </div>
 
             <div class="doctor-info">
-              <h3>Dr. {{ doctor.user?.firstname }}</h3>
+              <h3>Dr. {{ doctor.user?.firstName }}</h3>
               <div class="specialty">{{ doctor.specialty }}</div>
 
               <div class="rating">

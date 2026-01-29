@@ -9,8 +9,8 @@ export interface Doctor {
   office: string;
   user?: {
     email: string;
-    firstname: string;
-    lastname: string;
+    firstName: string;
+    lastName: string;
     phone: string;
   };
 
