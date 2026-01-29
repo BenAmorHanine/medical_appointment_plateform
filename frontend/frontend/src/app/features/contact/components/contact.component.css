@@ -207,6 +207,13 @@
         cursor: not-allowed;
         transform: none;
       }
+      .disabled-input {
+      background-color: #f5f5f5;
+      color: #555;
+      cursor: not-allowed;
+      border: 1px solid #ccc;
+    }
+
 
       &::before {
         content: '';

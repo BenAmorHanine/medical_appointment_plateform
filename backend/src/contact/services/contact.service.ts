@@ -26,23 +26,43 @@ export class ContactService {
   }
 
 
-async sendContactEmail(dto: ContactEmailDto) {
-  const { name, email, subject, message } = dto;
+// backend/src/contact/services/contact.service.ts
+
+async sendContactEmail(dto: ContactEmailDto, user: any) {
+  // 1. Prioritize data from the authenticated user for security
+  const senderName = `${user.firstName} ${user.lastName}`;
+  const senderEmail = user.email;
+  
+  // 2. Data from the DTO (the parts the user actually typed)
+  const { subject, message } = dto;
 
   const data = {
-    from: `${name} <noreply@${this.domain}>`, 
+    // The "from" should use your verified domain to avoid spam filters
+    from: `${senderName} <postmaster@${this.domain}>`, 
     to: this.companyEmail,
     subject: `Contact Form: ${subject}`,
-    // This ensures clicking "Reply" goes to the user
-    'h:Reply-To': email, 
+    
+    // Crucial: This makes sure when you hit "Reply" in your inbox, 
+    // it goes to the user's real email address.
+    'h:Reply-To': senderEmail, 
+    
     html: `
-      <div style="font-family: Arial, sans-serif; border: 1px solid #eee; padding: 20px;">
-        <h2 style="color: #2c3e50;">New Message from ${name}</h2>
-        <p><strong>Sender Email:</strong> ${email}</p>
-        <hr />
+      <div style="font-family: Arial, sans-serif; border: 1px solid #eee; padding: 20px; border-radius: 8px;">
+        <h2 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
+          New Support Message
+        </h2>
+        <p><strong>From:</strong> ${senderName} (${user.role})</p>
+        <p><strong>Sender Email:</strong> ${senderEmail}</p>
+        <p><strong>User ID:</strong> ${user.id}</p>
+        <hr style="border: none; border-top: 1px solid #eee;" />
         <p><strong>Subject:</strong> ${subject}</p>
         <p><strong>Message:</strong></p>
-        <p style="background: #f9f9f9; padding: 15px; border-left: 4px solid #3498db; fontsize:18">${message}</p>
+        <div style="background: #f9f9f9; padding: 15px; border-left: 4px solid #3498db; font-size: 16px; line-height: 1.6;">
+          ${message}
+        </div>
+        <footer style="margin-top: 20px; font-size: 12px; color: #7f8c8d;">
+          Sent via MedWin Platform Internal System
+        </footer>
       </div>
     `,
   };
@@ -51,6 +71,8 @@ async sendContactEmail(dto: ContactEmailDto) {
     const result = await this.mailgun.messages.create(this.domain, data);
     return { success: true, messageId: result.id };
   } catch (error) {
+    // Log the actual error in the terminal for debugging (Mailgun credentials, etc.)
+    console.error('Mailgun Error:', error);
     throw new InternalServerErrorException('Email failed to send');
   }
 }

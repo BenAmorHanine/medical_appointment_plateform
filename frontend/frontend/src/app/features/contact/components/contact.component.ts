@@ -1,71 +1,59 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators, FormGroup, FormsModule } from '@angular/forms';
 import { ContactService } from '../services/contact.service';
-import { inject, OnInit } from '@angular/core';
-import { AuthService } from '../../auth/services/auth.service';
+import { inject, OnInit, signal } from '@angular/core';
+import { ProfileService } from '../../profile/profile.service';
+
+
 
 @Component({
   selector: 'app-contact',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './contact.component.html',
-  styleUrls: ['./contact.component.scss']
+  styleUrls: ['./contact.component.css']
 })
 export class ContactComponent implements OnInit {
   private fb = inject(FormBuilder);
   private contactService = inject(ContactService);
-  private authService = inject(AuthService);
+  private profileService = inject(ProfileService);
 
-  contactForm: FormGroup = this.fb.group({
-    name: ['', [Validators.required]],
-    email: ['', [Validators.required, Validators.email]],
-    phone: [''],
-    role: [''],
-    subject: ['', Validators.required],
-    message: ['', [Validators.required, Validators.minLength(10)]]
-  });
+  user = signal<any | null>(null);
+  subject = signal('');
+  message = signal('');
 
-  isSubmitting = false;
-  submitted = false;
+  isSubmitting = signal(false);
+  submitted = signal(false);
 
   ngOnInit() {
-    this.autoFillUserData();
+    this.profileService.getProfile().subscribe({
+      next: (profile) => this.user.set(profile),
+      error: (err) => console.error('Failed to load profile', err)
+    });
   }
 
-  autoFillUserData() {
-    const user = this.authService.getCurrentUser();
+sendMessage() {
+    const u = this.user();
+    if (!u || !this.subject() || !this.message()) return;
 
-    if (user) {
-      this.contactForm.patchValue({
-        name: user.username,
-        email: user.email,
-        phone: user.phone,
-        role: user.role
-      });
+    this.isSubmitting.set(true);
 
-      this.contactForm.get('name')?.disable();
-      this.contactForm.get('email')?.disable();
-      this.contactForm.get('phone')?.disable();
-    }
+    const payload = {
+      subject: this.subject(),
+      message: this.message()
+    };
+
+    // Chapter 13: HTTP POST Request
+    this.contactService.sendContactEmail(payload).subscribe({
+      next: () => {
+        this.submitted.set(true);
+        this.subject.set('');
+        this.message.set('');
+      },
+      error: (err) => console.error('Submission failed', err),
+      complete: () => this.isSubmitting.set(false)
+    });
   }
 
-onSubmit() {
-  // We use getRawValue() because name, email, and phone are DISABLED
-  const payload = this.contactForm.getRawValue();
-
-  console.log('Attempting to post to:', `${this.contactService['apiUrl']}/contact-us-email`);
-
-  this.contactService.sendContactEmail(payload).subscribe({
-    next: (res) => {
-      this.submitted = true;
-      this.contactForm.get('subject')?.reset();
-      this.contactForm.get('message')?.reset();
-    },
-    error: (err) => {
-      console.error('404 Debug - Full URL tried:', err.url); // THIS WILL SHOW THE WRONG URL
-      alert(`Error 404: The route ${err.url} does not exist on the server.`);
-    }
-  });
-}
 }

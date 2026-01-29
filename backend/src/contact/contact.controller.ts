@@ -1,4 +1,4 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Req } from '@nestjs/common';
 import { ContactService } from './services/contact.service';
 import { ContactEmailDto } from './dto/contact-email.dto';
 import { SendNotificationEmailDto } from './dto/send-notification-email.dto';
@@ -11,8 +11,9 @@ export class ContactController {
 
   @Post('contact-us-email')
   @UseGuards(AuthGuard('jwt'))
-  async sendEmail(@Body() dto: ContactEmailDto) {
-    return this.contactService.sendContactEmail(dto);
+  async sendEmail(@Body() dto: ContactEmailDto, @Req() req) {
+    const user = req.user;
+    return this.contactService.sendContactEmail(dto, user);
   }
 
   @Post('send-notification')

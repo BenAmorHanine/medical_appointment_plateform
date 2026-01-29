@@ -3,15 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { inject } from '@angular/core';
+import { ContactEmailData } from '../models/contact-email-data.model';
 
-export interface ContactEmailData {
-  name: string;
-  email: string;
-  phone?: string;
-  role?: string;
-  subject: string;
-  message: string;
-}
 
 @Injectable({
   providedIn: 'root'

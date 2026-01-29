@@ -28,59 +28,74 @@
         </div>
       </div>
 
-      <div class="contact-form">
-        <h2>Send Message</h2>
+<div class="contact-form">
+  <h2>Send Us a Message</h2>
 
-        @if (submitted) {
-          <div class="alert alert-success animate-fade-in mb-4">
-            <i class="fas fa-check-circle me-2"></i>
-            Your message has been sent successfully!
-          </div>
-        }
+  <!-- Success message -->
+  <div *ngIf="submitted()" class="alert alert-success animate-fade-in mb-4">
+    <i class="fas fa-check-circle me-2"></i>
+    Your message has been sent successfully!
+  </div>
 
-        <form [formGroup]="contactForm" (ngSubmit)="onSubmit()">
-          <div class="form-row">
-            <div class="form-group">
-              <label>Name</label>
-              <input type="text" formControlName="name" [class.error]="contactForm.get('name')?.invalid && contactForm.get('name')?.touched">
-              @if (contactForm.get('name')?.invalid && contactForm.get('name')?.touched) {
-                <div class="error-message">Name is required (min 2 chars)</div>
-              }
-            </div>
+  <form (ngSubmit)="sendMessage()">
 
-            <div class="form-group">
-              <label>Email</label>
-              <input type="email" formControlName="email" class ="disabled-input">
-            </div>
-          </div>
-
-          <div class="form-group">
-          <label>Phone Number</label>
-          <input type="tel" formControlName="phone" class="disabled-input">
-        </div>
-
-          <div class="form-group">
-            <label>Subject</label>
-            <input type="text" formControlName="subject" [class.error]="contactForm.get('subject')?.invalid && contactForm.get('subject')?.touched">
-            @if (contactForm.get('subject')?.invalid && contactForm.get('subject')?.touched) {
-              <div class="error-message">Subject is required</div>
-            }
-          </div>
-
-          <div class="form-group">
-            <label>Message</label>
-            <textarea formControlName="message" rows="5" [class.error]="contactForm.get('message')?.invalid && contactForm.get('message')?.touched"></textarea>
-            @if (contactForm.get('message')?.invalid && contactForm.get('message')?.touched) {
-              <div class="error-message">Message must be at least 10 characters</div>
-            }
-          </div>
-
-          <button type="submit" class="btn-primary" [disabled]="contactForm.invalid || isSubmitting">
-            <i class="fas" [class.fa-spinner]="isSubmitting" [class.fa-spin]="isSubmitting" [class.fa-paper-plane]="!isSubmitting"></i>
-            {{ isSubmitting ? ' Sending...' : ' Send Message' }}
-          </button>
-        </form>
+    <!-- Autofilled user info -->
+    <div class="form-row">
+      <div class="form-group" style="flex: 1; margin-right: 10px;">
+        <label>Name</label>
+        <input type="text" [value]="user() ? user().firstName + ' ' + user().lastName : ''" readonly class="disabled-input"> <!--[disabled]="true" -->
       </div>
+
+      <div class="form-group" style="flex: 1;">
+        <label>Username</label>
+        <input type="text" [value]="user() ? user().username : ''" readonly class="disabled-input">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group" style="flex: 1; margin-right: 10px;">
+        <label>Email</label>
+        <input type="email" [value]="user() ? user().email : ''" readonly class="disabled-input">
+      </div>
+
+      <div class="form-group" style="flex: 1;">
+        <label>Phone Number</label>
+        <input type="tel" [value]="user() ? user().phone : ''" readonly class="disabled-input">
+      </div>
+    </div>
+
+    <!-- Subject input -->
+    <div class="form-group">
+      <label>Subject</label>
+      <input type="text" [(ngModel)]="subject" name="subject" required
+             [class.error]="!subject() && submitted()">
+      <div *ngIf="!subject() && submitted()" class="error-message">
+        Subject is required
+      </div>
+    </div>
+
+    <!-- Message input -->
+    <div class="form-group">
+      <label>Message</label>
+      <textarea [(ngModel)]="message" name="message" rows="5" required
+                [class.error]="message() && message().length < 10 && submitted()"></textarea>
+      <div *ngIf="message() && message().length < 10 && submitted()" class="error-message">
+        Message must be at least 10 characters
+      </div>
+    </div>
+
+    <!-- Submit button -->
+    <button type="submit" class="btn-primary" [disabled]="isSubmitting()">
+      <i class="fas"
+         [class.fa-spinner]="isSubmitting()"
+         [class.fa-spin]="isSubmitting()"
+         [class.fa-paper-plane]="!isSubmitting()">
+      </i>
+      {{ isSubmitting() ? ' Sending...' : ' Send Message' }}
+    </button>
+  </form>
+</div>
+
     </div>
   </div>
 </section>
