@@ -45,6 +45,12 @@ export class UserEntity {
   })
   role: UserRole;
 
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  resetCode: string | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  resetCodeExpiresAt: Date | null;
+
   @CreateDateColumn()
   createdAt: Date;
 

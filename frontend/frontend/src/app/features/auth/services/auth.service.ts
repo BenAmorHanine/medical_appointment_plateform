@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, tap, distinctUntilChanged, map } from 'rxjs';
 import { AuthResponse, User } from '../models/user.model';
-import { LoginRequest } from '../models/auth.model';
+import { LoginRequest, PasswordResetRequest, PasswordResetVerify, PasswordResetConfirm, PasswordResetResponse } from '../models/auth.model';
 import { RegisterRequest } from '../models/auth.model';
 import { environment } from '../../../../environments/environment';
 
@@ -68,12 +68,40 @@ export class AuthService {
     return this.getCurrentUser()?.role === role;
   }
 
+  isAuthenticated(): boolean {
+    return this.isAuthenticatedSubject.value;
+  }
+
   isDoctor(): boolean {
     return this.hasRole('doctor');
   }
 
   isPatient(): boolean {
     return this.hasRole('patient');
+  }
+
+  requestPasswordReset(email: string): Observable<PasswordResetResponse> {
+    return this.http.post<PasswordResetResponse>(
+      `${this.apiUrl}/password-reset/request`,
+      { email },
+      { withCredentials: true }
+    );
+  }
+
+  verifyResetCode(email: string, code: string): Observable<any> {
+    return this.http.post<any>(
+      `${this.apiUrl}/password-reset/verify`,
+      { email, code },
+      { withCredentials: true }
+    );
+  }
+
+  resetPassword(token: string, password: string): Observable<PasswordResetResponse> {
+    return this.http.post<PasswordResetResponse>(
+      `${this.apiUrl}/password-reset/confirm`,
+      { token, password },
+      { withCredentials: true }
+    );
   }
 
 

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Doctor } from '../models/doctor.model';
 import { DoctorsService } from '../services/doctors.service';
+import { AuthService } from '../../auth/services/auth.service';
 
 @Component({
   selector: 'app-doctors',
@@ -18,6 +19,7 @@ export class DoctorsComponent implements OnInit {
 
   router = inject(Router);
   doctorsService = inject(DoctorsService);
+  authService = inject(AuthService);
 
   ngOnInit() {
     this.loadDoctors();
@@ -45,9 +47,15 @@ export class DoctorsComponent implements OnInit {
     this.router.navigate(['/doctor', doctor.id]);
   }*/
 
-bookNow(doctor: Doctor) {
+  bookNow(doctor: Doctor) {
+    if (!this.authService.isAuthenticated()) {
+    this.router.navigate(['/auth/login']);
+    window.scrollTo(0, 0);
+    return;
+  }
   sessionStorage.setItem('selectedDoctor', JSON.stringify(doctor));
   this.router.navigate(['/book']);
+  window.scrollTo(0, 0);
 }
 
 

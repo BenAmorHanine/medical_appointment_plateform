@@ -9,3 +9,21 @@ export interface RegisterRequest {
   password: string;
   role: 'doctor' | 'patient';
 }
+export interface PasswordResetRequest {
+  email: string;
+}
+
+export interface PasswordResetVerify {
+  email: string;
+  code: string;
+}
+
+export interface PasswordResetConfirm {
+  token: string;
+  password: string;
+}
+
+export interface PasswordResetResponse {
+  token?: string;
+  message: string;
+}

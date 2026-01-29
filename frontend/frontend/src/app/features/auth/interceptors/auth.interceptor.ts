@@ -1,17 +1,13 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  // We use 'token' : AuthService.setSession uses localStorage.setItem('token', ...)
-  const token = localStorage.getItem('token');
+  // Enable credentials (cookies) for all requests to the API
+  const authReq = req.clone({
+    withCredentials: true,
+    setHeaders: {
+      'Content-Type': 'application/json',
+    }
+  });
 
-  if (token) {
-    const authReq = req.clone({
-      setHeaders: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-    return next(authReq);
-  }
-
-  return next(req);
+  return next(authReq);
 };
