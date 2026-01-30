@@ -21,7 +21,8 @@ interface DashboardUser {
 
 @Injectable({ providedIn: 'root' })
 export class DashboardService {
-  private baseUrl = `${environment.apiUrl}/dashboard`;
+  private apiUrl = environment.apiUrl;
+  private baseUrl = `${this.apiUrl}/dashboard`;  
 
   constructor(private http: HttpClient) {}
 
