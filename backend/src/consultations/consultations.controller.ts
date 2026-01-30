@@ -7,8 +7,6 @@ import {
   Res,
   StreamableFile,
   Header,
-  HttpStatus,
-  HttpException,
   UseGuards,
 } from '@nestjs/common';
 import type { Response } from 'express';
@@ -56,11 +54,11 @@ export class ConsultationsController {
     @Param('id') id: string,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const pdfPath = await this.consultationsService.getOrdonnancePath(id);
-    const file = createReadStream(pdfPath);
+    const { path, filename } = await this.consultationsService.getOrdonnancePath(id);
+    const file = createReadStream(path);
 
     res.set({
-      'Content-Disposition': `attachment; filename="ordonnance-${id}.pdf"`,
+      'Content-Disposition': `attachment; filename="${filename}"`,
     });
 
     return new StreamableFile(file);
@@ -73,11 +71,11 @@ export class ConsultationsController {
     @Param('id') id: string,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const pdfPath = await this.consultationsService.getCertificatPath(id);
-    const file = createReadStream(pdfPath);
+    const { path, filename } = await this.consultationsService.getCertificatPath(id);
+    const file = createReadStream(path);
 
     res.set({
-      'Content-Disposition': `attachment; filename="certificat-${id}.pdf"`,
+      'Content-Disposition': `attachment; filename="${filename}"`,
     });
 
     return new StreamableFile(file);

@@ -65,12 +65,25 @@ export class ConsultationService {
   downloadOrdonnance(id: string): void {
     this.http.get(`${this.apiUrl}/${id}/ordonnance`, {
       responseType: 'blob',
+      observe: 'response',
     }).subscribe({
-      next: (blob) => {
+      next: (response) => {
+        const blob = response.body;
+        if (!blob) return;
+
+        const contentDisposition = response.headers.get('Content-Disposition');
+        let filename = `ordonnance-${id}.pdf`; // default
+        if (contentDisposition) {
+          const match = contentDisposition.match(/filename="(.+)"/);
+          if (match) {
+            filename = match[1];
+          }
+        }
+
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `ordonnance-${id}.pdf`;
+        link.download = filename;
         link.click();
         window.URL.revokeObjectURL(url);
       },
@@ -84,12 +97,25 @@ export class ConsultationService {
   downloadCertificat(id: string): void {
     this.http.get(`${this.apiUrl}/${id}/certificat`, {
       responseType: 'blob',
+      observe: 'response',
     }).subscribe({
-      next: (blob) => {
+      next: (response) => {
+        const blob = response.body;
+        if (!blob) return;
+
+        const contentDisposition = response.headers.get('Content-Disposition');
+        let filename = `certificat-${id}.pdf`; // default
+        if (contentDisposition) {
+          const match = contentDisposition.match(/filename="(.+)"/);
+          if (match) {
+            filename = match[1];
+          }
+        }
+
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `certificat-${id}.pdf`;
+        link.download = filename;
         link.click();
         window.URL.revokeObjectURL(url);
       },
@@ -131,4 +157,3 @@ export class ConsultationService {
     });
   }
 }
-

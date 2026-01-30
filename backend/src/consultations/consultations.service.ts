@@ -255,13 +255,15 @@ const consultation = await queryRunner.manager.save(
 
       // Générer les PDFs en parallèle
       const names = await this.getNames(dto.doctorProfileId, dto.patientId);
+      const ordonnanceFilename = this.generatePdfFilename('ordonnance', names, consultation.createdAt);
+      const certificatFilename = this.generatePdfFilename('certificat', names, consultation.createdAt);
       const [ordonnanceUrl, certificatUrl] = await Promise.all([
         this.createPDF(
-          `ordonnance-${consultation.id}.pdf`,
+          ordonnanceFilename,
           this.buildOrdonnance(consultation, names),
         ),
         this.createPDF(
-          `certificat-${consultation.id}.pdf`,
+          certificatFilename,
           this.buildCertificat(consultation, names),
         ),
       ]);
@@ -334,20 +336,23 @@ const consultation = await queryRunner.manager.save(
   private async getPdfPath(
     id: string,
     field: 'ordonnanceUrl' | 'certificatUrl',
-  ): Promise<string> {
+  ): Promise<{ path: string, filename: string }> {
     const consultation = await this.findOne(id);
 
     const names = await this.getNames(consultation.doctorProfileId, consultation.patientId);
 
     let pdfUrl: string;
+    let filename: string;
     if (field === 'ordonnanceUrl') {
+      filename = this.generatePdfFilename('ordonnance', names, consultation.createdAt);
       pdfUrl = await this.createPDF(
-        `ordonnance-${consultation.id}.pdf`,
+        filename,
         this.buildOrdonnance(consultation, names),
       );
     } else {
+      filename = this.generatePdfFilename('certificat', names, consultation.createdAt);
       pdfUrl = await this.createPDF(
-        `certificat-${consultation.id}.pdf`,
+        filename,
         this.buildCertificat(consultation, names),
       );
     }
@@ -357,20 +362,33 @@ const consultation = await queryRunner.manager.save(
       await this.consultationRepo.update(consultation.id, { [field]: pdfUrl });
     }
 
-    return join(process.cwd(), pdfUrl.replace(/^\//, ''));
+    return { path: join(process.cwd(), pdfUrl.replace(/^\//, '')), filename };
   }
 
   /**
    * Récupère le chemin de l'ordonnance
    */
-  async getOrdonnancePath(id: string): Promise<string> {
+  async getOrdonnancePath(id: string): Promise<{ path: string, filename: string }> {
     return this.getPdfPath(id, 'ordonnanceUrl');
   }
 
   /**
    * Récupère le chemin du certificat médical
    */
-  async getCertificatPath(id: string): Promise<string> {
+  async getCertificatPath(id: string): Promise<{ path: string, filename: string }> {
     return this.getPdfPath(id, 'certificatUrl');
+  }
+
+  /**
+   * Génère le nom de fichier pour un PDF
+   */
+  private generatePdfFilename(
+    type: 'ordonnance' | 'certificat',
+    names: Names,
+    date: Date,
+  ): string {
+    const patientName = names.patient.replace(/\s+/g, '_');
+    const dateStr = date.toISOString().split('T')[0];
+    return `${type}-${patientName}-${dateStr}.pdf`;
   }
 }
