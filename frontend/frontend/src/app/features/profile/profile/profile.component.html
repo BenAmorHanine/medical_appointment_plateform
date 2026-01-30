@@ -33,6 +33,11 @@
                 <i class="bi bi-clock-history me-2"></i> Visit History
               </a>
             }
+            @if (user()?.role === 'doctor') {
+              <a routerLink="/history/doctor" class="btn btn-primary px-4 rounded-pill fw-bold transition-all">
+                <i class="bi bi-clock-history me-2"></i> My History
+              </a>
+            }
             <button class="btn btn-outline-light px-4 rounded-pill fw-bold transition-all" (click)="toggleEdit()">
               @if (!isEditing()) {
                 <i class="bi bi-pencil-square me-2"></i> Edit Profile
