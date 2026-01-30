@@ -4,6 +4,7 @@ import { PatientConsultationsComponent } from './features/patient-consultations/
 import { authGuard } from './features/auth/guards/auth.guard';
 import { doctorGuard } from './features/auth/guards/doctor.guard';
 import { patientGuard } from './features/auth/guards/patient.guard';
+import { adminGuard } from './features/auth/guards/admin.guard';
 import { ContactComponent } from './features/contact/components/contact.component';
 import { DoctorsComponent } from './features/doctors/components/doctors.component';
 import { AppointmentsComponent } from './features/appointments/appointments.component';
@@ -66,12 +67,12 @@ export const routes: Routes = [
   {
     path: 'dashboard',
     component: DashboardComponent,
-    canActivate: [authGuard]
+    canActivate: [authGuard, adminGuard]
   },
   {
     path: 'patients',
     component: AdminPatientsComponent,
-    canActivate: [authGuard]
+    canActivate: [authGuard, adminGuard]
   },
 
   // FALLBACKS

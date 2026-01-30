@@ -79,6 +79,9 @@ export class AuthService {
   isPatient(): boolean {
     return this.hasRole('patient');
   }
+  isAdmin(): boolean {
+    return this.hasRole('admin');
+  }
 
   requestPasswordReset(email: string): Observable<PasswordResetResponse> {
     return this.http.post<PasswordResetResponse>(
