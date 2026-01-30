@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   BeforeInsert,
+  DeleteDateColumn,
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
@@ -56,6 +57,9 @@ export class UserEntity {
 
   @UpdateDateColumn()
   updatedAt: Date;
+  
+  @DeleteDateColumn({ nullable: true })   // ✅ add this
+  deletedAt?: Date;
 
   @BeforeInsert()
   async hashPassword() {
