@@ -27,13 +27,20 @@
             </div>
           </div>
 
-          <button class="btn btn-outline-light px-4 rounded-pill fw-bold transition-all" (click)="toggleEdit()">
-            @if (!isEditing()) {
-              <i class="bi bi-pencil-square me-2"></i> Edit Profile
-            } @else {
-              <i class="bi bi-x-circle me-2"></i> Cancel
+          <div class="d-flex gap-2">
+            @if (user()?.role === 'patient') {
+              <a routerLink="/history" class="btn btn-primary px-4 rounded-pill fw-bold transition-all">
+                <i class="bi bi-clock-history me-2"></i> Visit History
+              </a>
             }
-          </button>
+            <button class="btn btn-outline-light px-4 rounded-pill fw-bold transition-all" (click)="toggleEdit()">
+              @if (!isEditing()) {
+                <i class="bi bi-pencil-square me-2"></i> Edit Profile
+              } @else {
+                <i class="bi bi-x-circle me-2"></i> Cancel
+              }
+            </button>
+          </div>
         </div>
 
         <div class="card-body p-4 p-md-5">

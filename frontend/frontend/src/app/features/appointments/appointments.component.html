@@ -2,19 +2,18 @@
   <div class="container">
     <div class="row align-items-center">
       <div class="col-lg-8">
-        <h1 class="section-title mb-4">
-          My 
-          <span class="gradient-text">{{ isDoctor ? 'Patients' : 'Appointments' }}</span>
+        <h1 class="section-title mb-3">
+          <span style="color: #000000;">My </span> <span class="gradient-text">{{ isDoctor ? 'Patients' : 'Appointments' }}</span>
         </h1>
-        <p class="lead mb-0">{{ isDoctor ? "All Appointments" : "Your Consultations" }}</p>
+        <p class="lead mb-0" style="color: #000000;">{{ isDoctor ? "All Appointments" : "Everything Tracked" }}</p>
       </div>
-      @if (!isDoctor) {
-        <div class="col-lg-4 text-lg-end">
+      <div class="col-lg-4 text-lg-end">
+        @if (!isDoctor) {
           <a routerLink="/doctors" class="btn btn-primary btn-lg px-4">
             <i class="fas fa-calendar-plus me-2"></i>New Appointment
           </a>
-        </div>
-      }
+        }
+      </div>
     </div>
   </div>
 </section>
@@ -75,7 +74,7 @@
                   <button 
                     class="btn btn-primary w-100" 
                     (click)="navigateToConsultation(appointment)"
-                    [disabled]="appointment.status.toLowerCase() === 'done'">
+                    [disabled]="appointment.status?.toLowerCase() === 'done'">
                     <i class="fas fa-stethoscope me-1"></i>Consultation
                   </button>
                 }

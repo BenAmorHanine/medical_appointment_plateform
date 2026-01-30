@@ -113,10 +113,19 @@ this.historyService
 
   statusClass(status: string): string {
     switch (status) {
-      case 'EFFECTUE': return 'badge bg-success';
-      case 'ANNULE':   return 'badge bg-warning';
-      case 'ABSENT':   return 'badge bg-danger';
-      default:         return 'badge bg-secondary';
+      case 'EFFECTUE': return 'badge-status badge-status-success';
+      case 'ANNULE':   return 'badge-status badge-status-warning';
+      case 'ABSENT':   return 'badge-status badge-status-danger';
+      default:         return 'badge-status badge-status-secondary';
+    }
+  }
+
+  getStatusIcon(status: string): string {
+    switch (status) {
+      case 'EFFECTUE': return 'fas fa-check-circle';
+      case 'ANNULE':   return 'fas fa-times-circle';
+      case 'ABSENT':   return 'fas fa-user-slash';
+      default:         return 'fas fa-info-circle';
     }
   }
 
