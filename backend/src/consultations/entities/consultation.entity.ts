@@ -57,4 +57,3 @@ export class ConsultationEntity {
   @UpdateDateColumn()
   updatedAt: Date;
 }
-

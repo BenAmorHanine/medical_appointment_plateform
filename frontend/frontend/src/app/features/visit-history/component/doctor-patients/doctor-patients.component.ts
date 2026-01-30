@@ -52,9 +52,21 @@ export class DoctorPatientsComponent implements OnInit {
       this.load();
     }
   }
-
+/*
  openHistory(patientId: string): void {
   this.router.navigate(['/history/doctor/patient', patientId]);
 }
+*/
+openHistory(patientId: string): void {
+  console.log('➡️ Navigating with patientId:', patientId);
+ sessionStorage.setItem('patientHistoryId', patientId);
+  this.router.navigate(
+    ['/history/doctor/patient'],
+    {
+      state: { patientId },
+    }
+  );
+}
+
 
 }

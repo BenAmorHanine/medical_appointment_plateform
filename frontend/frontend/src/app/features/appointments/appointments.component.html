@@ -75,7 +75,7 @@
                   <button 
                     class="btn btn-primary w-100" 
                     (click)="navigateToConsultation(appointment)"
-                    [disabled]="appointment.status?.toLowerCase() === 'done'">
+                    [disabled]="appointment.status.toLowerCase() === 'done'">
                     <i class="fas fa-stethoscope me-1"></i>Consultation
                   </button>
                 }

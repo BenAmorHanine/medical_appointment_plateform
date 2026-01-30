@@ -1,9 +1,11 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed,inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { VisitHistoryResponse, VisitHistoryItem } from '../../model/visit-history.model';
 import { VisitHistoryService } from '../../service/visit-history.service';
 import { CommonModule } from '@angular/common';
 import { environment } from '../../../../../environments/environment';
+import { AuthService } from '../../../auth/services/auth.service';
+
 @Component({
   selector: 'app-visit-history',
   standalone: true,
@@ -12,12 +14,15 @@ import { environment } from '../../../../../environments/environment';
   styleUrls: ['./visit-history.component.css'],
 })
 export class VisitHistoryComponent implements OnInit {
+  private historyService = inject(VisitHistoryService);
+  private route = inject(ActivatedRoute);
+  private authService = inject(AuthService);
 
   loading = signal(true);
   error = signal<string | null>(null);
   data = signal<VisitHistoryResponse | null>(null);
 
-  // 🔽 Pagination state
+  //  Pagination 
   page = signal(1);
   limit = 5;
 
@@ -29,36 +34,68 @@ export class VisitHistoryComponent implements OnInit {
     return environment.apiUrl;
   }
 
-  constructor(
-    private historyService: VisitHistoryService,
-    private route: ActivatedRoute
-  ) {}
+
 
   ngOnInit(): void {
     this.loadHistory();
   }
 
-  loadHistory(): void {
-    this.loading.set(true);
-    this.error.set(null);
 
-    const patientId = this.route.snapshot.paramMap.get('patientId');
+loadHistory(): void {
+  this.loading.set(true);
+  this.error.set(null);
 
-    const request$ = patientId
-      ? this.historyService.getPatientHistory(patientId, this.page(), this.limit)
-      : this.historyService.getMyHistory(this.page(), this.limit);
+  const user = this.authService.getCurrentUser();
 
-    request$.subscribe({
-      next: (res) => {
-        this.data.set(res);
-        this.loading.set(false);
-      },
-      error: (err) => {
-        this.error.set(err.error?.message || 'Failed to load history');
-        this.loading.set(false);
-      },
-    });
+  if (!user) {
+    this.error.set('Utilisateur non authentifié');
+    this.loading.set(false);
+    return;
   }
+
+  
+  //  PATIENT
+  if (user.role === 'patient') {
+    this.historyService
+      .getMyHistory(this.page(), this.limit)
+      .subscribe({
+        next: (res) => {
+          this.data.set(res);
+          this.loading.set(false);
+        },
+        error: (err) => {
+          this.error.set(err.error?.message || 'Erreur chargement historique');
+          this.loading.set(false);
+        },
+      });
+    return;
+  }
+
+// CAS DOCTOR
+const patientId =
+  history.state?.patientId ||
+  sessionStorage.getItem('patientHistoryId');
+
+if (!patientId) {
+  this.error.set('Patient non sélectionné');
+  this.loading.set(false);
+  return;
+}
+
+this.historyService
+  .getDoctorPatientHistory(patientId, this.page(), this.limit)
+  .subscribe({
+    next: (res) => {
+      this.data.set(res);
+      this.loading.set(false);
+    },
+    error: (err) => {
+      this.error.set(err.error?.message || 'Failed to load history');
+      this.loading.set(false);
+    },
+  });
+
+}
 
   nextPage(): void {
     if (this.data() && this.page() < this.data()!.totalPages) {
@@ -82,4 +119,13 @@ export class VisitHistoryComponent implements OnInit {
       default:         return 'badge bg-secondary';
     }
   }
+
+ 
 }
+
+
+
+
+
+
+

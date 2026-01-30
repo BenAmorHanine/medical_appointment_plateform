@@ -4,7 +4,7 @@ import { VisitHistoryComponent } from './component/visit-history/visit-history.c
 import { authGuard } from '../auth/guards/auth.guard';
 import { DoctorPatientsComponent } from './component/doctor-patients/doctor-patients.component';
 
-
+/*
 const routes: Routes = [
   // 👤 Patient
   {
@@ -17,15 +17,36 @@ const routes: Routes = [
     path: 'doctor',
     component: DoctorPatientsComponent,
   },
-
+   {
+  path: 'history/doctor/patient',
+  component: VisitHistoryComponent,
+}
+,
+/*
   // 👨‍⚕️ Médecin → historique d’un patient
   {
     path: 'doctor/patient/:patientId',
     component: VisitHistoryComponent,
   },
+
+ 
 ];
+*/
 
-
+const routes: Routes = [
+  {
+    path: '',
+    component: VisitHistoryComponent,
+  },
+  {
+    path: 'doctor',
+    component: DoctorPatientsComponent,
+  },
+  {
+    path: 'doctor/patient',
+    component: VisitHistoryComponent,
+  },
+];
 @NgModule({
   imports: [RouterModule.forChild(routes)],
   exports: [RouterModule],

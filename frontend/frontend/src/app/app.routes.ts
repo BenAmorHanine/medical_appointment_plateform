@@ -13,6 +13,7 @@ import { BookAppointmentComponent } from './features/appointments/book-appointme
 import { ProfileComponent } from './features/profile/profile/profile.component';
 import { DashboardComponent } from './features/dashboard/components/dashboard.component';
 import { AdminPatientsComponent } from './features/patients/components/patients.component';
+import { DoctorSendNotificationComponent } from './features/doctor-notification/components/doctor-send-notification/doctor-send-notification.component';
 
 export const routes: Routes = [
   // PUBLIC ROUTES
@@ -38,6 +39,15 @@ export const routes: Routes = [
     component: AppointmentsComponent,
     canActivate: [authGuard]
   },
+{
+  path: 'doctor/send-notification',
+  component: DoctorSendNotificationComponent,
+  canActivate: [authGuard],
+},
+
+
+
+
   {
     path: 'book',
     component: BookAppointmentComponent,

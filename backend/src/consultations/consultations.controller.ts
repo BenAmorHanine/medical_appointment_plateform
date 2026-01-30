@@ -88,4 +88,4 @@ export class ConsultationsController {
   findOne(@Param('id') id: string) {
     return this.consultationsService.findOne(id);
   }
-}
+  }

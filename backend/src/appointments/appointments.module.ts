@@ -7,16 +7,17 @@ import { AvailabilityEntity } from '../availability/entities/availability.entity
 import { UsersModule } from '../users/users.module';  
 import { PatientProfileEntity } from '../profiles/patient/entities/patient-profile.entity';
 import { DoctorProfileEntity } from '../profiles/doctor/entities/doctor-profile.entity';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       AppointmentEntity,
       AvailabilityEntity, PatientProfileEntity,DoctorProfileEntity 
     ]),
-    UsersModule,  
+    UsersModule, 
   ],
   controllers: [AppointmentsController],
-  providers: [AppointmentsService],
+  providers: [AppointmentsService,],
   exports: [AppointmentsService],  
 })
 export class AppointmentsModule {}

@@ -32,6 +32,15 @@
                   <span>My History</span>
                   <i class="fas fa-history ms-2"></i>
                 </button>
+                  @if (isDoctor) {
+                   <a
+                   routerLink="/doctor/send-notification"
+                    class="btn-hero-primary"
+                    >
+                    <span>Send Notification</span>
+                   <i class="fas fa-envelope ms-2"></i>
+                   </a>
+                  }
                 <button class="btn-hero-outline" (click)="logout()">
                   <span>Logout</span>
                   <i class="fas fa-sign-out-alt ms-2"></i>

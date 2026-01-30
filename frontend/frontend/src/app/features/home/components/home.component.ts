@@ -112,4 +112,16 @@ export class HomeComponent implements OnInit, OnDestroy {
     // ou '/history/me' selon ta config
   }
 }
+
+
+get isDoctor(): boolean {
+  const user = this.authService.getCurrentUser();
+  return user?.role === 'doctor';
+}
+
+
+goToSendNotification(): void {
+  this.router.navigate(['/doctor/send-notification']);
+}
+
 }

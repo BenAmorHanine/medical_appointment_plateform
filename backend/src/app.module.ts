@@ -15,6 +15,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { ProfileModule } from './profile/profile.module';
 import { VisitHistoryModule } from './visit-history/visit-history.module';
 import { ContactModule } from './contact/contact.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { ContactModule } from './contact/contact.module';
     ProfileModule,
     VisitHistoryModule,
     ContactModule,
+     ScheduleModule.forRoot(),
   ],
 })
 export class AppModule {}

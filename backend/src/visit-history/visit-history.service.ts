@@ -5,7 +5,7 @@ import { ForbiddenException } from '@nestjs/common';
 import { ConsultationEntity } from '../consultations/entities/consultation.entity';
 import { AppointmentEntity } from '../appointments/entities/appointment.entity';
 import { PatientProfileEntity } from '../profiles/patient/entities/patient-profile.entity';
-import { VisitHistoryDto, VisitStatus } from './dto/visit-history.dto';
+import { VisitHistoryDto } from './dto/visit-history.dto';
 import { DoctorProfileEntity } from '../profiles/doctor/entities/doctor-profile.entity';
 
 @Injectable()
@@ -76,23 +76,25 @@ async getHistoryByUserId(userId: string, page = 1, limit = 10) {
     consultationId: c.id,
     date: c.createdAt,
     type: c.type,
-    status: 'EFFECTUE', // logique existante conservée
+    status: 'EFFECTUE', 
     ordonnanceUrl: c.ordonnanceUrl || undefined,
     certificatUrl: c.certificatUrl || undefined,
   }));
 
   return {
-    page,
-    limit,
-    total,
-    blocked: false,
-    absenceCount,
-    history,
-  };
+  page,
+  limit,
+  total,
+  totalPages: Math.ceil(total / limit),
+  blocked: false,
+  absenceCount,
+  history,
+};
+
 }
 
 
-
+/*
 async getPatientsOfDoctor(
   doctorUserId: string,
   page = 1,
@@ -141,9 +143,61 @@ async getPatientsOfDoctor(
     data,
   };
 }
+*/
+async getPatientsOfDoctor(
+  doctorUserId: string,
+  page = 1,
+  limit = 10,
+) {
+  const doctorProfile = await this.doctorProfileRepository.findOneOrFail({
+    where: { user: { id: doctorUserId } },
+    select: { id: true },
+  });
 
+  // ✅ Compter les patients distincts AVANT groupBy
+  const totalQuery = this.consultationRepository
+    .createQueryBuilder('c')
+    .innerJoin(PatientProfileEntity, 'p', 'p.id = c.patientId')
+    .where('c.doctorProfileId = :doctorId', {
+      doctorId: doctorProfile.id,
+    })
+    .select('COUNT(DISTINCT p.id)', 'count');
 
+  const totalResult = await totalQuery.getRawOne();
+  const total = parseInt(totalResult.count);
 
+  // ✅ Query avec pagination
+  const data = await this.consultationRepository
+    .createQueryBuilder('c')
+    .innerJoin(PatientProfileEntity, 'p', 'p.id = c.patientId')
+    .innerJoin('p.user', 'u')
+    .where('c.doctorProfileId = :doctorId', {
+      doctorId: doctorProfile.id,
+    })
+    .groupBy('p.id')
+    .addGroupBy('u.firstName')
+    .addGroupBy('u.lastName')
+    .orderBy('MAX(c.createdAt)', 'DESC')
+    .select([
+      'p.id AS patientId',
+      "CONCAT(u.firstName, ' ', u.lastName) AS fullName",
+      'COUNT(c.id) AS visits',
+      'MAX(c.createdAt) AS lastVisit',
+    ])
+    .skip((page - 1) * limit)
+    .take(limit)
+    .getRawMany();
+
+  return {
+    page,
+    limit,
+    total,
+    totalPages: Math.ceil(total / limit),
+    data,
+  };
+}
+
+/*
  async getHistoryByPatient(
   patientId: string,
   page = 1,
@@ -192,8 +246,39 @@ async getPatientsOfDoctor(
   }
 
   return {
-    blocked: absenceCount >= this.ABSENCE_LIMIT,
+    //blocked: absenceCount >= this.ABSENCE_LIMIT,
     absenceCount,
+    page,
+    limit,
+    total,
+    totalPages: Math.ceil(total / limit),
+    history,
+  };
+}*/
+
+async getHistoryByPatient(
+  patientId: string,
+  page = 1,
+  limit = 10,
+) {
+  const [consultations, total] =
+    await this.consultationRepository.findAndCount({
+      where: { patientId },
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+  const history: VisitHistoryDto[] = consultations.map(c => ({
+    consultationId: c.id,
+    date: c.createdAt,
+    type: c.type,
+    status: 'EFFECTUE',
+    ordonnanceUrl: c.ordonnanceUrl || undefined,
+    certificatUrl: c.certificatUrl || undefined,
+  }));
+
+  return {
     page,
     limit,
     total,
@@ -202,4 +287,21 @@ async getPatientsOfDoctor(
   };
 }
 
+/*
+async markAbsent(consultationId: string) {
+  const consultation = await this.consultationRepository.findOne({
+    where: { id: consultationId },
+  });
+
+  if (!consultation) {
+    throw new NotFoundException('Consultation introuvable');
+  }
+
+  consultation.visitStatus = VisitStatus.ABSENT;
+
+  await this.consultationRepository.save(consultation);
+
+  return { success: true };
+}
+*/
 }
