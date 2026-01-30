@@ -21,31 +21,82 @@
     @else if (stats) {
       <div class="stats-grid">
         <div class="stat-card">
-          <h3>Total patients</h3>
-          <p>{{ stats.totalPatients }}</p>
+          <h3>👥 Total patients</h3>
+          <p class="stat-number stat-blue">{{ stats.totalPatients }}</p>
         </div>
         <div class="stat-card">
-          <h3>Total doctors</h3>
-          <p>{{ stats.totalDoctors }}</p>
+          <h3>🩺 Total doctors</h3>
+          <p class="stat-number stat-green">{{ stats.totalDoctors }}</p>
         </div>
         <div class="stat-card">
-          <h3>Total appointments</h3>
-          <p>{{ stats.totalAppointments }}</p>
+          <h3>📅 Total appointments</h3>
+          <p class="stat-number stat-orange">{{ stats.totalAppointments }}</p>
         </div>
         <div class="stat-card">
-          <h3>Total consultations</h3>
-          <p>{{ stats.totalConsultations }}</p>
+          <h3>🧾 Total consultations</h3>
+          <p class="stat-number stat-purple">{{ stats.totalConsultations }}</p>
+        </div>
+      </div>
+
+      <!-- ✅ Quick insights -->
+      <div class="insights-grid">
+        <div class="insight-card accent-blue">
+          <div class="insight-head">
+            <span class="insight-emoji">⚖️</span>
+            <h4>Doctors / Patients</h4>
+          </div>
+          <div class="insight-value">{{ doctorPatientRatio }}</div>
+          <div class="insight-sub">
+            {{ stats.totalDoctors }} / {{ stats.totalPatients }}
+          </div>
+        </div>
+
+        <div class="insight-card accent-orange">
+          <div class="insight-head">
+            <span class="insight-emoji">📈</span>
+            <h4>Appointments per doctor</h4>
+          </div>
+          <div class="insight-value">{{ apptPerDoctor }}</div>
+          <div class="insight-sub">
+            {{ stats.totalAppointments }} / {{ stats.totalDoctors }}
+          </div>
+        </div>
+
+        <div class="insight-card accent-purple">
+          <div class="insight-head">
+            <span class="insight-emoji">📊</span>
+            <h4>Appointments per patient</h4>
+          </div>
+          <div class="insight-value">{{ apptPerPatient }}</div>
+          <div class="insight-sub">
+            {{ stats.totalAppointments }} / {{ stats.totalPatients }}
+          </div>
+        </div>
+
+        <div class="insight-card accent-green">
+          <div class="insight-head">
+            <span class="insight-emoji">✅</span>
+            <h4>System status</h4>
+          </div>
+          <div class="insight-value ok">
+            <span class="dot"></span> OK
+          </div>
+          <div class="insight-sub">
+            Stats loaded successfully
+          </div>
         </div>
       </div>
     }
 
     <!-- Charts placeholder -->
+    <!--
     <div class="charts-row">
       <div class="chart-card">
         <h3>Appointments overview</h3>
         <p class="chart-placeholder">Charts to be added here (ng2-charts / Chart.js).</p>
       </div>
     </div>
+    -->
 
     <!-- Users management -->
     <div class="users-section">
