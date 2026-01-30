@@ -56,14 +56,14 @@ export class ConsultationsService implements OnModuleInit {
   async onModuleInit(): Promise<void> {
     try {
       await mkdir(this.uploadsDir, { recursive: true });
-      this.logger.log(`Répertoire uploads créé: ${this.uploadsDir}`);
+      this.logger.log(`Uploads directory created: ${this.uploadsDir}`);
     } catch (error) {
-      this.logger.error('Erreur création répertoire uploads', error);
+      this.logger.error('Uploads directory creation error', error);
     }
   }
 
   /**
-   * Récupère les noms du médecin et du patient en parallèle
+   * Retrieves the names of the doctor and patient in parallel
    */
   private async getNames(
     doctorProfileId: string,
@@ -81,13 +81,13 @@ export class ConsultationsService implements OnModuleInit {
     ]);
 
     return {
-      doctor: doctor?.user?.username ?? 'Dr. Inconnu',
-      patient: patient?.user?.username ?? 'Patient Inconnu',
+      doctor: doctor?.user?.username ?? 'Dr. Unknown',
+      patient: patient?.user?.username ?? 'Unknown Patient',
     };
   }
 
   /**
-   * Générateur PDF générique avec gestion d'erreurs robuste
+   * Generic PDF generator with robust error handling
    */
   private async createPDF(
     fileName: string,
@@ -106,25 +106,25 @@ export class ConsultationsService implements OnModuleInit {
         doc.end();
       } catch (error) {
         stream.destroy();
-        this.logger.error(`Erreur génération PDF ${fileName}`, error);
-        reject(new InternalServerErrorException('Erreur génération PDF'));
+        this.logger.error(`PDF generation error ${fileName}`, error);
+        reject(new InternalServerErrorException('PDF generation error'));
         return;
       }
 
       stream.on('finish', () => {
-        this.logger.log(`PDF créé: ${fileName}`);
+        this.logger.log(`PDF created: ${fileName}`);
         resolve(`/uploads/consultations/${fileName}`);
       });
 
       stream.on('error', (error) => {
-        this.logger.error(`Erreur écriture PDF ${fileName}`, error);
-        reject(new InternalServerErrorException('Erreur sauvegarde PDF'));
+        this.logger.error(`PDF write error ${fileName}`, error);
+        reject(new InternalServerErrorException('PDF save error'));
       });
     });
   }
 
   /**
-   * Construction du PDF d'ordonnance
+   * Prescription PDF builder
    */
   private buildOrdonnance(
     consultation: ConsultationEntity,
@@ -133,29 +133,29 @@ export class ConsultationsService implements OnModuleInit {
     return (doc: PDFKit.PDFDocument) => {
       doc
         .fontSize(20)
-        .text('ORDONNANCE MÉDICALE', { align: 'center' })
+        .text('MEDICAL PRESCRIPTION', { align: 'center' })
         .moveDown();
 
       doc
         .fontSize(12)
-        .text(`Date: ${consultation.createdAt.toLocaleDateString('fr-FR')}`)
-        .text(`Type: ${consultation.type} | Durée: ${consultation.duration}min`)
-        .text(`Médecin: ${names.doctor} | Patient: ${names.patient}`)
+        .text(`Date: ${consultation.createdAt.toLocaleDateString('en-US')}`)
+        .text(`Type: ${consultation.type} | Duration: ${consultation.duration} min`)
+        .text(`Doctor: ${names.doctor} | Patient: ${names.patient}`)
         .moveDown()
         .fontSize(14)
         .text('PRESCRIPTIONS:', { underline: true })
         .fontSize(12)
         .text(
-          consultation.medicament ? `- ${consultation.medicament}` : '- Aucun',
+          consultation.medicament ? `- ${consultation.medicament}` : '- None',
         )
         .moveDown()
-        .text('Signature électronique', { align: 'right' })
+        .text('Electronic Signature', { align: 'right' })
         .text(names.doctor, { align: 'right' });
     };
   }
 
   /**
-   * Construction du PDF de certificat médical
+   * Medical certificate PDF builder
    */
   private buildCertificat(
     consultation: ConsultationEntity,
@@ -164,47 +164,47 @@ export class ConsultationsService implements OnModuleInit {
     return (doc: PDFKit.PDFDocument) => {
       doc
         .fontSize(20)
-        .text('CERTIFICAT MÉDICAL', { align: 'center' })
+        .text('MEDICAL CERTIFICATE', { align: 'center' })
         .moveDown();
 
       doc
         .fontSize(12)
-        .text(`Je soussigné(e), ${names.doctor}, certifie avoir examiné:`)
+        .text(`I, the undersigned, ${names.doctor}, certify that I have examined:`)
         .text(`Patient: ${names.patient}`)
         .text(
-          `Date: ${consultation.createdAt.toLocaleDateString('fr-FR')} | Type: ${consultation.type}`,
+          `Date: ${consultation.createdAt.toLocaleDateString('en-US')} | Type: ${consultation.type}`,
         )
         .moveDown();
 
       if (consultation.joursRepos) {
         doc
           .fontSize(14)
-          .text('ARRÊT DE TRAVAIL', { underline: true })
+          .text('SICK LEAVE', { underline: true })
           .fontSize(12)
           .text(
-            `${consultation.joursRepos} jour(s) à compter du ${consultation.createdAt.toLocaleDateString('fr-FR')}`,
+            `${consultation.joursRepos} day(s) starting from ${consultation.createdAt.toLocaleDateString('en-US')}`,
           )
           .moveDown();
       }
 
       doc
-        .text('Signature électronique', { align: 'right' })
+        .text('Electronic Signature', { align: 'right' })
         .text(names.doctor, { align: 'right' })
-        .text(`Date: ${consultation.createdAt.toLocaleDateString('fr-FR')}`, {
+        .text(`Date: ${consultation.createdAt.toLocaleDateString('en-US')}`, {
           align: 'right',
         });
     };
   }
 
   /**
-   * Création d'une consultation avec transaction et génération des PDFs
+   * Creates a consultation with transaction and PDF generation
    */
   async create(dto: CreateConsultationDto): Promise<ConsultationEntity> {
-    // Si une consultation existe déjà pour ce rendez-vous, renvoyer l'existante
+    // If a consultation already exists for this appointment, return the existing one
     if (dto.appointmentId) {
       const existing = await this.consultationRepo.findOne({ where: { appointmentId: dto.appointmentId } });
       if (existing) {
-        this.logger.warn(`Consultation déjà existante pour appointment ${dto.appointmentId}, renvoi de l'existante.`);
+        this.logger.warn(`Consultation already exists for appointment ${dto.appointmentId}, returning existing.`);
         return existing;
       }
     }
@@ -216,11 +216,11 @@ export class ConsultationsService implements OnModuleInit {
     try {
       const duration = dto.duration ?? this.durations[dto.type] ?? 30;
 
-     /* // Créer la consultation
+     /* // Create the consultation
       const consultation = await queryRunner.manager.save(
         this.consultationRepo.create({ ...dto, duration }),
       );*/
-       //1️⃣ Récupérer le patientProfile depuis le userId reçu
+       //1️⃣ Retrieve patientProfile from received userId
 const [patientProfile, doctorProfile] = await Promise.all([
   this.patientRepo.findOne({
     where: { user: { id: dto.patientId } },
@@ -244,7 +244,7 @@ if (!patientProfile) {
 }
 
 
-//  Forcer l’ID correct
+//  Force the correct ID
 const consultation = await queryRunner.manager.save(
   this.consultationRepo.create({
     ...dto,
@@ -255,14 +255,14 @@ const consultation = await queryRunner.manager.save(
 );
 
 
-      // Marquer le rendez-vous comme terminé si présent
+      // Mark the appointment as done if present
       if (dto.appointmentId) {
         await queryRunner.manager.update(AppointmentEntity, dto.appointmentId, {
           status: AppointmentStatus.DONE,
         });
       }
 
-      // Générer les PDFs en parallèle
+      // Generate PDFs in parallel
       const names = await this.getNames(dto.doctorProfileId, dto.patientId);
       const ordonnanceFilename = this.generatePdfFilename('ordonnance', names, consultation.createdAt);
       const certificatFilename = this.generatePdfFilename('certificat', names, consultation.createdAt);
@@ -277,22 +277,22 @@ const consultation = await queryRunner.manager.save(
         ),
       ]);
 
-      // Mettre à jour les URLs des PDFs
-      // Au lieu d'exposer directement le chemin '/uploads/...', on sauvegarde l'URL
-      // contrôlée qui servira le fichier et ajoutera Content-Disposition.
+      // Update PDF URLs
+      // Instead of exposing the direct path '/uploads/...', we save the controlled URL
+      // that will serve the file and add Content-Disposition.
       consultation.ordonnanceUrl = `/consultations/${consultation.id}/ordonnance`;
       consultation.certificatUrl = `/consultations/${consultation.id}/certificat`;
 
       await queryRunner.manager.save(consultation);
       await queryRunner.commitTransaction();
 
-      this.logger.log(`Consultation créée: ${consultation.id}`);
+      this.logger.log(`Consultation created: ${consultation.id}`);
       return consultation;
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      this.logger.error('Erreur création consultation', error);
+      this.logger.error('Consultation creation error', error);
       throw new InternalServerErrorException(
-        'Erreur lors de la création de la consultation',
+        'Error during consultation creation',
       );
     } finally {
       await queryRunner.release();
@@ -300,10 +300,10 @@ const consultation = await queryRunner.manager.save(
   }
 
   /**
-   * Normalise les URLs des PDFs pour qu'elles pointent vers les endpoints contrôlés
-   * (/consultations/:id/ordonnance ou /consultations/:id/certificat). Si la
-   * base contient encore l'URL statique '/uploads/consultations/..', on la remplace
-   * par l'URL contrôlée et on met à jour l'enregistrement en base.
+   * Normalizes PDF URLs to point to controlled endpoints
+   * (/consultations/:id/ordonnance or /consultations/:id/certificat). If the
+   * database still contains the static URL '/uploads/consultations/..', replace it
+   * with the controlled URL and update the database record.
    */
   private async normalizePdfUrls(consultation: ConsultationEntity): Promise<void> {
     if (!consultation) return;
@@ -328,7 +328,7 @@ const consultation = await queryRunner.manager.save(
   }
 
   /**
-   * Récupère une consultation par son ID
+   * Retrieves a consultation by its ID
    */
   async findOne(id: string): Promise<ConsultationEntity> {
     const consultation = await this.consultationRepo.findOne({
@@ -336,7 +336,7 @@ const consultation = await queryRunner.manager.save(
     });
 
     if (!consultation) {
-      throw new NotFoundException(`Consultation ${id} introuvable`);
+      throw new NotFoundException(`Consultation ${id} not found`);
     }
 
     await this.normalizePdfUrls(consultation);
@@ -344,17 +344,17 @@ const consultation = await queryRunner.manager.save(
   }
 
   /**
-   * Récupère toutes les consultations
+   * Retrieves all consultations
    */
   async findAll(): Promise<ConsultationEntity[]> {
     const consultations = await this.consultationRepo.find({ order: { createdAt: 'DESC' } });
-    // Normaliser en parallèle
+    // Normalize in parallel
     await Promise.all(consultations.map((c) => this.normalizePdfUrls(c)));
     return consultations;
   }
 
   /**
-   * Récupère les consultations d'un médecin
+   * Retrieves consultations by doctor
    */
   async findByDoctor(doctorProfileId: string): Promise<ConsultationEntity[]> {
     const consultations = await this.consultationRepo.find({
@@ -366,7 +366,7 @@ const consultation = await queryRunner.manager.save(
   }
 
   /**
-   * Récupère les consultations d'un patient
+   * Retrieves consultations by patient
    */
   async findByPatient(patientId: string): Promise<ConsultationEntity[]> {
     const consultations = await this.consultationRepo.find({
@@ -378,7 +378,7 @@ const consultation = await queryRunner.manager.save(
   }
 
   /**
-   * Récupère le chemin d'un PDF (ordonnance ou certificat)
+   * Retrieves the path of a PDF (prescription or certificate)
    */
   private async getPdfPath(
     id: string,
@@ -404,7 +404,7 @@ const consultation = await queryRunner.manager.save(
       );
     }
 
-    // Mettre à jour l'URL dans la base si différente
+    // Update the URL in the database if different
     const controlledUrl = `/consultations/${consultation.id}/${field === 'ordonnanceUrl' ? 'ordonnance' : 'certificat'}`;
 
     if (consultation[field] !== controlledUrl) {
@@ -415,21 +415,21 @@ const consultation = await queryRunner.manager.save(
   }
 
   /**
-   * Récupère le chemin de l'ordonnance
+   * Retrieves the prescription path
    */
   async getOrdonnancePath(id: string): Promise<{ path: string, filename: string }> {
     return this.getPdfPath(id, 'ordonnanceUrl');
   }
 
   /**
-   * Récupère le chemin du certificat médical
+   * Retrieves the medical certificate path
    */
   async getCertificatPath(id: string): Promise<{ path: string, filename: string }> {
     return this.getPdfPath(id, 'certificatUrl');
   }
 
   /**
-   * Génère le nom de fichier pour un PDF
+   * Generates the filename for a PDF
    */
   private generatePdfFilename(
     type: 'ordonnance' | 'certificat',

@@ -5,10 +5,10 @@
       <div class="container">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
           <h1 class="page-title">
-            Consultations du <span class="gradient-text">Patient</span>
+            <span class="gradient-text">Patient</span> Consultations
           </h1>
           <button class="btn btn-back" (click)="goBack()">
-            <i class="fa fa-arrow-left me-2"></i>Retour aux Rendez-vous
+            <i class="fa fa-arrow-left me-2"></i>Back to Appointments
           </button>
         </div>
       </div>
@@ -21,13 +21,13 @@
         <!-- Historique des Consultations -->
         <div class="card card-consultation mb-4">
           <div class="card-header history">
-            <h5 class="mb-0"><i class="fa fa-history me-2"></i>Historique des Consultations</h5>
+            <h5 class="mb-0"><i class="fa fa-history me-2"></i>Consultation History</h5>
           </div>
           <div class="card-body">
             @if (patientConsultations().length === 0) {
               <div class="empty-state">
-                <h6>Aucune consultation précédente pour ce patient</h6>
-                <p class="mb-0">Ce patient n'a pas encore de consultations enregistrées.</p>
+                <h6>No previous consultations for this patient</h6>
+                <p class="mb-0">This patient has no consultations recorded yet.</p>
               </div>
             }
 
@@ -39,7 +39,7 @@
                     <span class="badge badge-type">{{ getTypeLabel(consultation.type) }}</span>
                   </div>
                   <div class="col-md-2 mb-2 mb-md-0">
-                    <span class="label d-block">Durée</span>
+                    <span class="label d-block">Duration</span>
                     <span class="value">{{ consultation.duration }} min</span>
                   </div>
                   <div class="col-md-3 mb-2 mb-md-0">
@@ -47,23 +47,23 @@
                     <span class="value">{{ consultation.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
                   </div>
                   <div class="col-md-2 mb-2 mb-md-0">
-                    <span class="label d-block">Rendez-vous</span>
-                    <small class="value">{{ consultation.appointmentId ? 'Oui' : 'Non' }}</small>
+                    <span class="label d-block">Appointment</span>
+                    <small class="value">{{ consultation.appointmentId ? 'Yes' : 'No' }}</small>
                   </div>
                   <div class="col-md-3 text-md-end">
                     <button
                       class="btn btn-doc btn-ordonnance me-2 mb-2 mb-md-0"
                       (click)="openPdfUrl(consultation.ordonnanceUrl)"
-                      title="Télécharger l'ordonnance"
+                      title="Download the prescription"
                     >
-                      <i class="fa fa-file-medical me-1"></i>Ordonnance
+                      <i class="fa fa-file-medical me-1"></i>Prescription
                     </button>
                     <button
                       class="btn btn-doc btn-certificat"
                       (click)="openPdfUrl(consultation.certificatUrl)"
-                      title="Télécharger le certificat médical"
+                      title="Download the medical certificate"
                     >
-                      <i class="fa fa-certificate me-1"></i>Certificat
+                      <i class="fa fa-certificate me-1"></i>Certificate
                     </button>
                   </div>
                 </div>
@@ -75,13 +75,13 @@
         <!-- Formulaire Nouvelle Consultation -->
         <div class="card card-consultation">
           <div class="card-header">
-            <h5 class="mb-0"><i class="fa fa-plus-circle me-2"></i>Nouvelle Consultation</h5>
+            <h5 class="mb-0"><i class="fa fa-plus-circle me-2"></i>New Consultation</h5>
           </div>
           <div class="card-body">
             <form [formGroup]="consultationForm" (ngSubmit)="onSubmit()">
               <div class="row">
                 <div class="col-md-6 mb-3">
-                  <label for="type" class="form-label">Type de Consultation *</label>
+                  <label for="type" class="form-label">Consultation Type *</label>
                   <select
                     id="type"
                     class="form-select"
@@ -95,47 +95,47 @@
                   </select>
                 </div>
                 <div class="col-md-6 mb-3">
-                  <label for="duration" class="form-label">Durée (minutes) – Optionnel</label>
+                  <label for="duration" class="form-label">Duration (minutes) – Optional</label>
                   <input
                     type="number"
                     id="duration"
                     class="form-control"
                     formControlName="duration"
-                    placeholder="Durée en minutes (auto si vide)"
+                    placeholder="Duration in minutes (auto if empty)"
                     min="5"
                   />
                   <small class="text-muted d-block mt-1">
-                    Durée par défaut : Standard=30 min, Contrôle=15 min, Urgence=45 min
+                    Default duration: Standard=30 min, Control=15 min, Emergency=45 min
                   </small>
                 </div>
               </div>
 
               <div class="row">
                 <div class="col-md-6 mb-3">
-                  <label for="medicament" class="form-label">Médicament – Optionnel</label>
+                  <label for="medicament" class="form-label">Medication – Optional</label>
                   <input
                     type="text"
                     id="medicament"
                     class="form-control"
                     formControlName="medicament"
-                    placeholder="Ex. : Paracétamol 500 mg, 2 comprimés 3 fois par jour"
+                    placeholder="E.g.: Paracetamol 500 mg, 2 tablets 3 times a day"
                   />
                   <small class="text-muted d-block mt-1">
-                    Ce médicament sera ajouté à l'ordonnance
+                    This medication will be added to the prescription
                   </small>
                 </div>
                 <div class="col-md-6 mb-3">
-                  <label for="joursRepos" class="form-label">Nombre de jours de repos – Optionnel</label>
+                  <label for="joursRepos" class="form-label">Number of rest days – Optional</label>
                   <input
                     type="number"
                     id="joursRepos"
                     class="form-control"
                     formControlName="joursRepos"
-                    placeholder="Nombre de jours"
+                    placeholder="Number of days"
                     min="1"
                   />
                   <small class="text-muted d-block mt-1">
-                    Ce nombre sera ajouté au certificat médical
+                    This number will be added to the medical certificate
                   </small>
                 </div>
               </div>
@@ -149,7 +149,7 @@
                   @if (loading()) {
                     <span class="spinner-border spinner-border-sm me-2"></span>
                   }
-                  {{ loading() ? 'Création...' : 'Créer Consultation' }}
+                  {{ loading() ? 'Creating...' : 'Create Consultation' }}
                 </button>
                 <button
                   type="button"
@@ -157,7 +157,7 @@
                   (click)="resetForm()"
                   [disabled]="loading()"
                 >
-                  Réinitialiser
+                  Reset
                 </button>
               </div>
 
@@ -171,24 +171,24 @@
             <!-- Consultation créée -->
             @if (currentConsultation(); as consultation) {
               <div class="alert alert-success alert-custom mt-3">
-                <h6 class="mb-2"><i class="fa fa-check-circle me-2"></i>Consultation créée avec succès</h6>
+                <h6 class="mb-2"><i class="fa fa-check-circle me-2"></i>Consultation created successfully</h6>
                 <p class="mb-2">
-                  <strong>Type :</strong> {{ getTypeLabel(consultation.type) }} |
-                  <strong>Durée :</strong> {{ consultation.duration }} minutes |
-                  <strong>ID :</strong> {{ consultation.id.substring(0, 8) }}...
+                  <strong>Type:</strong> {{ getTypeLabel(consultation.type) }} |
+                  <strong>Duration:</strong> {{ consultation.duration }} minutes |
+                  <strong>ID:</strong> {{ consultation.id.substring(0, 8) }}...
                 </p>
                 <div class="d-flex flex-wrap gap-2 mt-2">
                   <button
                     class="btn btn-sm btn-ordonnance"
                     (click)="openPdfUrl(consultation.ordonnanceUrl)"
                   >
-                    <i class="fa fa-file-medical me-1"></i>Télécharger Ordonnance
+                    <i class="fa fa-file-medical me-1"></i>Download Prescription
                   </button>
                   <button
                     class="btn btn-sm btn-certificat"
                     (click)="openPdfUrl(consultation.certificatUrl)"
                   >
-                    <i class="fa fa-certificate me-1"></i>Télécharger Certificat
+                    <i class="fa fa-certificate me-1"></i>Download Certificate
                   </button>
                 </div>
               </div>

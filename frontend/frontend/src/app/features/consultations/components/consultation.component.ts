@@ -52,6 +52,19 @@ export class ConsultationComponent implements OnInit {
       medicament: [null],
       joursRepos: [null],
     });
+
+    // Auto-remplir la durée lorsque le type change
+    this.consultationForm.get('type')?.valueChanges.subscribe((selectedType: ConsultationType) => {
+      const defaultDurations: Record<ConsultationType, number> = {
+        [ConsultationType.STANDARD]: 30,
+        [ConsultationType.CONTROLE]: 15,
+        [ConsultationType.URGENCE]: 45,
+      };
+      this.consultationForm.patchValue({ duration: defaultDurations[selectedType] });
+    });
+
+    // Définir la durée initiale pour le type par défaut
+    this.consultationForm.patchValue({ duration: 30 });
   }
 
   ngOnInit(): void {
@@ -62,12 +75,12 @@ export class ConsultationComponent implements OnInit {
     console.log('Current user:', currentUser);
 
     if (!appointment?.id) {
-      this.handleError('Aucun appointment trouvé dans le state', '/appointments');
+      this.handleError('No appointment found in state', '/appointments');
       return;
     }
 
     if (!currentUser) {
-      this.error.set('Utilisateur non authentifié');
+      this.error.set('User not authenticated');
       this.router.navigate(['/auth/login']);
       return;
     }
@@ -97,7 +110,7 @@ export class ConsultationComponent implements OnInit {
         console.log('Appointment doctorId:', appointment.doctorId);
 
         if (!doctorProfile?.id) {
-          this.handleError('Profil médecin introuvable', '/appointments');
+          this.handleError('Doctor profile not found', '/appointments');
           return;
         }
 
@@ -110,7 +123,7 @@ export class ConsultationComponent implements OnInit {
             },
             error: (err: any) => {
               console.error('Erreur lors de la récupération de l\'appointment:', err);
-              this.error.set('Erreur lors de la récupération du rendez-vous');
+              this.error.set('Error retrieving appointment');
             }
           });
         } else {
@@ -119,7 +132,7 @@ export class ConsultationComponent implements OnInit {
       },
       error: (err) => {
         console.error('Erreur lors de la récupération du profil médecin:', err);
-        this.error.set('Erreur lors de la vérification des permissions');
+        this.error.set('Error verifying permissions');
       }
     });
   }
@@ -132,7 +145,7 @@ export class ConsultationComponent implements OnInit {
       this.appointmentDate = appointment.appointmentDate ? new Date(appointment.appointmentDate) : null;
       this.loadPatientConsultations();
     } else {
-      this.handleError('Vous n\'avez pas accès à ce rendez-vous', '/appointments');
+      this.handleError('You do not have access to this appointment', '/appointments');
     }
   }
 
@@ -184,7 +197,7 @@ export class ConsultationComponent implements OnInit {
           }
          },
          error: () => {
-           this.error.set('Erreur lors du chargement des consultations');
+           this.error.set('Error loading consultations');
          },
        });
   } else {
@@ -199,7 +212,7 @@ export class ConsultationComponent implements OnInit {
           }
          },
          error: () => {
-           this.error.set('Erreur lors du chargement des consultations');
+           this.error.set('Error loading consultations');
          },
        });
   }
@@ -208,9 +221,9 @@ export class ConsultationComponent implements OnInit {
 
   getTypeLabel(type: ConsultationType): string {
     const labels: Record<ConsultationType, string> = {
-      [ConsultationType.STANDARD]: 'Consultation Standard',
-      [ConsultationType.CONTROLE]: 'Consultation de Contrôle',
-      [ConsultationType.URGENCE]: 'Consultation d\'Urgence',
+      [ConsultationType.STANDARD]: 'Standard Consultation',
+      [ConsultationType.CONTROLE]: 'Control Consultation',
+      [ConsultationType.URGENCE]: 'Emergency Consultation',
     };
     return labels[type] || type;
   }
@@ -222,7 +235,7 @@ export class ConsultationComponent implements OnInit {
     }
     if (!this.consultationForm.valid || !this.doctorId) {
       if (!this.doctorId) {
-        this.error.set('Médecin non identifié. Veuillez rafraîchir la page.');
+        this.error.set('Doctor not identified. Please refresh the page.');
       }
       return;
     }
@@ -266,7 +279,7 @@ export class ConsultationComponent implements OnInit {
         }
       },
       error: (err: any) => {
-        this.error.set(err.error?.message || 'Erreur lors de la création de la consultation');
+        this.error.set(err.error?.message || 'Error during consultation creation');
         // Revenir en arrière si la création a échoué
         this.loading.set(false);
         this.hasConsultation.set(false);
@@ -291,10 +304,10 @@ export class ConsultationComponent implements OnInit {
     this.consultationService.downloadCertificat(consultationId);
   }
 
-  // Ouvre une URL relative de PDF (/consultations/:id/...) dans un nouvel onglet
+  // Opens a relative PDF URL (/consultations/:id/...) in a new tab
   openPdfUrl(relativeUrl: string | null): void {
     if (!relativeUrl) {
-      this.error.set('PDF non disponible');
+      this.error.set('PDF not available');
       return;
     }
 
