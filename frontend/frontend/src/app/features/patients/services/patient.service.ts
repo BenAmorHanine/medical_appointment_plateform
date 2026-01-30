@@ -30,8 +30,12 @@ export class PatientService {
       })
     );
   }
-   getAllPatients(): Observable<PatientProfile[]> {
-    return this.http.get<PatientProfile[]>(this.adminPatientsUrl);
+  getAllPatients(): Observable<PatientProfile[]> {
+    return this.http.get<PatientProfile[]>(this.adminPatientsUrl).pipe(
+      map((patients) =>
+        (patients || []).filter((p) => !!p.user && !!p.user.id)
+      )
+    );
   }
 }
 
