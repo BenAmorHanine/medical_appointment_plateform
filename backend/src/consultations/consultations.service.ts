@@ -240,7 +240,7 @@ const consultation = await queryRunner.manager.save(
   this.consultationRepo.create({
     ...dto,
     patientId: patientProfile.id,
-    doctorProfileId: doctorProfile.id, 
+    doctorProfileId: doctorProfile.id,
     duration,
   }),
 );
@@ -337,19 +337,27 @@ const consultation = await queryRunner.manager.save(
   ): Promise<string> {
     const consultation = await this.findOne(id);
 
-    if (!consultation[field]) {
-      throw new NotFoundException(`${field} non disponible`);
+    const names = await this.getNames(consultation.doctorProfileId, consultation.patientId);
+
+    let pdfUrl: string;
+    if (field === 'ordonnanceUrl') {
+      pdfUrl = await this.createPDF(
+        `ordonnance-${consultation.id}.pdf`,
+        this.buildOrdonnance(consultation, names),
+      );
+    } else {
+      pdfUrl = await this.createPDF(
+        `certificat-${consultation.id}.pdf`,
+        this.buildCertificat(consultation, names),
+      );
     }
 
-    const pdfPath = join(process.cwd(), consultation[field].replace(/^\//, ''));
-
-    try {
-      await access(pdfPath);
-      return pdfPath;
-    } catch {
-      this.logger.error(`PDF introuvable: ${pdfPath}`);
-      throw new NotFoundException('Fichier PDF introuvable sur le serveur');
+    // Mettre à jour l'URL dans la base si différente
+    if (consultation[field] !== pdfUrl) {
+      await this.consultationRepo.update(consultation.id, { [field]: pdfUrl });
     }
+
+    return join(process.cwd(), pdfUrl.replace(/^\//, ''));
   }
 
   /**

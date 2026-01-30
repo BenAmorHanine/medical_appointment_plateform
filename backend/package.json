@@ -22,8 +22,8 @@
     "seed:patients": "ts-node -r tsconfig-paths/register -r dotenv/config src/seed/add-patients-for-doctor.ts"
   },
   "dependencies": {
-    "@nestjs/common": "^10.0.0",
-    "@nestjs/config": "^3.3.0",
+    "@nestjs/common": "^11.1.12",
+    "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.11",
     "@nestjs/event-emitter": "^3.0.1",
     "@nestjs/jwt": "^11.0.2",
