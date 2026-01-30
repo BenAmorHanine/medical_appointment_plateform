@@ -4,6 +4,7 @@ import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../auth/services/auth.service';
 import { DoctorsService } from '../../doctors/services/doctors.service';
 import { Doctor } from '../../doctors/models/doctor.model';
+import { environment } from '../../../../environments/environment';
 import { Subject, takeUntil } from 'rxjs';
 
 interface Testimonial {
@@ -78,8 +79,13 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.router.navigate(['/']);
   }
 
-  getDoctorImage(doctor: Doctor): string {
-    return doctor.image || '/assets/images/default-doctor.jpg';
+  getDoctorImage(doctor: Doctor | null): string {
+    if (!doctor || !doctor.image) {
+      return 'assets/images/default-doctor.jpg';
+    }
+    return doctor.image.startsWith('uploads/')
+      ? `${environment.apiUrl}/${doctor.image}`
+      : doctor.image;
   }
 
   getDoctorName(doctor: Doctor): string {
