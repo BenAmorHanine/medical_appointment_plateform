@@ -5,7 +5,6 @@ import {
   Delete,
   Param,
   UseGuards,
-  Req,  // ← AJOUTE
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -32,22 +31,15 @@ export class NotificationsController {
   @ApiOperation({ summary: 'Get all user notifications' })
   @ApiResponse({ status: 200, description: 'Notifications retrieved' })
   getUserNotifications(@GetUser() user: any) {
-  console.log('JWT user object =', user);
-  console.log('sub =', user?.sub);
-  console.log('userId =', user?.userId);
-  console.log('id =', user?.id);
-
-  const userId = user?.sub || user?.userId || user?.id;
-  console.log('EXTRACTED userId =', userId);
-
-  return this.service.findByUser(userId);
-}
+    const userId = user?.id || user?.sub || user?.userId;
+    return this.service.findByUser(userId);
+  }
 
   @Get('unread-count')
   @ApiOperation({ summary: 'Get unread notifications count' })
   @ApiResponse({ status: 200, description: 'Unread count retrieved' })
-  async getUnreadCount(@GetUser() user: any) {  // ✅ Fix
-    const userId = user.sub || user.userId;
+  async getUnreadCount(@GetUser() user: any) {
+    const userId = user?.id || user?.sub || user?.userId;
     const count = await this.service.getUnreadCount(userId);
     return { count };
   }
@@ -55,24 +47,24 @@ export class NotificationsController {
   @Patch(':id/read')
   @ApiOperation({ summary: 'Mark notification as read' })
   @ApiResponse({ status: 200, description: 'Notification marked as read' })
-  markRead(@Param('id') id: string, @GetUser() user: any) {  // ✅ Fix
-    const userId = user.sub || user.userId;
+  markRead(@Param('id') id: string, @GetUser() user: any) {
+    const userId = user?.id || user?.sub || user?.userId;
     return this.service.markRead(id, userId);
   }
 
   @Patch('mark-all-read')
   @ApiOperation({ summary: 'Mark all notifications as read' })
   @ApiResponse({ status: 200, description: 'All notifications marked as read' })
-  markAllRead(@GetUser() user: any) {  // ✅ Fix
-    const userId = user.sub || user.userId;
+  markAllRead(@GetUser() user: any) {
+    const userId = user?.id || user?.sub || user?.userId;
     return this.service.markAllRead(userId);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete notification' })
   @ApiResponse({ status: 200, description: 'Notification deleted' })
-  deleteNotification(@Param('id') id: string, @GetUser() user: any) {  // ✅ Fix
-    const userId = user.sub || user.userId;
+  deleteNotification(@Param('id') id: string, @GetUser() user: any) {
+    const userId = user?.id || user?.sub || user?.userId;
     return this.service.deleteNotification(id, userId);
   }
     // ✅ ADMIN: list ALL notifications (no userId filter)
