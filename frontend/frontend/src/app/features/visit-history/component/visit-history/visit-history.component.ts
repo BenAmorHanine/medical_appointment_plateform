@@ -1,5 +1,5 @@
 import { Component, OnInit, signal, computed,inject } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { VisitHistoryResponse, VisitHistoryItem } from '../../model/visit-history.model';
 import { VisitHistoryService } from '../../service/visit-history.service';
 import { CommonModule } from '@angular/common';
@@ -16,6 +16,7 @@ import { AuthService } from '../../../auth/services/auth.service';
 export class VisitHistoryComponent implements OnInit {
   private historyService = inject(VisitHistoryService);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private authService = inject(AuthService);
 
   loading = signal(true);
@@ -53,6 +54,12 @@ loadHistory(): void {
     return;
   }
 
+  // Check if doctor is accessing /history - redirect to /history/doctor
+  if (user.role === 'doctor' && !this.router.url.includes('/history/doctor/patient')) {
+    this.router.navigate(['/history/doctor']);
+    return;
+  }
+
   
   //  PATIENT
   if (user.role === 'patient') {
@@ -73,7 +80,7 @@ loadHistory(): void {
 
 // CAS DOCTOR
 const patientId =
-  history.state?.patientId ||
+  window.history.state?.patientId ||
   sessionStorage.getItem('patientHistoryId');
 
 if (!patientId) {

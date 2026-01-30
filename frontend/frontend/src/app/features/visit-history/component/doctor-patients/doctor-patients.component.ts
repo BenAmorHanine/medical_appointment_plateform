@@ -18,6 +18,7 @@ export class DoctorPatientsComponent implements OnInit {
   total = signal(0);
   loading = signal(true);
 
+  Math = Math;
   constructor(
     private historyService: VisitHistoryService,
     private router: Router,
