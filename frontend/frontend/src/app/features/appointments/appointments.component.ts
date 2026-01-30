@@ -132,7 +132,7 @@ loadDoctorAppointments(userId: string) {
 
   navigateToDetails(appointment: any) {
     // todo
-    this.router.navigate(['/appointmens'], {
+    this.router.navigate(['/appointments'], {
       state: { appointment }
     });
   }
