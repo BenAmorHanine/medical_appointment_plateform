@@ -6,6 +6,7 @@ import { Doctor } from '../models/doctor.model';
 import { DoctorsService } from '../services/doctors.service';
 import { AuthService } from '../../auth/services/auth.service';
 import { environment } from '../../../../environments/environment';
+import { signal } from '@angular/core';
 
 @Component({
   selector: 'app-doctors',
@@ -24,6 +25,9 @@ export class DoctorsComponent implements OnInit {
   router = inject(Router);
   doctorsService = inject(DoctorsService);
   authService = inject(AuthService);
+
+  userRating = signal(0);
+  isSubmitting = signal(false);
 
   ngOnInit() {
     this.loadDoctors();
@@ -49,7 +53,7 @@ export class DoctorsComponent implements OnInit {
       return;
     }
     const searchTerm = this.searchSpecialty.toLowerCase().trim();
-    this.doctors = this.allDoctors.filter(doctor => 
+    this.doctors = this.allDoctors.filter(doctor =>
       doctor.specialty?.toLowerCase().includes(searchTerm)
     );
   }
@@ -103,6 +107,30 @@ export class DoctorsComponent implements OnInit {
 
   get isDoctor(): boolean {
     return this.authService.isDoctor();
+  }
+
+  submitRating() {
+  if (!this.selectedDoctor || this.userRating() === 0) return;
+
+  this.isSubmitting.set(true);
+  this.doctorsService.rateDoctor(this.selectedDoctor.id, this.userRating()).subscribe({
+    next: (updatedDoctor) => {
+      // 1. Update the local view
+      this.selectedDoctor = updatedDoctor;
+
+      // 2. Update the main list so stars change everywhere
+      const index = this.doctors.findIndex(d => d.id === updatedDoctor.id);
+      if (index !== -1) this.doctors[index] = updatedDoctor;
+
+      this.isSubmitting.set(false);
+      this.userRating.set(0); // Reset
+      alert('Rating submitted! Thank you.');
+    },
+    error: (err) => {
+      this.isSubmitting.set(false);
+      alert(err.error?.message || 'Error submitting rating');
+    }
+  });
   }
 
 }

@@ -41,4 +41,7 @@ export class DoctorsService {
     this.doctorsCache.next([]);
     this.featuredCache.next([]);
   }
+  rateDoctor(doctorId: number, score: number): Observable<Doctor> {
+  return this.http.post<Doctor>(`${this.apiUrl}/rate`, { score, doctorId });
+}
 }

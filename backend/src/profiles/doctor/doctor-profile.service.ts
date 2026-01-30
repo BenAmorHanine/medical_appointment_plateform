@@ -6,6 +6,7 @@ import { CreateDoctorProfileDto } from './dto/create-doctor-profile.dto';
 import { UpdateDoctorProfileDto } from './dto/update-doctor-profile.dto';
 import { UserEntity } from '../../users/entities/user.entity';
 
+
 @Injectable()
 export class DoctorProfileService {
   constructor(
@@ -100,4 +101,25 @@ export class DoctorProfileService {
       order: { id: 'DESC' }        
     });
   }
+
+  // backend/src/doctor-profile/doctor-profile.service.ts
+
+async updateRating(doctorId: string | number, newScore: number) {
+  // 1. Find the doctor
+  const doctor = await this.repository.findOne({ where: { id: doctorId.toString() } });
+  
+  if (!doctor) {
+    throw new NotFoundException("Doctor not found");
+  }
+  const currentAverage = Number(doctor.rating) || 0;
+  const currentCount = doctor.ratingCount || 0;
+
+  const newCount = currentCount + 1;
+  const newAverage = ((currentAverage * currentCount) + newScore) / newCount;
+
+  doctor.rating = newAverage;
+  doctor.ratingCount = newCount;
+
+  return await this.repository.save(doctor);
+}
 }

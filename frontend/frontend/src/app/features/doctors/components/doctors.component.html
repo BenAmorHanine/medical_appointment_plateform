@@ -89,10 +89,38 @@
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-    }
+            <div class="rating-input-section mt-5 border-top pt-4 text-center">
+              <h5 class="text-primary mb-3">How was your experience with Dr. {{ selectedDoctor.user?.lastName }}?</h5>
+
+              @if (authService.getCurrentUser()?.role === 'patient') {
+                <div class="star-rating-wrapper mb-3">
+                  @for (star of [1,2,3,4,5]; track star) {
+                    <i class="fa-star fa-2x mx-1"
+                       [class.fas]="userRating() >= star"
+                       [class.far]="userRating() < star"
+                       [style.color]="userRating() >= star ? '#ffc107' : '#e4e5e9'"
+                       (click)="userRating.set(star)"
+                       style="cursor: pointer;"></i>
+                  }
+                </div>
+
+                <button class="btn btn-primary px-5 shadow-sm"
+                        [disabled]="userRating() === 0 || isSubmitting()"
+                        (click)="submitRating()">
+                  @if (isSubmitting()) {
+                    <span class="spinner-border spinner-border-sm me-2"></span>Sending...
+                  } @else {
+                    <i class="fas fa-paper-plane me-2"></i>Submit My Rating
+                  }
+                </button>
+              } @else {
+                <div class="alert alert-light border shadow-sm d-inline-block">
+                  <i class="fas fa-info-circle text-primary me-2"></i>
+                  Only logged-in patients can submit ratings.
+                </div>
+              }
+            </div>
+            </div> </div> </div> }
 
     @else {
       <div class="search-container mb-5">
@@ -102,9 +130,9 @@
               <div class="search-icon">
                 <i class="fas fa-search"></i>
               </div>
-              <input 
-                type="text" 
-                class="search-input" 
+              <input
+                type="text"
+                class="search-input"
                 placeholder="Search by specialty (e.g., Cardiology, Dermatology, Pediatrics...)"
                 [(ngModel)]="searchSpecialty"
                 (input)="onSearchChange()"

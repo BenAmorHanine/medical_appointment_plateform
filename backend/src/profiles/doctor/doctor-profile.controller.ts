@@ -13,6 +13,8 @@ import {
 import { DoctorProfileService } from './doctor-profile.service';
 import { CreateDoctorProfileDto } from './dto/create-doctor-profile.dto';
 import { UpdateDoctorProfileDto } from './dto/update-doctor-profile.dto';
+import { UseGuards, Req, ForbiddenException } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('doctor-profiles')
 export class DoctorProfileController {
@@ -60,4 +62,18 @@ export class DoctorProfileController {
   remove(@Param('id') id: string) {
     return this.doctorProfileService.remove(id);
   }
+
+@Post('rate')
+@UseGuards(AuthGuard('jwt'))
+async rateDoctor(
+  @Body() body: { doctorId: string; score: number },
+  @Req() req
+) {
+  if (req.user.role !== 'patient') {
+    throw new ForbiddenException('Access denied: Only patients can rate our medical staff.');
+  }
+
+  return this.doctorProfileService.updateRating(body.doctorId, body.score);
+}
+
 }

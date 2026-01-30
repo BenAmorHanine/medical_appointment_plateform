@@ -28,9 +28,5 @@ node_modules/
 backend\package-lock.json
 frontend\frontend\package-lock.json
 
-#contact
-backend\src\contact\*
-frontend\frontend\src\app\features\contact\*
-
 #uplaods
-backend\uploads\*
+backend/uploads/

@@ -42,6 +42,9 @@ export class DoctorProfileEntity {
   })
   rating: number;
 
+  @Column({ default: 0 })
+  ratingCount: number;
+
   @Column({ 
     type: 'boolean', 
     default: true 
