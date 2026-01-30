@@ -1,13 +1,12 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit ,signal, computed} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AppointmentService } from './services/appointment.service'; 
 import { Appointment } from './models/appointment.interface';
 import { AuthService } from '../auth/services/auth.service';
-import { PatientService } from '../patients/services/patient.service';
 import { environment } from '../../../environments/environment';
-
+import { finalize } from 'rxjs';
 @Component({
   selector: 'app-appointments',
   standalone: true,
@@ -22,10 +21,18 @@ export class AppointmentsComponent implements OnInit {
   private authService = inject(AuthService);
   private apiUrl = environment.apiUrl;
 
-  appointments: Appointment[] = [];
-  loading = false;
+  appointments = signal<Appointment[]>([]);
+  loading = signal(false);
+
+  appointmentList = computed(() => 
+    this.appointments().filter(apt => apt.status?.toLowerCase() !== 'cancelled')
+  );
 
   ngOnInit() {
+    this.loadData();
+  }
+
+  loadData() {
     const currentUser = this.authService.getCurrentUser();
     if (currentUser?.role === 'doctor') {
       this.loadDoctorAppointments(currentUser.id);
@@ -35,91 +42,64 @@ export class AppointmentsComponent implements OnInit {
   }
 
   loadPatientAppointments(patientId: string) {
-    this.loading = true;
-    
-    this.appointmentService.getAppointmentsByPatient(patientId).subscribe({
-      next: (appointments) => {
-        this.appointments = appointments; 
-        this.loading = false;
-      },
-      error: (err) => {
-        this.loading = false;
-      }
+    this.loading.set(true);
+    this.appointmentService.getAppointmentsByPatient(patientId).pipe(
+      finalize(() => this.loading.set(false))
+    ).subscribe({
+      next: (data) => this.appointments.set(data),
+      error: () => this.appointments.set([])
     });
   }
 
 loadDoctorAppointments(userId: string) {
-  this.loading = true;
-  
-  this.http.get<any>(`${this.apiUrl}/doctor-profiles/user/${userId}`).subscribe({
-    next: (doctorProfile) => {
-      if (doctorProfile && doctorProfile.id) {
-        this.appointmentService.getAppointmentsByDoctor(doctorProfile.id).subscribe({
-          next: (allAppointments) => {
-            this.appointments = allAppointments; 
-            this.loading = false;
-          },
-          error: (err) => {
-            console.error('Erreur lors du chargement des rendez-vous:', err);
-            this.loading = false;
-          }
-        });
-      }
-    },
-    error: () => this.loading = false
-  });
-}
+    this.loading.set(true);
+    this.http.get<any>(`${this.apiUrl}/doctor-profiles/user/${userId}`).subscribe({
+      next: (doctorProfile) => {
+        if (doctorProfile?.id) {
+          this.appointmentService.getAppointmentsByDoctor(doctorProfile.id).pipe(
+            finalize(() => this.loading.set(false))
+          ).subscribe({
+            next: (data) => this.appointments.set(data),
+            error: () => this.loading.set(false)
+          });
+        } else {
+          this.loading.set(false);
+        }
+      },
+      error: () => this.loading.set(false)
+    });
+  }
 
-
-
-
-  get appointmentList(): any[] {
-  return this.appointments.filter(apt => apt.status?.toLowerCase() !== 'cancelled');
-}
-
+  get isDoctor(): boolean {
+    return this.authService.getCurrentUser()?.role === 'doctor';
+  }
 
   getDoctorName(appointment: any): string {
   return appointment.doctorName || 'unknown' ;
 }
 
   getPatientDisplayName(appointment: any): string {
-    return appointment.patientName || appointment.patientId?.substring(0, 8) || 'Patient inconnu';
-  }
-
-  get isLoading(): boolean {
-    const currentUser = this.authService.getCurrentUser();
-    if (currentUser?.role === 'doctor') {
-      return this.loading;
-    }
-    return this.appointmentService.loading();
+    return appointment.patientName || appointment.patientId?.substring(0, 8) || 'Patient unknown';
   }
 
 
-
-  get isDoctor(): boolean {
-    return this.authService.getCurrentUser()?.role === 'doctor';
+isLoading = computed(() => {
+  const currentUser = this.authService.getCurrentUser();
+  if (currentUser?.role === 'doctor') {
+    return this.loading(); 
   }
+  return this.appointmentService.loading(); 
+});
 
-  cancelAppointment(id: string) {
-    if (!confirm('Êtes-vous sûr de vouloir annuler ce rendez-vous ? Cette action est irréversible.')) {
-      return;
-    }
-    this.loading = true;
+
+
+cancelAppointment(id: string) {
+    if (!confirm('Are you sure you want to cancel this appointment?')) return;
+    
+    this.loading.set(true);
     this.appointmentService.cancelAppointment(id).subscribe({
-      next: () => {
-        // Recharger la liste des rendez-vous
-        const currentUser = this.authService.getCurrentUser();
-        if (currentUser?.role === 'doctor' && currentUser?.id) {
-          this.loadDoctorAppointments(currentUser.id);
-        } else if (currentUser?.role === 'patient' && currentUser?.id) {
-          this.loadPatientAppointments(currentUser.id);
-        }
-      },
-      error: (err) => {
-        this.loading = false;
-        alert('Erreur lors de l\'annulation du rendez-vous. Veuillez réessayer.');
-        console.error('Erreur annulation:', err);
-      }
+      next: () => this.loadData(),
+      error: () => this.loading.set(false)
     });
   }
 
@@ -130,12 +110,6 @@ loadDoctorAppointments(userId: string) {
     });
   }
 
-  navigateToDetails(appointment: any) {
-    // todo
-    this.router.navigate(['/appointments'], {
-      state: { appointment }
-    });
-  }
 
   canCancel(appointment: any): boolean {
     const status = appointment.status?.toLowerCase();

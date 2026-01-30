@@ -22,14 +22,14 @@
 <section class="appointments-list py-5">
   <div class="container">
     
-    @if (isLoading) {
+    @if (isLoading()) {
       <div class="text-center py-5">
         <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;"></div>
         <p class="mt-3">Loading...</p>
       </div>
     }
 
-    @if (!isLoading && appointmentList.length === 0) {
+    @if (!isLoading() && appointmentList().length === 0) {
       <div class="text-center py-5">
         <i class="fas fa-calendar-times fa-4x text-muted mb-4"></i>
         <h3 class="text-muted">{{ isDoctor ? 'No Patients' : 'No Appointments' }}</h3>
@@ -40,8 +40,8 @@
       </div>
     }
 
-    @if (!isDoctor && appointmentList.length > 0) {
-      @for (appointment of appointmentList; track appointment.id) {
+    @if (!isLoading() && appointmentList().length > 0) {
+      @for (appointment of appointmentList(); track appointment.id) {
         <div class="appointment-card card mb-4 shadow-lg border-0 overflow-hidden">
           <div class="card-body p-4">
             <div class="row align-items-center">
@@ -49,22 +49,36 @@
                 <div class="appointment-time text-center">
                   <h2 class="display-4 fw-bold text-primary mb-1">{{ appointment.startTime }}</h2>
                   <p class="mb-1">{{ formatAppointmentDate(appointment.appointmentDate) }}</p>
-                  <span class="badge bg-success">Confirmed</span>
+                  <span class="badge" [ngClass]="isDoctor ? 'bg-info' : 'bg-success'">
+                    {{ isDoctor ? 'Patient' : 'Confirmed' }}
+                  </span>
                 </div>
               </div>
+
               <div class="col-md-6">
-                <h5 class="card-title mb-2">Dr. {{ getDoctorName(appointment) }}</h5>
+                @if (isDoctor) {
+                  <h5 class="card-title mb-2">Patient: {{ getPatientDisplayName(appointment) }}</h5>
+                } @else {
+                  <h5 class="card-title mb-2">Dr. {{ getDoctorName(appointment) }}</h5>
+                }
                 <p class="card-text text-muted mb-1">Status: {{ appointment.status }}</p>
               </div>
+
               <div class="col-md-3 text-md-end">
                 @if (canCancel(appointment)) {
                   <button class="btn btn-outline-danger me-2 mb-2" (click)="cancelAppointment(appointment.id)">
                     <i class="fas fa-times me-1"></i>Cancel
                   </button>
                 }
-                <button class="btn btn-primary w-100" (click)="navigateToDetails(appointment)">
-                  <i class="fas fa-eye me-1"></i>Details
-                </button>
+                
+                @if (isDoctor) {
+                  <button 
+                    class="btn btn-primary w-100" 
+                    (click)="navigateToConsultation(appointment)"
+                    [disabled]="appointment.status?.toLowerCase() === 'done'">
+                    <i class="fas fa-stethoscope me-1"></i>Consultation
+                  </button>
+                }
               </div>
             </div>
           </div>
@@ -72,42 +86,5 @@
       }
     }
 
-    @if (isDoctor && appointmentList.length > 0) {
-      @for (appointment of appointmentList; track appointment.id) {
-        <div class="appointment-card card mb-4 shadow-lg border-0 overflow-hidden">
-          <div class="card-body p-4">
-            <div class="row align-items-center">
-              <div class="col-md-3">
-                <div class="appointment-time text-center">
-                  <h2 class="display-4 fw-bold text-primary mb-1">{{ appointment.startTime }}</h2>
-                  <p class="mb-1">{{ formatAppointmentDate(appointment.appointmentDate) }}</p>
-                  <span class="badge bg-info">Patient</span>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <h5 class="card-title mb-2">Patient: {{ getPatientDisplayName(appointment) }}</h5>
-                <p class="card-text text-muted mb-1">Status: {{ appointment.status }}</p>
-              </div>
-              <div class="col-md-3 text-md-end">
-                @if (canCancel(appointment)) {
-                  <button 
-                    class="btn btn-outline-danger w-100 mb-2" 
-                    (click)="cancelAppointment(appointment.id)"
-                    title="Annuler ce rendez-vous">
-                    <i class="fas fa-times me-1"></i>Annuler Rendez-vous
-                  </button>
-                }
-                <button 
-                  class="btn btn-primary w-100" 
-                  (click)="navigateToConsultation(appointment)"
-                  [disabled]="appointment.status?.toLowerCase() === 'done'">
-                  <i class="fas fa-stethoscope me-1"></i>Consultation
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      }
-    }
   </div>
 </section>
