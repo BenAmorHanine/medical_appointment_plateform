@@ -1,201 +1,201 @@
-<div class="container mt-4">
-  <div class="row">
-    <div class="col-12">
-      <h2 class="mb-4">Gestion des Consultations</h2>
-
-      <!-- Formulaire de création -->
-      <div class="card mb-4">
-        <div class="card-header">
-          <h4 class="mb-0">Créer une Consultation</h4>
-        </div>
-        <div class="card-body">
-          <form [formGroup]="consultationForm" (ngSubmit)="onSubmit()">
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <label for="patientId" class="form-label">ID Patient *</label>
-                <input
-                  type="text"
-                  id="patientId"
-                  class="form-control"
-                  formControlName="patientId"
-                  placeholder="UUID du patient"
-                />
-                @if (consultationForm.get('patientId')?.invalid && consultationForm.get('patientId')?.touched) {
-                  <div class="text-danger small">
-                    L'ID patient est requis
-                  </div>
-                }
-              </div>
-
-              <div class="col-md-6 mb-3">
-                <label for="doctorId" class="form-label">ID Médecin *</label>
-                <input
-                  type="text"
-                  id="doctorId"
-                  class="form-control"
-                  formControlName="doctorId"
-                  placeholder="UUID du médecin"
-                />
-                @if (consultationForm.get('doctorId')?.invalid && consultationForm.get('doctorId')?.touched) {
-                  <div class="text-danger small">
-                    L'ID médecin est requis
-                  </div>
-                }
-              </div>
-            </div>
-
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <label for="type" class="form-label">Type de Consultation *</label>
-                <select
-                  id="type"
-                  class="form-select"
-                  formControlName="type"
-                >
-                  @for (type of consultationTypeKeys; track type) {
-                    <option [value]="type">
-                      {{ getTypeLabel(type) }}
-                    </option>
-                  }
-                </select>
-              </div>
-
-              <div class="col-md-6 mb-3">
-                <label for="duration" class="form-label">Durée (minutes) - Optionnel</label>
-                <input
-                  type="number"
-                  id="duration"
-                  class="form-control"
-                  formControlName="duration"
-                  placeholder="Durée en minutes (auto si vide)"
-                  min="5"
-                />
-              </div>
-            </div>
-
-            <div class="mb-3">
-              <label for="appointmentId" class="form-label">ID Rendez-vous - Optionnel</label>
-              <input
-                type="text"
-                id="appointmentId"
-                class="form-control"
-                formControlName="appointmentId"
-                placeholder="UUID du rendez-vous (optionnel)"
-              />
-            </div>
-
-            <div class="d-flex gap-2">
-              <button
-                type="submit"
-                class="btn btn-primary"
-                [disabled]="loading() || consultationForm.invalid"
-              >
-                @if (loading()) {
-                  <span class="spinner-border spinner-border-sm me-2"></span>
-                }
-                {{ loading() ? 'Création...' : 'Démarrer Consultation' }}
-              </button>
-              <button
-                type="button"
-                class="btn btn-secondary"
-                (click)="resetForm()"
-                [disabled]="loading()"
-              >
-                Réinitialiser
-              </button>
-            </div>
-
-            @if (error()) {
-              <div class="alert alert-danger mt-3">
-                {{ error() }}
-              </div>
-            }
-          </form>
+<div class="consultations-page">
+  <!-- Bandeau hero style MedWin -->
+  <section class="consultations-hero">
+    <div class="hero-overlay">
+      <div class="container">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+          <h1 class="page-title">
+            Consultations du <span class="gradient-text">Patient</span>
+          </h1>
+          <button class="btn btn-back" (click)="goBack()">
+            <i class="fa fa-arrow-left me-2"></i>Retour aux Rendez-vous
+          </button>
         </div>
       </div>
+    </div>
+  </section>
 
-      <!-- Affichage de la consultation créée -->
-      @if (currentConsultation(); as consultation) {
-        <div class="card">
-          <div class="card-header bg-success text-white">
-            <h4 class="mb-0">Consultation Créée avec Succès</h4>
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <!-- Historique des Consultations -->
+        <div class="card card-consultation mb-4">
+          <div class="card-header history">
+            <h5 class="mb-0"><i class="fa fa-history me-2"></i>Historique des Consultations</h5>
           </div>
           <div class="card-body">
-            <div class="row mb-3">
-              <div class="col-md-6">
-                <strong>ID Consultation:</strong>
-                <p class="text-muted">{{ consultation.id }}</p>
+            @if (patientConsultations().length === 0) {
+              <div class="empty-state">
+                <h6>Aucune consultation précédente pour ce patient</h6>
+                <p class="mb-0">Ce patient n'a pas encore de consultations enregistrées.</p>
               </div>
-              <div class="col-md-6">
-                <strong>Type:</strong>
-                <p class="text-muted">{{ getTypeLabel(consultation.type) }}</p>
-              </div>
-            </div>
-            <div class="row mb-3">
-              <div class="col-md-6">
-                <strong>Durée:</strong>
-                <p class="text-muted">{{ consultation.duration }} minutes</p>
-              </div>
-              <div class="col-md-6">
-                <strong>Date de création:</strong>
-                <p class="text-muted">{{ consultation.createdAt | date: 'dd/MM/yyyy HH:mm' }}</p>
-              </div>
-            </div>
-            <div class="row mb-3">
-              <div class="col-md-6">
-                <strong>ID Patient:</strong>
-                <p class="text-muted">{{ consultation.patientId }}</p>
-              </div>
-              <div class="col-md-6">
-                <strong>ID Médecin:</strong>
-                <p class="text-muted">{{ consultation.doctorId }}</p>
-              </div>
-            </div>
+            }
 
-            <div class="d-flex gap-2 mt-4">
-              <button
-                class="btn btn-success"
-                (click)="generatePDF()"
-                [disabled]="loading()"
-              >
-                @if (loading()) {
-                  <span class="spinner-border spinner-border-sm me-2"></span>
-                }
-                Générer PDF
-              </button>
-              <button
-                class="btn btn-info"
-                (click)="viewPDF()"
-                [disabled]="loading() || !consultation.pdfUrl"
-              >
-                Visualiser PDF
-              </button>
-              <button
-                class="btn btn-primary"
-                (click)="downloadPDF()"
-                [disabled]="loading() || !consultation.pdfUrl"
-              >
-                Télécharger PDF
-              </button>
-              <button
-                class="btn btn-secondary"
-                (click)="printPDF()"
-                [disabled]="loading() || !consultation.pdfUrl"
-              >
-                Imprimer PDF
-              </button>
-            </div>
-
-            @if (consultation.pdfUrl) {
-              <div class="mt-3">
-                <small class="text-muted">
-                  PDF disponible: {{ consultation.pdfUrl }}
-                </small>
+            @for (consultation of patientConsultations(); track consultation.id) {
+              <div class="consultation-item mb-3">
+                <div class="row align-items-center">
+                  <div class="col-md-2 mb-2 mb-md-0">
+                    <span class="label d-block">Type</span>
+                    <span class="badge badge-type">{{ getTypeLabel(consultation.type) }}</span>
+                  </div>
+                  <div class="col-md-2 mb-2 mb-md-0">
+                    <span class="label d-block">Durée</span>
+                    <span class="value">{{ consultation.duration }} min</span>
+                  </div>
+                  <div class="col-md-3 mb-2 mb-md-0">
+                    <span class="label d-block">Date</span>
+                    <span class="value">{{ consultation.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+                  </div>
+                  <div class="col-md-2 mb-2 mb-md-0">
+                    <span class="label d-block">Rendez-vous</span>
+                    <small class="value">{{ consultation.appointmentId ? 'Oui' : 'Non' }}</small>
+                  </div>
+                  <div class="col-md-3 text-md-end">
+                    <button
+                      class="btn btn-doc btn-ordonnance me-2 mb-2 mb-md-0"
+                      (click)="downloadOrdonnance(consultation.id)"
+                      title="Télécharger l'ordonnance"
+                    >
+                      <i class="fa fa-file-medical me-1"></i>Ordonnance
+                    </button>
+                    <button
+                      class="btn btn-doc btn-certificat"
+                      (click)="downloadCertificat(consultation.id)"
+                      title="Télécharger le certificat médical"
+                    >
+                      <i class="fa fa-certificate me-1"></i>Certificat
+                    </button>
+                  </div>
+                </div>
               </div>
             }
           </div>
         </div>
-      }
+
+        <!-- Formulaire Nouvelle Consultation -->
+        <div class="card card-consultation">
+          <div class="card-header">
+            <h5 class="mb-0"><i class="fa fa-plus-circle me-2"></i>Nouvelle Consultation</h5>
+          </div>
+          <div class="card-body">
+            <form [formGroup]="consultationForm" (ngSubmit)="onSubmit()">
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="type" class="form-label">Type de Consultation *</label>
+                  <select
+                    id="type"
+                    class="form-select"
+                    formControlName="type"
+                  >
+                    @for (type of consultationTypeKeys; track type) {
+                      <option [value]="type">
+                        {{ getTypeLabel(type) }}
+                      </option>
+                    }
+                  </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="duration" class="form-label">Durée (minutes) – Optionnel</label>
+                  <input
+                    type="number"
+                    id="duration"
+                    class="form-control"
+                    formControlName="duration"
+                    placeholder="Durée en minutes (auto si vide)"
+                    min="5"
+                  />
+                  <small class="text-muted d-block mt-1">
+                    Durée par défaut : Standard=30 min, Contrôle=15 min, Urgence=45 min
+                  </small>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="medicament" class="form-label">Médicament – Optionnel</label>
+                  <input
+                    type="text"
+                    id="medicament"
+                    class="form-control"
+                    formControlName="medicament"
+                    placeholder="Ex. : Paracétamol 500 mg, 2 comprimés 3 fois par jour"
+                  />
+                  <small class="text-muted d-block mt-1">
+                    Ce médicament sera ajouté à l'ordonnance
+                  </small>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="joursRepos" class="form-label">Nombre de jours de repos – Optionnel</label>
+                  <input
+                    type="number"
+                    id="joursRepos"
+                    class="form-control"
+                    formControlName="joursRepos"
+                    placeholder="Nombre de jours"
+                    min="1"
+                  />
+                  <small class="text-muted d-block mt-1">
+                    Ce nombre sera ajouté au certificat médical
+                  </small>
+                </div>
+              </div>
+
+              <div class="d-flex flex-wrap gap-2">
+                <button
+                  type="submit"
+                  class="btn btn-create"
+                  [disabled]="loading() || consultationForm.invalid"
+                >
+                  @if (loading()) {
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                  }
+                  {{ loading() ? 'Création...' : 'Créer Consultation' }}
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-reset"
+                  (click)="resetForm()"
+                  [disabled]="loading()"
+                >
+                  Réinitialiser
+                </button>
+              </div>
+
+              @if (error()) {
+                <div class="alert alert-danger alert-custom mt-3">
+                  {{ error() }}
+                </div>
+              }
+            </form>
+
+            <!-- Consultation créée -->
+            @if (currentConsultation(); as consultation) {
+              <div class="alert alert-success alert-custom mt-3">
+                <h6 class="mb-2"><i class="fa fa-check-circle me-2"></i>Consultation créée avec succès</h6>
+                <p class="mb-2">
+                  <strong>Type :</strong> {{ getTypeLabel(consultation.type) }} |
+                  <strong>Durée :</strong> {{ consultation.duration }} minutes |
+                  <strong>ID :</strong> {{ consultation.id.substring(0, 8) }}...
+                </p>
+                <div class="d-flex flex-wrap gap-2 mt-2">
+                  <button
+                    class="btn btn-sm btn-ordonnance"
+                    (click)="downloadOrdonnance(consultation.id)"
+                  >
+                    <i class="fa fa-file-medical me-1"></i>Télécharger Ordonnance
+                  </button>
+                  <button
+                    class="btn btn-sm btn-certificat"
+                    (click)="downloadCertificat(consultation.id)"
+                  >
+                    <i class="fa fa-certificate me-1"></i>Télécharger Certificat
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>

@@ -1,6 +1,5 @@
 import { Routes } from '@angular/router';
 import { HomeComponent } from './features/home/components/home.component';
-import { PatientConsultationsComponent } from './features/patient-consultations/patient-consultations.component';
 import { authGuard } from './features/auth/guards/auth.guard';
 import { doctorGuard } from './features/auth/guards/doctor.guard';
 import { patientGuard } from './features/auth/guards/patient.guard';
@@ -14,6 +13,7 @@ import { ProfileComponent } from './features/profile/profile/profile.component';
 import { DashboardComponent } from './features/dashboard/components/dashboard.component';
 import { AdminPatientsComponent } from './features/patients/components/patients.component';
 import { DoctorSendNotificationComponent } from './features/doctor-notification/components/doctor-send-notification/doctor-send-notification.component';
+import { ConsultationComponent } from './features/consultations/components/consultation.component';
 
 export const routes: Routes = [
   // PUBLIC ROUTES
@@ -55,7 +55,7 @@ export const routes: Routes = [
   },
   {
     path: 'consultation',
-    component: PatientConsultationsComponent,
+    component: ConsultationComponent,
     canActivate: [authGuard, doctorGuard]
   },
 
