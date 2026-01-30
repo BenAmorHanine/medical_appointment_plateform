@@ -7,10 +7,11 @@ import { Appointment } from './models/appointment.interface';
 import { AuthService } from '../auth/services/auth.service';
 import { environment } from '../../../environments/environment';
 import { finalize } from 'rxjs';
+import { FormsModule } from '@angular/forms';
 @Component({
   selector: 'app-appointments',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink,FormsModule],
   templateUrl: './appointments.component.html',
   styleUrls: ['./appointments.component.scss']
 })
@@ -23,6 +24,10 @@ export class AppointmentsComponent implements OnInit {
 
   appointments = signal<Appointment[]>([]);
   loading = signal(false);
+  selectedFile: File | null = null;
+  patientNote = signal(''); 
+  selectedAppointment: any = null;
+  tempNote: string = '';
 
   appointmentList = computed(() => 
     this.appointments().filter(apt => apt.status?.toLowerCase() !== 'cancelled')
@@ -118,11 +123,54 @@ cancelAppointment(id: string) {
 
 formatAppointmentDate(dateValue: any): string {
   const date = new Date(dateValue.displayDate || dateValue);
-  return date.toLocaleDateString('fr-TN', {
+  return date.toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric'
   });
+}
+
+
+onFileSelected(event: any) {
+  this.selectedFile = event.target.files[0];
+}
+
+openPreparationModal(appointment: any) {
+  this.selectedAppointment = appointment;
+  this.tempNote = appointment.patientNote || ''; 
+}
+
+savePreparation() {
+  if (!this.selectedAppointment) return;
+
+  const formData = new FormData();
+  formData.append('patientNote', this.tempNote); 
+  if (this.selectedFile) {
+    formData.append('file', this.selectedFile);
+  }
+
+  this.loading.set(true);
+
+  this.http.patch(`${this.apiUrl}/appointments/${this.selectedAppointment.id}`, formData)
+    .subscribe({
+      next: () => {
+        this.loading.set(false);
+        this.selectedAppointment = null; 
+        this.selectedFile = null; 
+        this.loadData(); 
+        alert('saved successfully!'); 
+      },
+      error: () => {
+        this.loading.set(false);
+        alert('Error saving changes.');
+      }
+    });
+}
+
+viewingPatientAppointment: any = null;
+
+openPatientInfoModal(appointment: any) {
+  this.viewingPatientAppointment = appointment;
 }
 }

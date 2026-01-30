@@ -8,6 +8,8 @@ export interface Appointment {
   status: 'reserved' | 'cancelled' | 'done' | 'RESERVED' | 'CANCELLED' | 'DONE'; // Backend renvoie en minuscules
   doctorId: string;
   createdAt: string;
+  patientNote?: string;   
+  documentUrl?: string;
 }
 
 export interface CreateAppointmentDto {

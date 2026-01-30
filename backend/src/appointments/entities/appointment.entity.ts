@@ -35,6 +35,11 @@ export class AppointmentEntity {
 
   @CreateDateColumn()
   createdAt: Date;
-
+ 
+  @Column({ type: 'text', nullable: true })
+  patientNote: string;
+  
+  @Column({ type: 'text', nullable: true }) 
+  documentUrl: string;
   
 }

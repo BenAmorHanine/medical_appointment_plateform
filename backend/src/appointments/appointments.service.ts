@@ -148,9 +148,9 @@ export class AppointmentsService {
   availability.bookedSlots++;
   await this.availabilityRepository.save(availability);
 
-  // 🔥 ÉMETTRE L'ÉVÉNEMENT avec userId du doctor
-  console.log('🚀 Emitting appointment.created event...');
-  console.log('📍 Doctor userId:', availability.doctor.user.id);
+  //  ÉMETTRE L'ÉVÉNEMENT avec userId du doctor
+  console.log(' Emitting appointment.created event...');
+  console.log(' Doctor userId:', availability.doctor.user.id);
   this.eventEmitter.emit(
     'appointment.created',
     new AppointmentCreatedEvent(
@@ -188,7 +188,7 @@ export class AppointmentsService {
     await this.availabilityRepository.save(availability);
 
     // Émettre l'événement avec userId du doctor
-    console.log('🚀 Emitting appointment.cancelled event...');
+    console.log(' Emitting appointment.cancelled event...');
     this.eventEmitter.emit(
       'appointment.cancelled',
       new AppointmentCancelledEvent(
@@ -219,4 +219,16 @@ export class AppointmentsService {
 
     return appointment;
   }
+
+    
+async update(id: string, updateData: Partial<AppointmentEntity>): Promise<AppointmentEntity> {
+  const appointment = await this.repository.findOne({ where: { id } });
+  
+  if (!appointment) {
+    throw new NotFoundException('Rendez-vous introuvable');
+  }
+  Object.assign(appointment, updateData);
+
+  return await this.repository.save(appointment);
+}
   }
