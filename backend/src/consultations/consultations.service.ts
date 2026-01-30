@@ -19,7 +19,7 @@ import {
 import { DoctorProfileEntity } from '../profiles/doctor/entities/doctor-profile.entity';
 import { PatientProfileEntity } from '../profiles/patient/entities/patient-profile.entity';
 import { createWriteStream } from 'node:fs';
-import { access, mkdir } from 'node:fs/promises';
+import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import PDFDocument from 'pdfkit';
 
@@ -200,6 +200,15 @@ export class ConsultationsService implements OnModuleInit {
    * Création d'une consultation avec transaction et génération des PDFs
    */
   async create(dto: CreateConsultationDto): Promise<ConsultationEntity> {
+    // Si une consultation existe déjà pour ce rendez-vous, renvoyer l'existante
+    if (dto.appointmentId) {
+      const existing = await this.consultationRepo.findOne({ where: { appointmentId: dto.appointmentId } });
+      if (existing) {
+        this.logger.warn(`Consultation déjà existante pour appointment ${dto.appointmentId}, renvoi de l'existante.`);
+        return existing;
+      }
+    }
+
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -257,7 +266,7 @@ const consultation = await queryRunner.manager.save(
       const names = await this.getNames(dto.doctorProfileId, dto.patientId);
       const ordonnanceFilename = this.generatePdfFilename('ordonnance', names, consultation.createdAt);
       const certificatFilename = this.generatePdfFilename('certificat', names, consultation.createdAt);
-      const [ordonnanceUrl, certificatUrl] = await Promise.all([
+      await Promise.all([
         this.createPDF(
           ordonnanceFilename,
           this.buildOrdonnance(consultation, names),
@@ -269,8 +278,10 @@ const consultation = await queryRunner.manager.save(
       ]);
 
       // Mettre à jour les URLs des PDFs
-      consultation.ordonnanceUrl = ordonnanceUrl;
-      consultation.certificatUrl = certificatUrl;
+      // Au lieu d'exposer directement le chemin '/uploads/...', on sauvegarde l'URL
+      // contrôlée qui servira le fichier et ajoutera Content-Disposition.
+      consultation.ordonnanceUrl = `/consultations/${consultation.id}/ordonnance`;
+      consultation.certificatUrl = `/consultations/${consultation.id}/certificat`;
 
       await queryRunner.manager.save(consultation);
       await queryRunner.commitTransaction();
@@ -289,6 +300,34 @@ const consultation = await queryRunner.manager.save(
   }
 
   /**
+   * Normalise les URLs des PDFs pour qu'elles pointent vers les endpoints contrôlés
+   * (/consultations/:id/ordonnance ou /consultations/:id/certificat). Si la
+   * base contient encore l'URL statique '/uploads/consultations/..', on la remplace
+   * par l'URL contrôlée et on met à jour l'enregistrement en base.
+   */
+  private async normalizePdfUrls(consultation: ConsultationEntity): Promise<void> {
+    if (!consultation) return;
+
+    const controlledOrdonnance = `/consultations/${consultation.id}/ordonnance`;
+    const controlledCertificat = `/consultations/${consultation.id}/certificat`;
+
+    const updates: Partial<ConsultationEntity> = {};
+    if (consultation.ordonnanceUrl && consultation.ordonnanceUrl.startsWith('/uploads/consultations/')) {
+      updates.ordonnanceUrl = controlledOrdonnance;
+    }
+    if (consultation.certificatUrl && consultation.certificatUrl.startsWith('/uploads/consultations/')) {
+      updates.certificatUrl = controlledCertificat;
+    }
+
+    if (Object.keys(updates).length > 0) {
+      await this.consultationRepo.update(consultation.id, updates as any);
+      // Reflect changes in the passed object for immediate return
+      if (updates.ordonnanceUrl) consultation.ordonnanceUrl = updates.ordonnanceUrl;
+      if (updates.certificatUrl) consultation.certificatUrl = updates.certificatUrl;
+    }
+  }
+
+  /**
    * Récupère une consultation par son ID
    */
   async findOne(id: string): Promise<ConsultationEntity> {
@@ -300,6 +339,7 @@ const consultation = await queryRunner.manager.save(
       throw new NotFoundException(`Consultation ${id} introuvable`);
     }
 
+    await this.normalizePdfUrls(consultation);
     return consultation;
   }
 
@@ -307,27 +347,34 @@ const consultation = await queryRunner.manager.save(
    * Récupère toutes les consultations
    */
   async findAll(): Promise<ConsultationEntity[]> {
-    return this.consultationRepo.find({ order: { createdAt: 'DESC' } });
+    const consultations = await this.consultationRepo.find({ order: { createdAt: 'DESC' } });
+    // Normaliser en parallèle
+    await Promise.all(consultations.map((c) => this.normalizePdfUrls(c)));
+    return consultations;
   }
 
   /**
    * Récupère les consultations d'un médecin
    */
   async findByDoctor(doctorProfileId: string): Promise<ConsultationEntity[]> {
-    return this.consultationRepo.find({
+    const consultations = await this.consultationRepo.find({
       where: { doctorProfileId },
       order: { createdAt: 'DESC' },
     });
+    await Promise.all(consultations.map((c) => this.normalizePdfUrls(c)));
+    return consultations;
   }
 
   /**
    * Récupère les consultations d'un patient
    */
   async findByPatient(patientId: string): Promise<ConsultationEntity[]> {
-    return this.consultationRepo.find({
+    const consultations = await this.consultationRepo.find({
       where: { patientId },
       order: { createdAt: 'DESC' },
     });
+    await Promise.all(consultations.map((c) => this.normalizePdfUrls(c)));
+    return consultations;
   }
 
   /**
@@ -358,8 +405,10 @@ const consultation = await queryRunner.manager.save(
     }
 
     // Mettre à jour l'URL dans la base si différente
-    if (consultation[field] !== pdfUrl) {
-      await this.consultationRepo.update(consultation.id, { [field]: pdfUrl });
+    const controlledUrl = `/consultations/${consultation.id}/${field === 'ordonnanceUrl' ? 'ordonnance' : 'certificat'}`;
+
+    if (consultation[field] !== controlledUrl) {
+      await this.consultationRepo.update(consultation.id, { [field]: controlledUrl });
     }
 
     return { path: join(process.cwd(), pdfUrl.replace(/^\//, '')), filename };

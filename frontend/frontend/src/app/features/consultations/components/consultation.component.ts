@@ -29,6 +29,7 @@ export class ConsultationComponent implements OnInit {
   readonly currentConsultation = signal<Consultation | null>(null);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
+  readonly hasConsultation = signal(false);
 
   // Propriétés simples
   patientId = '';
@@ -36,6 +37,7 @@ export class ConsultationComponent implements OnInit {
   doctorId = '';
   patientProfileId = '';
   doctorProfileId = '';
+  appointmentDate: Date | null = null;
   private readonly apiUrl = environment.apiUrl;
 
   // Form
@@ -70,11 +72,22 @@ export class ConsultationComponent implements OnInit {
       return;
     }
 
-    if (currentUser.role === 'doctor') {
-      this.handleDoctorAccess(appointment, currentUser);
-    } else {
-      this.handlePatientAccess(appointment, currentUser);
-    }
+    // Récupérer l'appointment complet pour avoir la date
+    this.appointmentService.getAppointment(appointment.id).subscribe({
+      next: (fullAppointment) => {
+        console.log('Appointment complet:', fullAppointment);
+        this.appointmentDate = new Date(fullAppointment.appointmentDate);
+        if (currentUser.role === 'doctor') {
+          this.handleDoctorAccess(fullAppointment, currentUser);
+        } else {
+          this.handlePatientAccess(fullAppointment, currentUser);
+        }
+      },
+      error: (err) => {
+        console.error('Erreur lors de la récupération de l\'appointment:', err);
+        this.handleError('Erreur lors de la récupération du rendez-vous', '/appointments');
+      }
+    });
   }
 
   private handleDoctorAccess(appointment: any, currentUser: any): void {
@@ -116,6 +129,7 @@ export class ConsultationComponent implements OnInit {
       this.appointmentId = appointment.id;
       this.patientId = appointment.patientId;
       this.doctorId = appointment.doctorId || '';
+      this.appointmentDate = appointment.appointmentDate ? new Date(appointment.appointmentDate) : null;
       this.loadPatientConsultations();
     } else {
       this.handleError('Vous n\'avez pas accès à ce rendez-vous', '/appointments');
@@ -129,6 +143,7 @@ export class ConsultationComponent implements OnInit {
       this.doctorId = appointment.doctorId;
       this.patientProfileId = appointment.patientId;   // profileId (chez toi = même valeur)
       this.doctorProfileId = doctorProfileId;
+      this.appointmentDate = appointment.appointmentDate ? new Date(appointment.appointmentDate) : null;
 
       this.loadPatientConsultations();
     } else {
@@ -160,20 +175,33 @@ export class ConsultationComponent implements OnInit {
     this.consultationService
       .getConsultationsByDoctor(this.doctorProfileId)
       .subscribe({
-        next: (consultations) => this.patientConsultations.set(consultations),
-        error: () => {
-          this.error.set('Erreur lors du chargement des consultations');
-        },
-      });
+        next: (consultations) => {
+          this.patientConsultations.set(consultations);
+          // Détecter s'il existe une consultation associée à l'appointment courant
+          if (this.appointmentId) {
+            const exists = consultations.some(c => c.appointmentId === this.appointmentId);
+            this.hasConsultation.set(exists);
+          }
+         },
+         error: () => {
+           this.error.set('Erreur lors du chargement des consultations');
+         },
+       });
   } else {
     this.consultationService
       .getConsultationsByPatient(this.patientId)
       .subscribe({
-        next: (consultations) => this.patientConsultations.set(consultations),
-        error: () => {
-          this.error.set('Erreur lors du chargement des consultations');
-        },
-      });
+        next: (consultations) => {
+          this.patientConsultations.set(consultations);
+          if (this.appointmentId) {
+            const exists = consultations.some(c => c.appointmentId === this.appointmentId);
+            this.hasConsultation.set(exists);
+          }
+         },
+         error: () => {
+           this.error.set('Erreur lors du chargement des consultations');
+         },
+       });
   }
 }
 
@@ -188,6 +216,10 @@ export class ConsultationComponent implements OnInit {
   }
 
   onSubmit(): void {
+    // Empêcher double-submit : si une soumission est déjà en cours, on ignore
+    if (this.loading()) {
+      return;
+    }
     if (!this.consultationForm.valid || !this.doctorId) {
       if (!this.doctorId) {
         this.error.set('Médecin non identifié. Veuillez rafraîchir la page.');
@@ -197,6 +229,8 @@ export class ConsultationComponent implements OnInit {
 
     this.loading.set(true);
     this.error.set(null);
+    // Prévenir double-creation côté UI immédiatement
+    this.hasConsultation.set(true);
 
     const formValue = this.consultationForm.value;
     const dto: CreateConsultationDto = {
@@ -212,6 +246,9 @@ export class ConsultationComponent implements OnInit {
     this.consultationService.createConsultation(dto).subscribe({
       next: (consultation) => {
         this.currentConsultation.set(consultation);
+        // Marquer qu'il y a une consultation pour l'appointment (renvoi d'existante possible)
+        // already set to true before le call; ensure it's true
+        this.hasConsultation.set(true);
         this.loading.set(false);
         this.loadPatientConsultations();
         this.consultationForm.reset({
@@ -230,7 +267,9 @@ export class ConsultationComponent implements OnInit {
       },
       error: (err: any) => {
         this.error.set(err.error?.message || 'Erreur lors de la création de la consultation');
+        // Revenir en arrière si la création a échoué
         this.loading.set(false);
+        this.hasConsultation.set(false);
       },
     });
   }
@@ -252,7 +291,28 @@ export class ConsultationComponent implements OnInit {
     this.consultationService.downloadCertificat(consultationId);
   }
 
+  // Ouvre une URL relative de PDF (/consultations/:id/...) dans un nouvel onglet
+  openPdfUrl(relativeUrl: string | null): void {
+    if (!relativeUrl) {
+      this.error.set('PDF non disponible');
+      return;
+    }
+
+    const fullUrl = `${this.apiUrl}${relativeUrl}`;
+    window.open(fullUrl, '_blank');
+  }
+
+  // Méthode de navigation
   goBack(): void {
     this.router.navigate(['/appointments']);
+  }
+
+  isButtonDisabled(): boolean {
+    if (!this.appointmentDate) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const appDate = new Date(this.appointmentDate);
+    appDate.setHours(0, 0, 0, 0);
+    return today < appDate;
   }
 }

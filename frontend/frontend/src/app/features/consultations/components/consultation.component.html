@@ -53,14 +53,14 @@
                   <div class="col-md-3 text-md-end">
                     <button
                       class="btn btn-doc btn-ordonnance me-2 mb-2 mb-md-0"
-                      (click)="downloadOrdonnance(consultation.id)"
+                      (click)="openPdfUrl(consultation.ordonnanceUrl)"
                       title="Télécharger l'ordonnance"
                     >
                       <i class="fa fa-file-medical me-1"></i>Ordonnance
                     </button>
                     <button
                       class="btn btn-doc btn-certificat"
-                      (click)="downloadCertificat(consultation.id)"
+                      (click)="openPdfUrl(consultation.certificatUrl)"
                       title="Télécharger le certificat médical"
                     >
                       <i class="fa fa-certificate me-1"></i>Certificat
@@ -144,7 +144,7 @@
                 <button
                   type="submit"
                   class="btn btn-create"
-                  [disabled]="loading() || consultationForm.invalid"
+                  [disabled]="loading() || consultationForm.invalid || isButtonDisabled() || hasConsultation()"
                 >
                   @if (loading()) {
                     <span class="spinner-border spinner-border-sm me-2"></span>
@@ -180,13 +180,13 @@
                 <div class="d-flex flex-wrap gap-2 mt-2">
                   <button
                     class="btn btn-sm btn-ordonnance"
-                    (click)="downloadOrdonnance(consultation.id)"
+                    (click)="openPdfUrl(consultation.ordonnanceUrl)"
                   >
                     <i class="fa fa-file-medical me-1"></i>Télécharger Ordonnance
                   </button>
                   <button
                     class="btn btn-sm btn-certificat"
-                    (click)="downloadCertificat(consultation.id)"
+                    (click)="openPdfUrl(consultation.certificatUrl)"
                   >
                     <i class="fa fa-certificate me-1"></i>Télécharger Certificat
                   </button>
