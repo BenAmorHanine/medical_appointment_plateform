@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
@@ -18,7 +19,10 @@ export class DoctorProfileController {
   constructor(private readonly doctorProfileService: DoctorProfileService) {}
 
   @Get()
-  findAll() {
+  findAll(@Query('specialty') specialty?: string) {
+    if (specialty) {
+      return this.doctorProfileService.findBySpecialty(specialty);
+    }
     return this.doctorProfileService.findAll();
   }
 

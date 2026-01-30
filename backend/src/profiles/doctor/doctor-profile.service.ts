@@ -19,6 +19,14 @@ export class DoctorProfileService {
     return await this.repository.find({ relations: ['user'] });
   }
 
+  async findBySpecialty(specialty: string): Promise<DoctorProfileEntity[]> {
+    return await this.repository
+      .createQueryBuilder('doctorProfile')
+      .leftJoinAndSelect('doctorProfile.user', 'user')
+      .where('doctorProfile.specialty ILIKE :specialty', { specialty: `%${specialty}%` })
+      .getMany();
+  }
+
   async findOne(id: string): Promise<DoctorProfileEntity> {
     const profile = await this.repository.findOne({
       where: { id },

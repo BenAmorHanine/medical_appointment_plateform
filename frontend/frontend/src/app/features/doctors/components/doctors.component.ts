@@ -1,5 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Doctor } from '../models/doctor.model';
 import { DoctorsService } from '../services/doctors.service';
@@ -9,14 +10,16 @@ import { environment } from '../../../../environments/environment';
 @Component({
   selector: 'app-doctors',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './doctors.component.html',
   styleUrls: ['./doctors.component.scss']
 })
 export class DoctorsComponent implements OnInit {
   doctors: Doctor[] = [];
+  allDoctors: Doctor[] = [];
   loading = true;
   selectedDoctor: Doctor | null = null;
+  searchSpecialty = '';
 
   router = inject(Router);
   doctorsService = inject(DoctorsService);
@@ -30,6 +33,7 @@ export class DoctorsComponent implements OnInit {
     this.loading = true;
     this.doctorsService.getDoctors().subscribe({
       next: (doctors) => {
+        this.allDoctors = doctors;
         this.doctors = doctors;
         this.loading = false;
       },
@@ -37,6 +41,17 @@ export class DoctorsComponent implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  onSearchChange() {
+    if (!this.searchSpecialty.trim()) {
+      this.doctors = this.allDoctors;
+      return;
+    }
+    const searchTerm = this.searchSpecialty.toLowerCase().trim();
+    this.doctors = this.allDoctors.filter(doctor => 
+      doctor.specialty?.toLowerCase().includes(searchTerm)
+    );
   }
 
   refreshDoctors() {

@@ -95,6 +95,38 @@
     }
 
     @else {
+      <div class="search-container mb-5">
+        <div class="row justify-content-center">
+          <div class="col-lg-8 col-md-10">
+            <div class="search-wrapper">
+              <div class="search-icon">
+                <i class="fas fa-search"></i>
+              </div>
+              <input 
+                type="text" 
+                class="search-input" 
+                placeholder="Search by specialty (e.g., Cardiology, Dermatology, Pediatrics...)"
+                [(ngModel)]="searchSpecialty"
+                (input)="onSearchChange()"
+              />
+              @if (searchSpecialty) {
+                <button class="search-clear" (click)="searchSpecialty = ''; onSearchChange()">
+                  <i class="fas fa-times"></i>
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      @if (doctors.length === 0 && searchSpecialty) {
+        <div class="text-center py-5">
+          <i class="fas fa-search fa-3x text-muted mb-3"></i>
+          <h4 class="text-muted">No doctors found</h4>
+          <p class="text-muted">Try a different specialty</p>
+        </div>
+      }
+
       <div class="doctors-grid">
         @for (doctor of doctors; track doctor.id) {
           <div class="doctor-card">

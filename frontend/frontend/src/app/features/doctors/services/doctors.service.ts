@@ -13,11 +13,9 @@ export class DoctorsService {
 
   constructor(private http: HttpClient) {}
 
-  getDoctors(): Observable<Doctor[]> {
-    if (this.doctorsCache.value.length > 0) {
-      return this.doctorsCache.asObservable();
-    }
-    return this.http.get<Doctor[]>(this.apiUrl).pipe(
+  getDoctors(specialty?: string): Observable<Doctor[]> {
+    const url = specialty ? `${this.apiUrl}?specialty=${encodeURIComponent(specialty)}` : this.apiUrl;
+    return this.http.get<Doctor[]>(url).pipe(
       tap(doctors => this.doctorsCache.next(doctors)),
       catchError(() => of([]))
     );
