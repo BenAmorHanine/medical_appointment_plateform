@@ -6,6 +6,7 @@ import { HttpClient } from '@angular/common/http';
 import { ConsultationService, Consultation, ConsultationType, CreateConsultationDto } from '../consultations/services/consultation.service';
 import { AppointmentService, Appointment } from '../appointments/services/appointment.service';
 import { AuthService } from '../auth/services/auth.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-patient-consultations',
@@ -36,7 +37,7 @@ export class PatientConsultationsComponent implements OnInit {
   doctorId = '';
   patientProfileId = '';
   doctorProfileId = '';
-  private readonly apiUrl = 'http://localhost:3000';
+  private readonly apiUrl = environment.apiUrl;
 
   // Form
   readonly consultationForm: FormGroup;

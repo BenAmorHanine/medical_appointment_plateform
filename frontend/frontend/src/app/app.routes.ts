@@ -45,7 +45,7 @@ export const routes: Routes = [
   {
     path: 'consultation',
     component: PatientConsultationsComponent,
-    canActivate: [authGuard, patientGuard]
+    canActivate: [authGuard, doctorGuard]
   },
 
   // PROTECTED ROUTES - Doctor Only

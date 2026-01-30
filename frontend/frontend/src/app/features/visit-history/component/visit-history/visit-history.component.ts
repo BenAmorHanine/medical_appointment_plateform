@@ -3,6 +3,7 @@ import { ActivatedRoute } from '@angular/router';
 import { VisitHistoryResponse, VisitHistoryItem } from '../../model/visit-history.model';
 import { VisitHistoryService } from '../../service/visit-history.service';
 import { CommonModule } from '@angular/common';
+import { environment } from '../../../../../environments/environment';
 @Component({
   selector: 'app-visit-history',
   standalone: true,
@@ -23,6 +24,10 @@ export class VisitHistoryComponent implements OnInit {
   presentVisits = computed<VisitHistoryItem[]>(() =>
     this.data()?.history.filter(h => h.status === 'EFFECTUE') ?? []
   );
+
+  get apiUrl(): string {
+    return environment.apiUrl;
+  }
 
   constructor(
     private historyService: VisitHistoryService,

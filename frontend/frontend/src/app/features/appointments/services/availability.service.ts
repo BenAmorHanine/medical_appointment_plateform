@@ -2,11 +2,12 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs'; 
 import { Availability } from '../models/availability.interface';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class AvailabilityService {
   private http = inject(HttpClient);
-  private baseUrl = 'http://localhost:3000/availabilities';
+  private baseUrl = `${environment.apiUrl}/availabilities`;
 
   availabilities = signal<Availability[]>([]);
   loading = signal(false);

@@ -2,6 +2,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 
 interface NotificationDto {
   id: string;
@@ -13,7 +14,7 @@ interface NotificationDto {
 }
 @Injectable({ providedIn: 'root' })
 export class NotificationCenterService {
-  private baseUrl = 'http://localhost:3000/notifications';
+  private baseUrl = `${environment.apiUrl}/notifications`;
 
   constructor(private http: HttpClient) {}
 

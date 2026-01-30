@@ -14,7 +14,7 @@
              -->
             <!--[src]="user().profile?.image || '/assets/images/default-doctor.jpg'"-->
             <img
-              [src]="user()?.profile?.image?.startsWith('uploads/') ? 'http://localhost:3000/' + user().profile.image : 'assets/images/default-doctor.jpg'"
+              [src]="user()?.profile?.image?.startsWith('uploads/') ? apiUrl + '/' + user().profile.image : 'assets/images/default-doctor.jpg'"
               (error)="$any($event.target).src = 'assets/images/default-doctor.jpg'"
               class="profile-avatar rounded-circle border border-2 border-primary shadow me-3"
               alt="Doctor profile image"

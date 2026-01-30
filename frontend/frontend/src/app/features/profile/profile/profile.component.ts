@@ -2,6 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { ProfileService } from '../profile.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-profile',
@@ -20,6 +21,10 @@ export class ProfileComponent implements OnInit {
   //image logic
   selectedFile: File | null = null;
   previewImage: string | null = null; // Declare this for the <img> preview
+
+  get apiUrl(): string {
+    return environment.apiUrl;
+  }
 
   ngOnInit() {
     this.profileService.getProfile().subscribe({

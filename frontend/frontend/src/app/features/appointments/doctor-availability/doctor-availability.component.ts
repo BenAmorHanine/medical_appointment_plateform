@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { AvailabilityService } from '../services/availability.service';
 import { Availability } from '../models/availability.interface';
 import { AuthService } from '../../auth/services/auth.service';
+import { environment } from '../../../../environments/environment';
 
 
 @Component({
@@ -19,7 +20,7 @@ export class DoctorAvailabilityComponent implements OnInit {
   private availabilityService = inject(AvailabilityService);
   private http = inject(HttpClient);
   private authService = inject(AuthService);
-  private apiUrl = 'http://localhost:3000';
+  private apiUrl = environment.apiUrl;
 
 
   availabilities: Availability[] = [];

@@ -6,6 +6,7 @@ import { AppointmentService } from './services/appointment.service';
 import { Appointment } from './models/appointment.interface';
 import { AuthService } from '../auth/services/auth.service';
 import { PatientService } from '../patients/services/patient.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-appointments',
@@ -19,7 +20,7 @@ export class AppointmentsComponent implements OnInit {
   private router = inject(Router);
   private http = inject(HttpClient);
   private authService = inject(AuthService);
-  private apiUrl = 'http://localhost:3000';
+  private apiUrl = environment.apiUrl;
 
   appointments: Appointment[] = [];
   loading = false;
@@ -131,7 +132,7 @@ loadDoctorAppointments(userId: string) {
 
   navigateToDetails(appointment: any) {
     // todo
-    this.router.navigate(['/consultation'], {
+    this.router.navigate(['/appointmens'], {
       state: { appointment }
     });
   }

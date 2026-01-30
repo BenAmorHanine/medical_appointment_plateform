@@ -6,20 +6,27 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const token = authService.getToken();
 
+  // Check if the request body is FormData
+  const isFormData = req.body instanceof FormData;
+
+  // Build headers object conditionally
+  const headers: { [key: string]: string } = {};
+  
+  // Only set Content-Type for non-FormData requests
+  // FormData requests need the browser to set Content-Type with boundary
+  if (!isFormData && !req.headers.has('Content-Type')) {
+    headers['Content-Type'] = 'application/json';
+  }
+
+  // Add Authorization header if token exists and not already set
+  if (token && !req.headers.has('Authorization')) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   let authReq = req.clone({
     withCredentials: true,
-    setHeaders: {
-      'Content-Type': 'application/json',
-    }
+    ...(Object.keys(headers).length > 0 && { setHeaders: headers })
   });
-
-  if (token && !req.headers.has('Authorization')) {
-    authReq = authReq.clone({
-      setHeaders: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-  }
 
   return next(authReq);
 };

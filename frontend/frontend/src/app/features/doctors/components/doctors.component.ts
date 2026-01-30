@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { Doctor } from '../models/doctor.model';
 import { DoctorsService } from '../services/doctors.service';
 import { AuthService } from '../../auth/services/auth.service';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-doctors',
@@ -72,7 +73,7 @@ export class DoctorsComponent implements OnInit {
     return 'assets/images/default-doctor.jpg';
   }
   return doctor.image.startsWith('uploads/')
-    ? `http://localhost:3000/${doctor.image}`
+    ? `${environment.apiUrl}/${doctor.image}`
     : doctor.image;
 }
 
@@ -85,5 +86,8 @@ export class DoctorsComponent implements OnInit {
     this.selectedDoctor = null;
   }
 
+  get isDoctor(): boolean {
+    return this.authService.isDoctor();
+  }
 
 }
