@@ -15,23 +15,29 @@
             </p>
 
             <!-- Home page buttons -->
-            @if (!(isAuthenticated$ | async)) {
-              <!-- Show ONLY when NOT authenticated -->
-              <a routerLink="/auth/register" class="btn btn-primary me-3">
-                Create Account
-              </a>
-              <a routerLink="/auth/login" class="btn btn-outline-light">
-                Sign In
-              </a>
-            } @else {
-              <!-- Authenticated users see this instead -->
-              <button class="btn btn-primary me-3" (click)="goToMyHistory()">
-                My History
-              </button>
-              <button class="btn btn-outline-light" (click)="logout()">
-                Logout
-              </button>
-            }
+            <div class="hero-buttons">
+              @if (!(isAuthenticated$ | async)) {
+                <!-- Show ONLY when NOT authenticated -->
+                <a routerLink="/auth/register" class="btn-hero-primary">
+                  <span>Create Account</span>
+                  <i class="fas fa-user-plus ms-2"></i>
+                </a>
+                <a routerLink="/auth/login" class="btn-hero-outline">
+                  <span>Sign In</span>
+                  <i class="fas fa-sign-in-alt ms-2"></i>
+                </a>
+              } @else {
+                <!-- Authenticated users see this instead -->
+                <button class="btn-hero-primary" (click)="goToMyHistory()">
+                  <span>My History</span>
+                  <i class="fas fa-history ms-2"></i>
+                </button>
+                <button class="btn-hero-outline" (click)="logout()">
+                  <span>Logout</span>
+                  <i class="fas fa-sign-out-alt ms-2"></i>
+                </button>
+              }
+            </div>
           </div>
         </div>
 
@@ -107,23 +113,21 @@
                     <i class="fa fa-star text-warning"></i>
                     {{ doctor.rating }}/5
                   </div>
-                  <a routerLink="/doctors" class="btn btn-sm btn-outline-light">
-                    View Profile
-                  </a>
                 </div>
               </div>
               <div class="doctor-info p-4">
                 <h5 class="doctor-name mb-1">{{ getDoctorName(doctor) }}</h5>
-                <p class="doctor-specialty text-muted mb-3">{{ doctor.specialty }}</p>
-                <div class="social-links">
-                  <a href="#" class="me-2"><i class="fab fa-facebook-f"></i></a>
-                  <a href="#" class="me-2"><i class="fab fa-twitter"></i></a>
-                  <a href="#"><i class="fab fa-linkedin-in"></i></a>
-                </div>  
+                <p class="doctor-specialty text-muted mb-3">{{ doctor.specialty }}</p> 
               </div>
             </div>
           </div>
         }
+      </div>
+      <div class="text-center mt-5 mb-4">
+        <a routerLink="/doctors" onclick="window.scrollTo(0, 0)" class="btn-view-all-doctors">
+          <span>View All Doctors</span>
+          <i class="fas fa-arrow-right ms-2"></i>
+        </a>
       </div>
     }
   </div>
