@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal,inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { VisitHistoryService } from '../../service/visit-history.service';
 import { CommonModule } from '@angular/common';
@@ -19,10 +19,9 @@ export class DoctorPatientsComponent implements OnInit {
   loading = signal(true);
 
   Math = Math;
-  constructor(
-    private historyService: VisitHistoryService,
-    private router: Router,
-  ) {}
+  private historyService = inject(VisitHistoryService);
+  private router = inject(Router);
+ 
 
   ngOnInit(): void {
     this.load();
@@ -53,11 +52,7 @@ export class DoctorPatientsComponent implements OnInit {
       this.load();
     }
   }
-/*
- openHistory(patientId: string): void {
-  this.router.navigate(['/history/doctor/patient', patientId]);
-}
-*/
+
 openHistory(patientId: string): void {
   console.log('➡️ Navigating with patientId:', patientId);
  sessionStorage.setItem('patientHistoryId', patientId);

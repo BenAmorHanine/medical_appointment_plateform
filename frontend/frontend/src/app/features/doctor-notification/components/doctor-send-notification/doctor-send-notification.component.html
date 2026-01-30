@@ -91,82 +91,88 @@
                 }
               </div>
 
-              <!-- SUBJECT -->
-              <div class="form-group-modern">
-                <label class="form-label-modern">
-                  <i class="fas fa-heading me-2"></i>Subject
-                </label>
-                <input
-                  type="text"
-                  class="form-control-modern"
-                  name="subject"
-                  ngModel
-                  required
-                  placeholder="Email subject"
-                />
-              </div>
+            <!-- SUBJECT -->
+<div class="form-group-modern">
+  <label class="form-label-modern">
+    <i class="fas fa-heading me-2"></i>Subject
+  </label>
+  <input
+    type="text"
+    class="form-control-modern"
+    name="subject"
+    [ngModel]="defaultSubject()"
+    (ngModelChange)="defaultSubject.set($event)"
+    required
+    placeholder="Email subject"
+  />
+</div>
+
+
 
               <!-- MESSAGE -->
-              <div class="form-group-modern">
-                <label class="form-label-modern">
-                  <i class="fas fa-comment-alt me-2"></i>Message
-                </label>
-                <textarea
-                  rows="6"
-                  class="form-control-modern form-control-textarea"
-                  name="message"
-                  [(ngModel)]="defaultMessage"
-                  required
-                  minlength="5"
-                  #messageInput="ngModel"
-                  placeholder="Write your message here..."
-                ></textarea>
+             <div class="form-group-modern">
+  <label class="form-label-modern">
+    <i class="fas fa-comment-alt me-2"></i>Message
+  </label>
+  <textarea
+    rows="6"
+    class="form-control-modern form-control-textarea"
+    name="message"
+    [ngModel]="defaultMessage()"
+    (ngModelChange)="defaultMessage.set($event)"
+    required
+    minlength="5"
+    #messageInput="ngModel"
+    placeholder="Write your message here..."
+  ></textarea>
 
-                @if (messageInput.invalid && messageInput.touched) {
-                  <div class="error-message">
-                    <i class="fas fa-exclamation-circle me-1"></i>
-                    Message must be at least 5 characters
-                  </div>
-                }
-              </div>
+  @if (messageInput.invalid && messageInput.touched) {
+    <div class="error-message">
+      <i class="fas fa-exclamation-circle me-1"></i>
+      Message must be at least 5 characters
+    </div>
+  }
+</div>
+
 
               <!-- HIDDEN ROLE -->
               <input type="hidden" name="role" ngModel value="patient" />
 
-              <!-- BUTTON -->
               <button
-                type="submit"
-                class="btn-submit"
-                [disabled]="mailForm.invalid || loading"
-              >
-                @if (!loading) {
-                  <span>
-                    <i class="fas fa-paper-plane me-2"></i> Send Email
-                  </span>
-                } @else {
-                  <span>
-                    <span class="spinner-border spinner-border-sm me-2"></span>
-                    Sending...
-                  </span>
-                }
-              </button>
+  type="submit"
+  class="btn-submit"
+  [disabled]="mailForm.invalid || loading()"
+>
+  @if (!loading()) {
+    <span>
+      <i class="fas fa-paper-plane me-2"></i> Send Email
+    </span>
+  } @else {
+    <span>
+      <span class="spinner-border spinner-border-sm me-2"></span>
+      Sending...
+    </span>
+  }
+</button>
+
 
             </form>
 
             <!-- FEEDBACK -->
-            @if (successMessage) {
-              <div class="alert-modern alert-modern-success mt-4">
-                <i class="fas fa-check-circle me-2"></i>
-                {{ successMessage }}
-              </div>
-            }
+          @if (successMessage()) {
+  <div class="alert-modern alert-modern-success mt-4">
+    <i class="fas fa-check-circle me-2"></i>
+    {{ successMessage() }}
+  </div>
+}
 
-            @if (errorMessage) {
-              <div class="alert-modern alert-modern-danger mt-4">
-                <i class="fas fa-exclamation-circle me-2"></i>
-                {{ errorMessage }}
-              </div>
-            }
+@if (errorMessage()) {
+  <div class="alert-modern alert-modern-danger mt-4">
+    <i class="fas fa-exclamation-circle me-2"></i>
+    {{ errorMessage() }}
+  </div>
+}
+
           </div>
         </div>
       </div>

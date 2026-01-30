@@ -55,13 +55,5 @@ getPatientHistoryForDoctor(
     Number(limit),
   );
 }
-/*
-@Patch('consultation/:id/absent')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('doctor')
-markConsultationAbsent(@Param('id') id: string) {
-  return this.visitHistoryService.markAbsent(id);
-}
-*/
 
 }

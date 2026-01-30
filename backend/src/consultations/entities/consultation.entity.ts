@@ -4,8 +4,11 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
-
+import { DoctorProfileEntity } from '../../profiles/doctor/entities/doctor-profile.entity';
+import { PatientProfileEntity } from '../../profiles/patient/entities/patient-profile.entity';
 export enum ConsultationType {
   STANDARD = 'standard',
   CONTROLE = 'controle',
@@ -56,4 +59,12 @@ export class ConsultationEntity {
 
   @UpdateDateColumn()
   updatedAt: Date;
+  //relation
+  @ManyToOne(() => PatientProfileEntity, { eager: false })
+  @JoinColumn({ name: 'patientId' })
+   patient: PatientProfileEntity;
+  @ManyToOne(() => DoctorProfileEntity, { eager: false })
+  @JoinColumn({ name: 'doctorProfileId' })
+  doctorProfile: DoctorProfileEntity;
+
 }

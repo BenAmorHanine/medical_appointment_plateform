@@ -10,7 +10,7 @@ export class VisitHistoryService {
 
   constructor(private http: HttpClient) {}
 
-  // 👤 Patient
+  //  Patient
   getMyHistory(page = 1, limit = 10) {
     return this.http.get<VisitHistoryResponse>(
       `${this.API}/me?page=${page}&limit=${limit}`
