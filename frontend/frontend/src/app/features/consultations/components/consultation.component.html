@@ -24,14 +24,14 @@
             <h5 class="mb-0"><i class="fa fa-history me-2"></i>Consultation History</h5>
           </div>
           <div class="card-body">
-            @if (patientConsultations().length === 0) {
+            @if (facade.patientConsultations().length === 0) {
               <div class="empty-state">
                 <h6>No previous consultations for this patient</h6>
                 <p class="mb-0">This patient has no consultations recorded yet.</p>
               </div>
             }
 
-            @for (consultation of patientConsultations(); track consultation.id) {
+            @for (consultation of facade.patientConsultations(); track consultation.id) {
               <div class="consultation-item mb-3">
                 <div class="row align-items-center">
                   <div class="col-md-2 mb-2 mb-md-0">
@@ -78,7 +78,7 @@
             <h5 class="mb-0"><i class="fa fa-plus-circle me-2"></i>New Consultation</h5>
           </div>
           <div class="card-body">
-            <form [formGroup]="consultationForm" (ngSubmit)="onSubmit()">
+            <form [formGroup]="formService.form()" (ngSubmit)="onSubmit()">
               <div class="row">
                 <div class="col-md-6 mb-3">
                   <label for="type" class="form-label">Consultation Type *</label>
@@ -144,32 +144,32 @@
                 <button
                   type="submit"
                   class="btn btn-create"
-                  [disabled]="loading() || consultationForm.invalid || isButtonDisabled() || hasConsultation()"
+                  [disabled]="facade.loading() || !formService.isValid() || isButtonDisabled() || hasConsultation()"
                 >
-                  @if (loading()) {
+                  @if (facade.loading()) {
                     <span class="spinner-border spinner-border-sm me-2"></span>
                   }
-                  {{ loading() ? 'Creating...' : 'Create Consultation' }}
+                  {{ facade.loading() ? 'Creating...' : 'Create Consultation' }}
                 </button>
                 <button
                   type="button"
                   class="btn btn-reset"
                   (click)="resetForm()"
-                  [disabled]="loading()"
+                  [disabled]="facade.loading()"
                 >
                   Reset
                 </button>
               </div>
 
-              @if (error()) {
+              @if (facade.error()) {
                 <div class="alert alert-danger alert-custom mt-3">
-                  {{ error() }}
+                  {{ facade.error() }}
                 </div>
               }
             </form>
 
             <!-- Consultation créée -->
-            @if (currentConsultation(); as consultation) {
+            @if (facade.currentConsultation(); as consultation) {
               <div class="alert alert-success alert-custom mt-3">
                 <h6 class="mb-2"><i class="fa fa-check-circle me-2"></i>Consultation created successfully</h6>
                 <p class="mb-2">

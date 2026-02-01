@@ -1,214 +1,148 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
-import { ConsultationService, Consultation, ConsultationType, CreateConsultationDto } from '../services/consultation.service';
-import { AppointmentService, Appointment } from '../../appointments/services/appointment.service';
+import {
+  ConsultationService,
+  ConsultationType,
+  CreateConsultationDto,
+} from '../services/consultation.service';
+import { AppointmentService } from '../../appointments/services/appointment.service';
 import { AuthService } from '../../auth/services/auth.service';
+import { ConsultationFacadeService } from '../services/consultation-facade.service';
+import { ConsultationFormService } from '../services/consultation-form.service';
 import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-consultation',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
+  providers: [ConsultationFormService],
   templateUrl: './consultation.component.html',
   styleUrls: ['./consultation.component.css'],
 })
 export class ConsultationComponent implements OnInit {
-  // Injection moderne Angular 19
+  // Services
   private readonly router = inject(Router);
-  private readonly consultationService = inject(ConsultationService);
   private readonly appointmentService = inject(AppointmentService);
   private readonly authService = inject(AuthService);
-  private readonly http = inject(HttpClient);
-  private readonly fb = inject(FormBuilder);
+  private readonly consultationService = inject(ConsultationService);
 
-  // Signals pour l'état réactif
-  readonly patientConsultations = signal<Consultation[]>([]);
-  readonly currentConsultation = signal<Consultation | null>(null);
-  readonly loading = signal(false);
-  readonly error = signal<string | null>(null);
-  readonly hasConsultation = signal(false);
+  readonly facade = inject(ConsultationFacadeService);
+  readonly formService = inject(ConsultationFormService);
 
-  // Propriétés simples
-  patientId = '';
-  appointmentId = '';
-  doctorId = '';
-  patientProfileId = '';
-  doctorProfileId = '';
-  appointmentDate: Date | null = null;
-  private readonly apiUrl = environment.apiUrl;
-
-  // Form
-  readonly consultationForm: FormGroup;
+  // Constantes pour le template
+  readonly apiUrl = environment.apiUrl;
   readonly consultationTypes = ConsultationType;
   readonly consultationTypeKeys = Object.values(ConsultationType);
 
-  constructor() {
-    this.consultationForm = this.fb.group({
-      type: [ConsultationType.STANDARD, [Validators.required]],
-      duration: [null],
-      medicament: [null],
-      joursRepos: [null],
-    });
+  // Computed signals
+  readonly hasConsultation = computed(() => {
+    const consultations = this.facade.patientConsultations();
+    const appointmentId = this.facade.appointmentState()?.id;
+    return appointmentId
+      ? consultations.some((c) => c.appointmentId === appointmentId)
+      : false;
+  });
 
-    // Auto-remplir la durée lorsque le type change
-    this.consultationForm.get('type')?.valueChanges.subscribe((selectedType: ConsultationType) => {
-      const defaultDurations: Record<ConsultationType, number> = {
-        [ConsultationType.STANDARD]: 30,
-        [ConsultationType.CONTROLE]: 15,
-        [ConsultationType.URGENCE]: 45,
-      };
-      this.consultationForm.patchValue({ duration: defaultDurations[selectedType] });
-    });
+  readonly isButtonDisabled = computed(() => {
+    const appointmentDate = this.facade.appointmentState()?.appointmentDate;
+    if (!appointmentDate) return false;
 
-    // Définir la durée initiale pour le type par défaut
-    this.consultationForm.patchValue({ duration: 30 });
-  }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const appDate = new Date(appointmentDate);
+    appDate.setHours(0, 0, 0, 0);
+    return today < appDate;
+  });
 
   ngOnInit(): void {
     const appointment = (window.history.state as any)?.appointment;
     const currentUser = this.authService.getCurrentUser() as any;
 
-    console.log('Appointment récupéré depuis history.state:', appointment);
-    console.log('Current user:', currentUser);
+    if (!this.validateInitialState(appointment, currentUser)) {
+      return;
+    }
 
+    this.initializeAppointment(appointment.id, currentUser);
+  }
+
+  /**
+   * Valide l'état initial
+   */
+  private validateInitialState(appointment: any, currentUser: any): boolean {
     if (!appointment?.id) {
       this.handleError('No appointment found in state', '/appointments');
-      return;
+      return false;
     }
 
     if (!currentUser) {
-      this.error.set('User not authenticated');
+      this.facade.error.set('User not authenticated');
       this.router.navigate(['/auth/login']);
-      return;
+      return false;
     }
 
-    // Récupérer l'appointment complet pour avoir la date
-    this.appointmentService.getAppointment(appointment.id).subscribe({
-      next: (fullAppointment) => {
-        console.log('Appointment complet:', fullAppointment);
-        this.appointmentDate = new Date(fullAppointment.appointmentDate);
+    return true;
+  }
+
+  /**
+   * Initialise l'appointment
+   */
+  private initializeAppointment(appointmentId: string, currentUser: any): void {
+    this.appointmentService.getAppointment(appointmentId).subscribe({
+      next: (appointment) => {
         if (currentUser.role === 'doctor') {
-          this.handleDoctorAccess(fullAppointment, currentUser);
+          this.facade.verifyDoctorAccess(appointment, currentUser.id).subscribe();
         } else {
-          this.handlePatientAccess(fullAppointment, currentUser);
+          this.facade.verifyPatientAccess(appointment, currentUser.id);
         }
       },
-      error: (err) => {
-        console.error('Erreur lors de la récupération de l\'appointment:', err);
+      error: () => {
         this.handleError('Erreur lors de la récupération du rendez-vous', '/appointments');
-      }
-    });
-  }
-
-  private handleDoctorAccess(appointment: any, currentUser: any): void {
-    this.http.get<any>(`${this.apiUrl}/doctor-profiles/user/${currentUser.id}`).subscribe({
-      next: (doctorProfile) => {
-        console.log('Doctor profile récupéré:', doctorProfile);
-        console.log('Appointment doctorId:', appointment.doctorId);
-
-        if (!doctorProfile?.id) {
-          this.handleError('Doctor profile not found', '/appointments');
-          return;
-        }
-
-        if (!appointment.doctorId) {
-          console.log('Appointment sans doctorId, récupération depuis le backend...');
-          this.appointmentService.getAppointment(appointment.id as string).subscribe({
-            next: (fullAppointment: Appointment) => {
-              appointment.doctorId = fullAppointment.doctorId;
-              this.validateAndLoad(appointment, doctorProfile.id);
-            },
-            error: (err: any) => {
-              console.error('Erreur lors de la récupération de l\'appointment:', err);
-              this.error.set('Error retrieving appointment');
-            }
-          });
-        } else {
-          this.validateAndLoad(appointment, doctorProfile.id);
-        }
       },
-      error: (err) => {
-        console.error('Erreur lors de la récupération du profil médecin:', err);
-        this.error.set('Error verifying permissions');
-      }
     });
   }
 
-  private handlePatientAccess(appointment: any, currentUser: any): void {
-    if (appointment.patientId === currentUser.id) {
-      this.appointmentId = appointment.id;
-      this.patientId = appointment.patientId;
-      this.doctorId = appointment.doctorId || '';
-      this.appointmentDate = appointment.appointmentDate ? new Date(appointment.appointmentDate) : null;
-      this.loadPatientConsultations();
-    } else {
-      this.handleError('You do not have access to this appointment', '/appointments');
-    }
-  }
-
-  private validateAndLoad(appointment: any, doctorProfileId: string): void {
-    if (appointment.doctorId === doctorProfileId) {
-      this.appointmentId = appointment.id;
-      this.patientId = appointment.patientId;
-      this.doctorId = appointment.doctorId;
-      this.patientProfileId = appointment.patientId;   // profileId (chez toi = même valeur)
-      this.doctorProfileId = doctorProfileId;
-      this.appointmentDate = appointment.appointmentDate ? new Date(appointment.appointmentDate) : null;
-
-      this.loadPatientConsultations();
-    } else {
-      console.error('IDs ne correspondent pas:', {
-        doctorProfileId,
-        appointmentDoctorId: appointment.doctorId
-      });
-      this.handleError('Vous n\'avez pas accès à ce rendez-vous', '/appointments');
-    }
-  }
-
-  private handleError(message: string, redirectPath: string): void {
-    console.error(message);
-    this.error.set(`${message}. Redirection...`);
-    setTimeout(() => this.router.navigate([redirectPath]), 2000);
-  }
-  /*
-    loadPatientConsultations(): void {
-      this.consultationService.getConsultationsByPatient(this.patientId).subscribe({
-        next: (consultations) => this.patientConsultations.set(consultations),
-        error: (err) => {
-          console.error('Erreur lors du chargement des consultations:', err);
-          this.error.set('Erreur lors du chargement des consultations');
-        },
-      });
-    }*/
-  loadPatientConsultations(): void {
-    // Always load consultations for the specific patient related to the appointment.
-    // When a doctor opens a patient's appointment, they should see only that patient's history.
-    const targetPatientId = this.patientProfileId || this.patientId;
-    if (!targetPatientId) {
-      this.error.set('Patient not identified');
+  /**
+   * Soumet le formulaire
+   */
+  onSubmit(): void {
+    if (this.facade.loading() || !this.formService.isValid() || this.hasConsultation()) {
       return;
     }
 
-    this.consultationService
-      .getConsultationsByPatient(targetPatientId)
-      .subscribe({
-        next: (consultations) => {
-          this.patientConsultations.set(consultations);
-          if (this.appointmentId) {
-            const exists = consultations.some(c => c.appointmentId === this.appointmentId);
-            this.hasConsultation.set(exists);
-          }
-        },
-        error: () => {
-          this.error.set('Error loading consultations');
-        },
-      });
+    const appointmentState = this.facade.appointmentState();
+    if (!appointmentState) {
+      this.facade.error.set('Appointment not identified. Please refresh the page.');
+      return;
+    }
+
+    const formValue = this.formService.getValue();
+    const dto: CreateConsultationDto = {
+      patientId: appointmentState.patientId,
+      doctorProfileId: appointmentState.doctorId,
+      type: formValue.type,
+      duration: formValue.duration || undefined,
+      appointmentId: appointmentState.id,
+      medicament: formValue.medicament || undefined,
+      joursRepos: formValue.joursRepos || undefined,
+    };
+
+    this.facade.createConsultation(dto).subscribe({
+      next: () => this.formService.reset(),
+    });
   }
 
+  /**
+   * Réinitialise le formulaire
+   */
+  resetForm(): void {
+    this.formService.reset();
+  }
 
+  /**
+   * Retourne le label d'un type de consultation
+   */
   getTypeLabel(type: ConsultationType): string {
     const labels: Record<ConsultationType, string> = {
       [ConsultationType.STANDARD]: 'Standard Consultation',
@@ -218,104 +152,44 @@ export class ConsultationComponent implements OnInit {
     return labels[type] || type;
   }
 
-  onSubmit(): void {
-    // Empêcher double-submit : si une soumission est déjà en cours, on ignore
-    if (this.loading()) {
+  /**
+   * Ouvre un PDF dans un nouvel onglet
+   */
+  openPdfUrl(relativeUrl: string | null): void {
+    if (!relativeUrl) {
+      this.facade.error.set('PDF not available');
       return;
     }
-    if (!this.consultationForm.valid || !this.doctorId) {
-      if (!this.doctorId) {
-        this.error.set('Doctor not identified. Please refresh the page.');
-      }
-      return;
-    }
-
-    this.loading.set(true);
-    this.error.set(null);
-    // Prévenir double-creation côté UI immédiatement
-    this.hasConsultation.set(true);
-
-    const formValue = this.consultationForm.value;
-    const dto: CreateConsultationDto = {
-      patientId: this.patientId,
-      doctorProfileId: this.doctorId,
-      type: formValue.type,
-      duration: formValue.duration || undefined,
-      appointmentId: this.appointmentId,
-      medicament: formValue.medicament || undefined,
-      joursRepos: formValue.joursRepos || undefined,
-    };
-
-    this.consultationService.createConsultation(dto).subscribe({
-      next: (consultation) => {
-        this.currentConsultation.set(consultation);
-        // Marquer qu'il y a une consultation pour l'appointment (renvoi d'existante possible)
-        // already set to true before le call; ensure it's true
-        this.hasConsultation.set(true);
-        this.loading.set(false);
-        this.loadPatientConsultations();
-        this.consultationForm.reset({
-          type: ConsultationType.STANDARD,
-          duration: null,
-          medicament: null,
-          joursRepos: null,
-        });
-
-        if (this.appointmentId) {
-          this.appointmentService.markAsDone(this.appointmentId as string).subscribe({
-            next: () => console.log('Rendez-vous marqué comme terminé'),
-            error: (err: any) => console.error('Erreur lors de la mise à jour du statut du rendez-vous:', err)
-          });
-        }
-      },
-      error: (err: any) => {
-        this.error.set(err.error?.message || 'Error during consultation creation');
-        // Revenir en arrière si la création a échoué
-        this.loading.set(false);
-        this.hasConsultation.set(false);
-      },
-    });
+    window.open(`${this.apiUrl}${relativeUrl}`, '_blank');
   }
 
-  resetForm(): void {
-    this.consultationForm.patchValue({
-      type: this.consultationTypes.STANDARD,
-      duration: null,
-      medicament: null,
-      joursRepos: null
-    });
-  }
-
+  /**
+   * Télécharge une ordonnance
+   */
   downloadOrdonnance(consultationId: string): void {
     this.consultationService.downloadOrdonnance(consultationId);
   }
 
+  /**
+   * Télécharge un certificat
+   */
   downloadCertificat(consultationId: string): void {
     this.consultationService.downloadCertificat(consultationId);
   }
 
-  // Opens a relative PDF URL (/consultations/:id/...) in a new tab
-  openPdfUrl(relativeUrl: string | null): void {
-    if (!relativeUrl) {
-      this.error.set('PDF not available');
-      return;
-    }
-
-    const fullUrl = `${this.apiUrl}${relativeUrl}`;
-    window.open(fullUrl, '_blank');
-  }
-
-  // Méthode de navigation
+  /**
+   * Retourne à la page des rendez-vous
+   */
   goBack(): void {
     this.router.navigate(['/appointments']);
   }
 
-  isButtonDisabled(): boolean {
-    if (!this.appointmentDate) return false;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const appDate = new Date(this.appointmentDate);
-    appDate.setHours(0, 0, 0, 0);
-    return today < appDate;
+  /**
+   * Gère les erreurs avec redirection
+   */
+  private handleError(message: string, redirectPath: string): void {
+    console.error(message);
+    this.facade.error.set(`${message}. Redirection...`);
+    setTimeout(() => this.router.navigate([redirectPath]), 2000);
   }
 }
