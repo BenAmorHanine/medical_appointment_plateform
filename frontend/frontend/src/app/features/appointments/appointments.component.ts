@@ -37,24 +37,42 @@ export class AppointmentsComponent implements OnInit {
     this.loadData();
   }
 
-  loadData() {
-    const currentUser = this.authService.getCurrentUser();
-    if (currentUser?.role === 'doctor') {
-      this.loadDoctorAppointments(currentUser.id);
-    } else if (currentUser?.role === 'patient') {
-      this.loadPatientAppointments(currentUser.id);
-    }
-  }
+// appointments.component.ts
 
-  loadPatientAppointments(patientId: string) {
-    this.loading.set(true);
-    this.appointmentService.getAppointmentsByPatient(patientId).pipe(
-      finalize(() => this.loading.set(false))
-    ).subscribe({
-      next: (data) => this.appointments.set(data),
-      error: () => this.appointments.set([])
-    });
+loadData() {
+  const currentUser = this.authService.getCurrentUser();
+  if (!currentUser) return;
+
+  if (currentUser.role === 'doctor') {
+    this.loadDoctorAppointments(currentUser.id);
+  } else if (currentUser.role === 'patient') {
+    this.fetchPatientProfileAndLoad(currentUser.id);
   }
+}
+
+fetchPatientProfileAndLoad(userId: string) {
+  this.loading.set(true);
+  this.http.get<any>(`${this.apiUrl}/patient-profiles/user/${userId}`).subscribe({
+    next: (patientProfile) => {
+      if (patientProfile?.id) {
+        
+        this.loadPatientAppointments(patientProfile.id);
+      } else {
+        this.loading.set(false);
+      }
+    },
+    error: () => this.loading.set(false)
+  });
+}
+
+loadPatientAppointments(patientProfileId: string) {
+  this.appointmentService.getAppointmentsByPatient(patientProfileId).pipe(
+    finalize(() => this.loading.set(false))
+  ).subscribe({
+    next: (data) => this.appointments.set(data),
+    error: () => this.appointments.set([])
+  });
+}
 
 loadDoctorAppointments(userId: string) {
     this.loading.set(true);
@@ -79,13 +97,17 @@ loadDoctorAppointments(userId: string) {
     return this.authService.getCurrentUser()?.role === 'doctor';
   }
 
-  getDoctorName(appointment: any): string {
-  return appointment.doctorName || 'unknown' ;
+getDoctorName(appointment: any): string {
+  const user = appointment?.doctor?.user;
+  if (!user) return 'Doctor unknown';
+  return `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim();
 }
 
-  getPatientDisplayName(appointment: any): string {
-    return appointment.patientName || appointment.patientId?.substring(0, 8) || 'Patient unknown';
-  }
+getPatientDisplayName(appointment: any): string {
+  const user = appointment?.patient?.user;
+  if (!user) return 'Patient unknown';
+  return `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim();
+}
 
 
 isLoading = computed(() => {

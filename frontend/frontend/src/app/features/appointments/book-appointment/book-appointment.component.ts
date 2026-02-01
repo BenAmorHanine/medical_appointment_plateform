@@ -9,6 +9,7 @@ import type { CalendarOptions } from '@fullcalendar/core';
 import { AvailabilityService } from '../services/availability.service';
 import { AuthService } from '../../auth/services/auth.service';
 import { AppointmentService } from '../services/appointment.service';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-book-appointment',
@@ -51,73 +52,103 @@ export class BookAppointmentComponent implements OnInit {
     eventTextColor: 'white',
   };
 
+
+
 ngOnInit() {
   const doctorData = sessionStorage.getItem('selectedDoctor');
-  if (doctorData) {
-    const doctor = JSON.parse(doctorData);
-    this.doctorId = doctor.id;
-    this.doctorName = doctor.name;
-    this.doctorSpecialty = doctor.specialty;
-    
-    const currentUser = this.authService.getCurrentUser();
-    this.patientId = currentUser?.id || '';
-    this.loadAvailabilities();
-    
-    sessionStorage.removeItem('selectedDoctor');
-  } else {
+  if (!doctorData) {
+    console.error('Aucun docteur sélectionné en session, redirection...');
     this.router.navigate(['/doctors']);
+    return;
   }
-}
 
+  const doctor = JSON.parse(doctorData);
+  this.doctorId = doctor.doctorProfileId || doctor.id; 
+  this.doctorName = doctor.name;
+  this.doctorSpecialty = doctor.specialty;
+
+  const currentUser = this.authService.getCurrentUser();
+  if (!currentUser) return;
+
+  fetch(`${environment.apiUrl}/patient-profiles/user/${currentUser.id}`)
+    .then(res => res.json())
+    .then(patientProfile => {
+      this.patientId = patientProfile.id;
+      this.loadAvailabilities(); 
+    })
+    .catch(err => console.error('Erreur Fetch PatientProfile:', err));
+
+   
+  // sessionStorage.removeItem('selectedDoctor'); 
+}
 
 
 
 
 loadAvailabilities() {
+  if (!this.doctorId) {
+    console.warn('Abandon : doctorId est vide');
+    return;
+  }
+  
   this.loading = true;
   this.availabilityService.loadAvailabilitiesForDoctor(this.doctorId).subscribe({
     next: (data) => {
-      const events = data.map(slot => {
-        const d = new Date(slot.date);
-        
+    const events = data.map(slot => {
+    const isFull = slot.bookedSlots >= slot.capacity;
+    
+   
+    const d = new Date(slot.date);
+    // Si l'heure est proche de minuit (ex: 23h), on rajoute quelques heures pour repasser au lendemain
+    if (d.getUTCHours() === 0 && d.getHours() < 0) {
+       d.setHours(d.getHours() + 5); 
+    }
+    
+    // Extraction manuelle sans passer par ISO 
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const datePart = `${year}-${month}-${day}`;
+
+    return {
+      id: slot.id,
+      title: isFull ? 'Complet' : `${slot.startTime}`,
+      start: `${datePart}T${slot.startTime}`,
+      end: `${datePart}T${slot.endTime}`,
+    extendedProps: { booked: slot.bookedSlots, capacity: slot.capacity },
+  
+    backgroundColor: isFull ? '#dc3545' : '#28a745', 
+    borderColor: isFull ? '#bd2130' : '#20c997',
+    display: 'block'
+  };
+});
+
+      this.calendarOptions = { 
+        ...this.calendarOptions, 
+        events: events 
+      };
       
-        const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        const dateString = `${year}-${month}-${day}`; 
-
-        return {
-          id: slot.id,
-          title: `${slot.startTime}-${slot.endTime} (${slot.capacity - slot.bookedSlots} slots left)`,
-          start: `${dateString}T${slot.startTime}:00`, 
-          end: `${dateString}T${slot.endTime}:00`,
-          extendedProps: { 
-            capacity: slot.capacity, 
-            booked: slot.bookedSlots 
-          },
-          backgroundColor: slot.bookedSlots >= slot.capacity ? '#dc3545' : '#28a745',
-          borderColor: slot.bookedSlots >= slot.capacity ? '#dc3545' : '#28a745',
-        };
-      });
-
-      this.calendarOptions = { ...this.calendarOptions, events };
       this.loading = false;
     },
-    error: () => this.loading = false
+    error: (err) => {
+      this.loading = false;
+    }
   });
 }
 
-  handleEventClick(clickInfo: any) {
-    const event = clickInfo.event;
-    const bookedSlots = event.extendedProps.booked;
-    const capacity = event.extendedProps.capacity;
-
-    if (bookedSlots < capacity) {
-      this.selectedEvent = event;
-    } else {
-      alert(`Ce créneau est complet ! (${bookedSlots}/${capacity})`);
-    }
+handleEventClick(clickInfo: any) {
+  const event = clickInfo.event;
+  const bookedSlots = event.extendedProps.booked;
+  const capacity = event.extendedProps.capacity;
+  
+  if (bookedSlots !== undefined && bookedSlots < capacity) {
+    this.selectedEvent = event;
+    
+  } else {
+    alert(`Ce créneau est complet ! (${bookedSlots}/${capacity})`);
+    this.selectedEvent = null;
   }
+}
 
   bookAppointment() {
     if (!this.selectedEvent || !this.patientId) {
@@ -135,7 +166,7 @@ loadAvailabilities() {
         alert('RDV réservé !');
         this.loadAvailabilities();
         setTimeout(() => {
-          window.location.href = '/appointments';
+          this.router.navigate(['/appointments']);
         }, 1000);
       },
       error: (err: any) => {

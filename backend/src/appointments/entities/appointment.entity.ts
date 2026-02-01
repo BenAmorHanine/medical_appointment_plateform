@@ -1,4 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import { DoctorProfileEntity } from 'src/profiles/doctor/entities/doctor-profile.entity';
+import { PatientProfileEntity } from 'src/profiles/patient/entities/patient-profile.entity';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 
 export enum AppointmentStatus {
   RESERVED = 'reserved',
@@ -27,9 +29,21 @@ export class AppointmentEntity {
     })
     status: AppointmentStatus;
 
-  @Column({ nullable: true })
-  patientId: string;
+  @ManyToOne(() => PatientProfileEntity)
+  @JoinColumn({ name: 'patientId' })
+  patient: PatientProfileEntity;
 
+  @Column()
+  patientId: string; 
+
+
+  @ManyToOne(() => DoctorProfileEntity)
+  @JoinColumn({ name: 'doctorId' })
+  doctor: DoctorProfileEntity;
+
+  @Column()
+  doctorId: string;
+  
   @Column({ nullable: false })
   availabilityId: string;
 
@@ -41,5 +55,8 @@ export class AppointmentEntity {
   
   @Column({ type: 'text', nullable: true }) 
   documentUrl: string;
+
+
+
   
 }

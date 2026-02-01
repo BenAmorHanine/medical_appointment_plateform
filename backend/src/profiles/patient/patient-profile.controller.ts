@@ -20,10 +20,16 @@ export class PatientProfileController {
     return this.patientProfileService.findAll();
   }
 
+  @Get('user/:userId')
+  findByUserId(@Param('userId') userId: string) {
+    return this.patientProfileService.findByUserId(userId);
+  }
+  
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.patientProfileService.findOne(id);
   }
+
 
   @Post()
   create(@Body() createPatientProfileDto: CreatePatientProfileDto) {

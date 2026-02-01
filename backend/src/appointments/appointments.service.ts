@@ -16,6 +16,8 @@ import { DoctorProfileEntity } from '../profiles/doctor/entities/doctor-profile.
 @Injectable()
 export class AppointmentsService {
   constructor(
+    @InjectRepository(PatientProfileEntity)
+    private readonly patientRepository: Repository<PatientProfileEntity>,
     @InjectRepository(AppointmentEntity)
     private readonly repository: Repository<AppointmentEntity>,
     @InjectRepository(AvailabilityEntity)
@@ -48,73 +50,42 @@ export class AppointmentsService {
     return { ...appointment, doctorId: availability.doctorId };
   }
 
-
-
-// rdv par patient
-  async findByPatient(patientId: string): Promise<(AppointmentEntity & { doctorName: string })[]> {
-    const appointments = await this.repository.find({
-      where: { patientId },
-      order: { appointmentDate: 'ASC', startTime: 'ASC' },
-    });
-
-    if (appointments.length === 0) return [];
-
-    const uniqueAvailabilityIds = [...new Set(appointments.map(a => a.availabilityId))];
-    const availabilities = await this.availabilityRepository.find({
-      where: { id: In(uniqueAvailabilityIds) },
-      relations: ['doctor', 'doctor.user']
-    });
-
-    const doctorNameMap = new Map<string, string>();
-    availabilities.forEach(avail => {
-      const fullName = avail.doctor?.user 
-        ? `${avail.doctor.user.firstName || ''} ${avail.doctor.user.lastName || ''}`.trim() 
-        : 'Dr. Unknown';
-      doctorNameMap.set(avail.id, fullName);
-    });
-
-    return appointments.map(apt => ({
-      ...apt,
-      doctorName: doctorNameMap.get(apt.availabilityId) || 'Dr. Unknown'
-    }));
+findDoctorAppointments(doctorProfileId: string) {
+  return this.repository.find({
+    where: {
+      doctor: { id: doctorProfileId },
+    },
+    relations: [
+      'patient',
+      'patient.user',
+    ],
+    order: {
+      appointmentDate: 'ASC',
+      startTime: 'ASC',
+    },
+  });
 }
 
-//rdv par doc
-  async findByDoctor(doctorId: string): Promise<(AppointmentEntity & { patientName: string })[]> {
-    const availabilities = await this.availabilityRepository.find({ where: { doctorId } });
-    if (availabilities.length === 0) return [];
 
-    const availabilityIds = availabilities.map(a => a.id);
-    const appointments = await this.repository.find({
-      where: { availabilityId: In(availabilityIds) },
-      order: { appointmentDate: 'ASC', startTime: 'ASC' },
-    });
+findPatientAppointments(patientProfileId: string) {
+  return this.repository.find({
+    where: {
+      patient: { id: patientProfileId },
+    },
+    relations: [
+      'doctor',
+      'doctor.user',
+    ],
+    order: {
+      appointmentDate: 'ASC',
+      startTime: 'ASC',
+    },
+  });
+}
 
-    const uniquePatientIds = [...new Set(appointments.map(a => a.patientId).filter(Boolean))];
-    if (uniquePatientIds.length === 0) {
-      return appointments.map(apt => ({ ...apt, patientName: 'Patient inconnu' }));
-    }
 
-    //recurpérer les noms dpuis users
-    const users = await this.dataSource
-      .getRepository('users')
-      .createQueryBuilder('user')
-      .where('user.id IN (:...ids)', { ids: uniquePatientIds })
-      .select(['user.id', 'user.firstName', 'user.lastName'])
-      .getMany();
 
-    const patientNameMap = new Map<string, string>();
-    users.forEach(user => {
-      const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 
-        `Patient ${user.id.substring(0, 8)}...`;
-      patientNameMap.set(user.id, fullName);
-    });
 
-    return appointments.map(apt => ({
-      ...apt,
-      patientName: patientNameMap.get(apt.patientId!) || `Patient ${apt.patientId?.substring(0, 8)}...`,
-    }));
-  }
 
 
 
@@ -132,13 +103,24 @@ export class AppointmentsService {
     throw new BadRequestException('Créneau complet');
   }
 
+  const patient = await this.patientRepository.findOne({
+  where: { id: createDto.patientId },
+  relations: ['user'],
+});
+
+if (!patient) {
+  throw new NotFoundException('Patient introuvable');
+}
+
   // Créer appointment
   const appointment = this.repository.create({
     appointmentDate: availability.date,
     startTime: availability.startTime,
     endTime: availability.endTime,
     status: AppointmentStatus.RESERVED,
-    patientId: createDto.patientId,
+    patient:patient,
+    patientId: patient.id,
+    doctor:availability.doctor,
     availabilityId: createDto.availabilityId,
   });
 
@@ -155,7 +137,7 @@ export class AppointmentsService {
     'appointment.created',
     new AppointmentCreatedEvent(
       saved.id,
-      saved.patientId,
+      saved.patient.user.id,
       availability.doctor.user.id, 
       saved.appointmentDate,
     ),
@@ -165,7 +147,8 @@ export class AppointmentsService {
 }
     async cancel(appointmentId: string): Promise<AppointmentEntity> {
   const appointment = await this.repository.findOne({ 
-    where: { id: appointmentId } 
+    where: { id: appointmentId } ,
+    relations: ['patient', 'patient.user'],
   });
   
   if (!appointment) throw new NotFoundException('RDV introuvable');
@@ -193,7 +176,7 @@ export class AppointmentsService {
       'appointment.cancelled',
       new AppointmentCancelledEvent(
         appointment.id,
-        appointment.patientId,
+        appointment.patient.user.id,
         availability.doctor.user.id, // ← userId du doctor
       ),
     );

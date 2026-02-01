@@ -29,8 +29,8 @@ export class AppointmentsController {
 
   @Get('doctor/:doctorId')
   @UseGuards(JwtAuthGuard)
-  findByDoctor(@Param('doctorId') doctorId: string) {
-    return this.service.findByDoctor(doctorId);
+  findDoctorAppointments(@Param('doctorId') doctorId: string) {
+    return this.service.findDoctorAppointments(doctorId);
   }
 
   @Get(':id')
@@ -41,8 +41,8 @@ export class AppointmentsController {
 
   @Get('patient/:patientId')
   @UseGuards(JwtAuthGuard)
-  findByPatient(@Param('patientId') patientId: string) {
-  return this.service.findByPatient(patientId);
+ findPatientAppointments(@Param('patientId') patientId: string) {
+  return this.service.findPatientAppointments(patientId);
 }
 
   @Delete(':id')

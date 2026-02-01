@@ -223,7 +223,7 @@ export class ConsultationsService implements OnModuleInit {
        //1️⃣ Retrieve patientProfile from received userId
 const [patientProfile, doctorProfile] = await Promise.all([
   this.patientRepo.findOne({
-    where: { user: { id: dto.patientId } },
+    where: {  id: dto.patientId  },
     select: { id: true },
   }),
   this.doctorRepo.findOne({
@@ -440,4 +440,6 @@ const consultation = await queryRunner.manager.save(
     const dateStr = date.toISOString().split('T')[0];
     return `${type}-${patientName}-${dateStr}.pdf`;
   }
+
+  
 }
