@@ -1,0 +1,54 @@
+<div class="card card-consultation mb-4">
+  <div class="card-header history">
+    <h5 class="mb-0">
+      <i class="fa fa-history me-2"></i>Consultation History
+    </h5>
+  </div>
+  <div class="card-body">
+    @if (consultations.length === 0) {
+      <div class="empty-state">
+        <h6>No previous consultations for this patient</h6>
+        <p class="mb-0">This patient has no consultations recorded yet.</p>
+      </div>
+    }
+
+    @for (consultation of consultations; track consultation.id) {
+      <div class="consultation-item mb-3">
+        <div class="row align-items-center">
+          <div class="col-md-2 mb-2 mb-md-0">
+            <span class="label d-block">Type</span>
+            <span class="badge badge-type">{{ consultation.type | consultationType }}</span>
+          </div>
+          <div class="col-md-2 mb-2 mb-md-0">
+            <span class="label d-block">Duration</span>
+            <span class="value">{{ consultation.duration }} min</span>
+          </div>
+          <div class="col-md-3 mb-2 mb-md-0">
+            <span class="label d-block">Date</span>
+            <span class="value">{{ consultation.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+          <div class="col-md-2 mb-2 mb-md-0">
+            <span class="label d-block">Appointment</span>
+            <small class="value">{{ consultation.appointmentId ? 'Yes' : 'No' }}</small>
+          </div>
+          <div class="col-md-3 text-md-end">
+            <button
+              class="btn btn-doc btn-ordonnance me-2 mb-2 mb-md-0"
+              (click)="onOpenPdf(consultation.ordonnanceUrl)"
+              title="Download the prescription"
+            >
+              <i class="fa fa-file-medical me-1"></i>Prescription
+            </button>
+            <button
+              class="btn btn-doc btn-certificat"
+              (click)="onOpenPdf(consultation.certificatUrl)"
+              title="Download the medical certificate"
+            >
+              <i class="fa fa-certificate me-1"></i>Certificate
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,26 @@
+@if (consultation) {
+  <div class="alert alert-success alert-custom mt-3">
+    <h6 class="mb-2">
+      <i class="fa fa-check-circle me-2"></i>Consultation created successfully
+    </h6>
+    <p class="mb-2">
+      <strong>Type:</strong> {{ consultation.type | consultationType }} |
+      <strong>Duration:</strong> {{ consultation.duration }} minutes |
+      <strong>ID:</strong> {{ consultation.id.substring(0, 8) }}...
+    </p>
+    <div class="d-flex flex-wrap gap-2 mt-2">
+      <button
+        class="btn btn-sm btn-ordonnance"
+        (click)="onOpenPdf(consultation.ordonnanceUrl)"
+      >
+        <i class="fa fa-file-medical me-1"></i>Download Prescription
+      </button>
+      <button
+        class="btn btn-sm btn-certificat"
+        (click)="onOpenPdf(consultation.certificatUrl)"
+      >
+        <i class="fa fa-certificate me-1"></i>Download Certificate
+      </button>
+    </div>
+  </div>
+}

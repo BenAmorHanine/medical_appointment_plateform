@@ -1,42 +1,51 @@
-import { Component, OnInit, inject, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import {
-  ConsultationService,
-  ConsultationType,
-  CreateConsultationDto,
-} from '../services/consultation.service';
-import { AppointmentService } from '../../appointments/services/appointment.service';
+import { CreateConsultationDto } from '../services/consultation.service';
+import { AppointmentService, Appointment } from '../../appointments/services/appointment.service';
 import { AuthService } from '../../auth/services/auth.service';
 import { ConsultationFacadeService } from '../services/consultation-facade.service';
 import { ConsultationFormService } from '../services/consultation-form.service';
+import { ConsultationHistoryComponent } from './consultation-history/consultation-history.component';
+import { ConsultationFormComponent } from './consultation-form/consultation-form.component';
+import { ConsultationSuccessComponent } from './consultation-success/consultation-success.component';
 import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-consultation',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [
+    CommonModule,
+    ConsultationHistoryComponent,
+    ConsultationFormComponent,
+    ConsultationSuccessComponent,
+  ],
   providers: [ConsultationFormService],
   templateUrl: './consultation.component.html',
   styleUrls: ['./consultation.component.css'],
 })
-export class ConsultationComponent implements OnInit {
+export class ConsultationComponent implements OnInit, OnDestroy {
   // Services
   private readonly router = inject(Router);
   private readonly appointmentService = inject(AppointmentService);
   private readonly authService = inject(AuthService);
-  private readonly consultationService = inject(ConsultationService);
 
   readonly facade = inject(ConsultationFacadeService);
   readonly formService = inject(ConsultationFormService);
 
-  // Constantes pour le template
-  readonly apiUrl = environment.apiUrl;
-  readonly consultationTypes = ConsultationType;
-  readonly consultationTypeKeys = Object.values(ConsultationType);
+  // Constantes
+  private readonly apiUrl = environment.apiUrl;
 
   // Computed signals
+  readonly isSubmitDisabled = computed(() => {
+    return (
+      this.facade.loading() ||
+      !this.formService.isValid() ||
+      this.isButtonDisabled() ||
+      this.hasConsultation()
+    );
+  });
+
   readonly hasConsultation = computed(() => {
     const consultations = this.facade.patientConsultations();
     const appointmentId = this.facade.appointmentState()?.id;
@@ -67,6 +76,10 @@ export class ConsultationComponent implements OnInit {
     this.initializeAppointment(appointment.id, currentUser);
   }
 
+  ngOnDestroy(): void {
+    this.facade.reset();
+  }
+
   /**
    * Valide l'état initial
    */
@@ -90,7 +103,7 @@ export class ConsultationComponent implements OnInit {
    */
   private initializeAppointment(appointmentId: string, currentUser: any): void {
     this.appointmentService.getAppointment(appointmentId).subscribe({
-      next: (appointment) => {
+      next: (appointment: Appointment) => {
         if (currentUser.role === 'doctor') {
           this.facade.verifyDoctorAccess(appointment, currentUser.id).subscribe();
         } else {
@@ -98,7 +111,7 @@ export class ConsultationComponent implements OnInit {
         }
       },
       error: () => {
-        this.handleError('Erreur lors de la récupération du rendez-vous', '/appointments');
+        this.handleError('Error retrieving the appointment', '/appointments');
       },
     });
   }
@@ -107,7 +120,7 @@ export class ConsultationComponent implements OnInit {
    * Soumet le formulaire
    */
   onSubmit(): void {
-    if (this.facade.loading() || !this.formService.isValid() || this.hasConsultation()) {
+    if (this.isSubmitDisabled()) {
       return;
     }
 
@@ -141,18 +154,6 @@ export class ConsultationComponent implements OnInit {
   }
 
   /**
-   * Retourne le label d'un type de consultation
-   */
-  getTypeLabel(type: ConsultationType): string {
-    const labels: Record<ConsultationType, string> = {
-      [ConsultationType.STANDARD]: 'Standard Consultation',
-      [ConsultationType.CONTROLE]: 'Control Consultation',
-      [ConsultationType.URGENCE]: 'Emergency Consultation',
-    };
-    return labels[type] || type;
-  }
-
-  /**
    * Ouvre un PDF dans un nouvel onglet
    */
   openPdfUrl(relativeUrl: string | null): void {
@@ -161,20 +162,6 @@ export class ConsultationComponent implements OnInit {
       return;
     }
     window.open(`${this.apiUrl}${relativeUrl}`, '_blank');
-  }
-
-  /**
-   * Télécharge une ordonnance
-   */
-  downloadOrdonnance(consultationId: string): void {
-    this.consultationService.downloadOrdonnance(consultationId);
-  }
-
-  /**
-   * Télécharge un certificat
-   */
-  downloadCertificat(consultationId: string): void {
-    this.consultationService.downloadCertificat(consultationId);
   }
 
   /**
@@ -189,7 +176,7 @@ export class ConsultationComponent implements OnInit {
    */
   private handleError(message: string, redirectPath: string): void {
     console.error(message);
-    this.facade.error.set(`${message}. Redirection...`);
+    this.facade.error.set(`${message}. Redirecting...`);
     setTimeout(() => this.router.navigate([redirectPath]), 2000);
   }
 }

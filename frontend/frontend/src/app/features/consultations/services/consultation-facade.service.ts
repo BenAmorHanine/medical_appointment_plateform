@@ -1,12 +1,12 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, tap } from 'rxjs';
+import { Observable, of, tap, map, catchError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
   ConsultationService,
   Consultation,
-  CreateConsultationDto
+  CreateConsultationDto,
 } from './consultation.service';
 import { AppointmentService, Appointment } from '../../appointments/services/appointment.service';
 
@@ -69,8 +69,8 @@ export class ConsultationFacadeService {
           // Marquer le rendez-vous comme terminé
           if (dto.appointmentId) {
             this.appointmentService.markAsDone(dto.appointmentId).subscribe({
-              next: () => console.log('Rendez-vous marqué comme terminé'),
-              error: (err) => console.error('Erreur mise à jour rendez-vous:', err),
+              next: () => console.log('Appointment marked as done'),
+              error: (err) => console.error('Error updating appointment:', err),
             });
           }
         },
@@ -83,7 +83,9 @@ export class ConsultationFacadeService {
   }
 
   /**
-   * Définit l'état de l'appointment
+   * Définit l'état de l'appointment.
+   * Réinitialise currentConsultation pour éviter qu'un message de succès
+   * d'une consultation précédente reste affiché.
    */
   setAppointmentState(appointment: Appointment): void {
     this.appointmentState.set({
@@ -92,45 +94,43 @@ export class ConsultationFacadeService {
       doctorId: appointment.doctorId,
       appointmentDate: new Date(appointment.appointmentDate),
     });
+
+    this.currentConsultation.set(null);
+    this.loadPatientConsultations(appointment.patientId);
   }
 
   /**
-   * Vérifie l'accès médecin
+   * Vérifie l'accès médecin via son profil.
+   * Utilise map/catchError au lieu de new Observable pour rester réactif.
    */
   verifyDoctorAccess(
     appointment: Appointment,
     userId: string
   ): Observable<boolean> {
-    return new Observable((observer) => {
-      this.http.get<any>(`${this.apiUrl}/doctor-profiles/user/${userId}`).subscribe({
-        next: (doctorProfile) => {
+    return this.http
+      .get<any>(`${this.apiUrl}/doctor-profiles/user/${userId}`)
+      .pipe(
+        map((doctorProfile) => {
           if (!doctorProfile?.id) {
             this.handleError('Doctor profile not found', '/appointments');
-            observer.next(false);
-            observer.complete();
-            return;
+            return false;
           }
 
           if (appointment.doctorId !== doctorProfile.id) {
-            this.handleError('Vous n\'avez pas accès à ce rendez-vous', '/appointments');
-            observer.next(false);
-            observer.complete();
-            return;
+            this.handleError('You do not have access to this appointment', '/appointments');
+            return false;
           }
 
+          // setAppointmentState appelle déjà loadPatientConsultations en interne
           this.setAppointmentState(appointment);
-          this.loadPatientConsultations(appointment.patientId);
-          observer.next(true);
-          observer.complete();
-        },
-        error: (err) => {
-          console.error('Erreur lors de la récupération du profil médecin:', err);
+          return true;
+        }),
+        catchError((err) => {
+          console.error('Error retrieving doctor profile:', err);
           this.error.set('Error verifying permissions');
-          observer.next(false);
-          observer.complete();
-        },
-      });
-    });
+          return of(false);
+        })
+      );
   }
 
   /**
@@ -143,7 +143,6 @@ export class ConsultationFacadeService {
     }
 
     this.setAppointmentState(appointment);
-    this.loadPatientConsultations(appointment.patientId);
     return true;
   }
 
@@ -152,12 +151,12 @@ export class ConsultationFacadeService {
    */
   private handleError(message: string, redirectPath: string): void {
     console.error(message);
-    this.error.set(`${message}. Redirection...`);
+    this.error.set(`${message}. Redirecting...`);
     setTimeout(() => this.router.navigate([redirectPath]), 2000);
   }
 
   /**
-   * Réinitialise l'état
+   * Réinitialise l'état complet du service
    */
   reset(): void {
     this.patientConsultations.set([]);
