@@ -184,38 +184,28 @@ export class ConsultationComponent implements OnInit {
     });
   }*/
  loadPatientConsultations(): void {
-  if ((this.authService.getCurrentUser() as any)?.role === 'doctor') {
-    this.consultationService
-      .getConsultationsByDoctor(this.doctorProfileId)
-      .subscribe({
-        next: (consultations) => {
-          this.patientConsultations.set(consultations);
-          // Détecter s'il existe une consultation associée à l'appointment courant
-          if (this.appointmentId) {
-            const exists = consultations.some(c => c.appointmentId === this.appointmentId);
-            this.hasConsultation.set(exists);
-          }
-         },
-         error: () => {
-           this.error.set('Error loading consultations');
-         },
-       });
-  } else {
-    this.consultationService
-      .getConsultationsByPatient(this.patientId)
-      .subscribe({
-        next: (consultations) => {
-          this.patientConsultations.set(consultations);
-          if (this.appointmentId) {
-            const exists = consultations.some(c => c.appointmentId === this.appointmentId);
-            this.hasConsultation.set(exists);
-          }
-         },
-         error: () => {
-           this.error.set('Error loading consultations');
-         },
-       });
+  // Always load consultations for the specific patient related to the appointment.
+  // When a doctor opens a patient's appointment, they should see only that patient's history.
+  const targetPatientId = this.patientProfileId || this.patientId;
+  if (!targetPatientId) {
+    this.error.set('Patient not identified');
+    return;
   }
+
+  this.consultationService
+    .getConsultationsByPatient(targetPatientId)
+    .subscribe({
+      next: (consultations) => {
+        this.patientConsultations.set(consultations);
+        if (this.appointmentId) {
+          const exists = consultations.some(c => c.appointmentId === this.appointmentId);
+          this.hasConsultation.set(exists);
+        }
+      },
+      error: () => {
+        this.error.set('Error loading consultations');
+      },
+    });
 }
 
 
