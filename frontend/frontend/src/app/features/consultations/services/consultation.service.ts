@@ -133,10 +133,10 @@ export class ConsultationService {
     });
   }
   getConsultationsByDoctor(doctorProfileId: string) {
-  return this.http.get<Consultation[]>(
-    `${this.apiUrl}/doctor/${doctorProfileId}`
-  );
-}
+    return this.http.get<Consultation[]>(
+      `${this.apiUrl}/doctor/${doctorProfileId}`
+    );
+  }
 
   downloadPDF(id: string): void {
     this.downloadOrdonnance(id);

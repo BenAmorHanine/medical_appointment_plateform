@@ -48,7 +48,6 @@ export class ConsultationsController {
   }
 
   @Get(':id/ordonnance')
-  @UseGuards(JwtAuthGuard)
   @Header('Content-Type', 'application/pdf')
   async getOrdonnance(
     @Param('id') id: string,
@@ -65,7 +64,6 @@ export class ConsultationsController {
   }
 
   @Get(':id/certificat')
-  @UseGuards(JwtAuthGuard)
   @Header('Content-Type', 'application/pdf')
   async getCertificat(
     @Param('id') id: string,
