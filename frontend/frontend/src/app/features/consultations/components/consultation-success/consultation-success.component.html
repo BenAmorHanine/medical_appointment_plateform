@@ -9,10 +9,10 @@
     <strong>ID:</strong> {{ consultation.id.substring(0, 8) }}...
   </p>
   <div class="d-flex flex-wrap gap-2 mt-2">
-    <button class="btn btn-sm btn-ordonnance" (click)="openPdf.emit(consultation.ordonnanceUrl)">
+    <button class="btn btn-sm btn-ordonnance" [appDownloadPdf]="consultation.ordonnanceUrl">
       <i class="fa fa-file-medical me-1"></i>Download Prescription
     </button>
-    <button class="btn btn-sm btn-certificat" (click)="openPdf.emit(consultation.certificatUrl)">
+    <button class="btn btn-sm btn-certificat" [appDownloadPdf]="consultation.certificatUrl">
       <i class="fa fa-certificate me-1"></i>Download Certificate
     </button>
   </div>

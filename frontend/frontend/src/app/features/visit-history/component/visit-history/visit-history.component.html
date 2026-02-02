@@ -86,15 +86,13 @@
                     </span>
                     <div class="mt-2 d-flex gap-2 flex-wrap">
                       @if (item.ordonnanceUrl) {
-                      <button class="btn-document btn-document-primary"
-                        (click)="downloadPdf(item.ordonnanceUrl, $event)">
+                      <button class="btn-document btn-document-primary" [appDownloadPdf]="item.ordonnanceUrl">
                         <i class="fas fa-file-prescription me-2"></i>
                         <span>Ordonnance</span>
                       </button>
                       }
                       @if (item.certificatUrl) {
-                      <button class="btn-document btn-document-success"
-                        (click)="downloadPdf(item.certificatUrl, $event)">
+                      <button class="btn-document btn-document-success" [appDownloadPdf]="item.certificatUrl">
                         <i class="fas fa-file-certificate me-2"></i>
                         <span>Certificat</span>
                       </button>
@@ -169,13 +167,13 @@
               </div>
               <div class="timeline-documents mt-3">
                 @if (item.ordonnanceUrl) {
-                <button class="btn-document btn-document-primary" (click)="downloadPdf(item.ordonnanceUrl, $event)">
+                <button class="btn-document btn-document-primary" [appDownloadPdf]="item.ordonnanceUrl">
                   <i class="fas fa-file-prescription me-2"></i>
                   <span>Ordonnance</span>
                 </button>
                 }
                 @if (item.certificatUrl) {
-                <button class="btn-document btn-document-success" (click)="downloadPdf(item.certificatUrl, $event)">
+                <button class="btn-document btn-document-success" [appDownloadPdf]="item.certificatUrl">
                   <i class="fas fa-file-certificate me-2"></i>
                   <span>Certificat</span>
                 </button>

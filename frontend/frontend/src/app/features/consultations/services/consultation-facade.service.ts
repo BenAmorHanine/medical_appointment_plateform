@@ -3,11 +3,9 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, of, tap, map, catchError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import {
-  ConsultationService,
-  Consultation,
-  CreateConsultationDto,
-} from './consultation.service';
+import { ConsultationService } from './consultation.service';
+import { Consultation } from '../models/consultation.model';
+import { CreateConsultationDto } from '../models/create-consultation.dto';
 import { AppointmentService, Appointment } from '../../appointments/services/appointment.service';
 
 interface AppointmentState {
@@ -158,33 +156,32 @@ export class ConsultationFacadeService {
   /**
    * Télécharge un PDF (ordonnance ou certificat)
    */
-  openPdfUrl(relativeUrl: string | null): void {
+  openPdfUrl(relativeUrl: string | null): Observable<void> {
     if (!relativeUrl) {
       this.error.set('PDF not available');
-      return;
+      return of(void 0);
     }
 
     // Extraire l'ID et le type depuis l'URL
-    // Format attendu: /consultations/{id}/ordonnance ou /consultations/{id}/certificat
     const match = relativeUrl.match(/consultations\/([^\/]+)\/(ordonnance|certificat)/);
     if (!match) {
       this.error.set('Invalid PDF URL format');
-      return;
+      return of(void 0);
     }
 
     const [, id, type] = match;
 
     // Utiliser le service de téléchargement avec JWT
-    const download$ = type === 'ordonnance'
-      ? this.consultationService.downloadOrdonnance(id)
-      : this.consultationService.downloadCertificat(id);
-
-    download$.subscribe({
-      error: (err) => {
+    return (type === 'ordonnance'
+      ? (this.consultationService as ConsultationService).downloadOrdonnance(id)
+      : (this.consultationService as ConsultationService).downloadCertificat(id)
+    ).pipe(
+      catchError((err: any) => {
         console.error('PDF download failed:', err);
         this.error.set(`Error downloading ${type}`);
-      },
-    });
+        return of(void 0);
+      })
+    );
   }
 
   /**

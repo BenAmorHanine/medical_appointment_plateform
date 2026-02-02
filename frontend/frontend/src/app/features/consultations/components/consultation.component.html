@@ -17,25 +17,14 @@
   <div class="container">
     <div class="row">
       <div class="col-12">
-        <app-consultation-history
-          [consultations]="facade.patientConsultations()"
-          (openPdf)="facade.openPdfUrl($event)"
-        />
+        <app-consultation-history [consultations]="facade.patientConsultations()" />
 
-        <app-consultation-form
-          [form]="formService.form()"
-          [loading]="facade.loading()"
-          [error]="facade.error()"
-          [isSubmitDisabled]="isSubmitDisabled()"
-          (formSubmit)="onSubmit()"
-          (formReset)="formService.reset()"
-        />
+        <app-consultation-form [form]="formService.form()" [loading]="facade.loading()" [error]="facade.error()"
+          [isSubmitDisabled]="isSubmitDisabled()" (formSubmit)="onSubmit()" (formReset)="formService.reset()" />
 
-        @if (facade.currentConsultation() && facade.appointmentState()?.id === facade.currentConsultation()?.appointmentId) {
-          <app-consultation-success
-            [consultation]="facade.currentConsultation()"
-            (openPdf)="facade.openPdfUrl($event)"
-          />
+        @if (facade.currentConsultation() && facade.appointmentState()?.id ===
+        facade.currentConsultation()?.appointmentId) {
+        <app-consultation-success [consultation]="facade.currentConsultation()" />
         }
       </div>
     </div>

@@ -2,38 +2,9 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, catchError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { Consultation } from '../models/consultation.model';
+import { CreateConsultationDto } from '../models/create-consultation.dto';
 
-export enum ConsultationType {
-  STANDARD = 'standard',
-  CONTROLE = 'controle',
-  URGENCE = 'urgence',
-}
-
-export interface CreateConsultationDto {
-  patientId: string;
-  doctorProfileId: string;
-  type: ConsultationType;
-  duration?: number;
-  appointmentId?: string;
-  medicament?: string;
-  joursRepos?: number;
-}
-
-export interface Consultation {
-  id: string;
-  patientId: string;
-  doctorProfileId: string;
-  type: ConsultationType;
-  duration: number;
-  appointmentId: string | null;
-  pdfUrl: string | null;
-  medicament: string | null;
-  joursRepos: number | null;
-  ordonnanceUrl: string | null;
-  certificatUrl: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
 
 @Injectable({
   providedIn: 'root',

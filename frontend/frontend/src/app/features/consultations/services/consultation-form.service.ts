@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ConsultationType } from './consultation.service';
+import { ConsultationType } from '../models/consultation.model';
 
 /**
  * Service pour gérer le formulaire de consultation

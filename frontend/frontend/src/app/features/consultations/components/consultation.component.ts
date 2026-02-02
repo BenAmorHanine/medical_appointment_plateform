@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { CreateConsultationDto } from '../services/consultation.service';
+import { CreateConsultationDto } from '../models/create-consultation.dto';
 import { AppointmentService, Appointment } from '../../appointments/services/appointment.service';
 import { AuthService } from '../../auth/services/auth.service';
 import { ConsultationFacadeService } from '../services/consultation-facade.service';

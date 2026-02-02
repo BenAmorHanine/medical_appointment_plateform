@@ -7,12 +7,13 @@ import { CommonModule } from '@angular/common';
 import { environment } from '../../../../../environments/environment';
 import { AuthService } from '../../../auth/services/auth.service';
 import { ConsultationFacadeService } from '../../../consultations/services/consultation-facade.service';
+import { DownloadPdfDirective } from '../../../../shared/directives/download-pdf.directive';
 import { catchError, map, of, startWith, switchMap, tap } from 'rxjs';
 
 @Component({
   selector: 'app-visit-history',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, DownloadPdfDirective],
   templateUrl: './visit-history.component.html',
   styleUrls: ['./visit-history.component.css'],
 })
@@ -114,11 +115,5 @@ export class VisitHistoryComponent {
     }
   }
 
-  /**
-   * Télécharge un PDF en réutilisant la logique du facade (DRY)
-   */
-  downloadPdf(url: string, event: Event): void {
-    event.preventDefault();
-    this.consultationFacade.openPdfUrl(url);
-  }
+
 }

@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { ConsultationType } from '../services/consultation.service';
+import { ConsultationType } from '../models/consultation.model';
 
 @Pipe({
   name: 'consultationType',

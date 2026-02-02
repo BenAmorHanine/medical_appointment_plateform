@@ -32,11 +32,11 @@
           <small class="value">{{ consultation.appointmentId ? 'Yes' : 'No' }}</small>
         </div>
         <div class="col-md-3 text-md-end">
-          <button class="btn btn-doc btn-ordonnance me-2 mb-2 mb-md-0"
-            (click)="openPdf.emit(consultation.ordonnanceUrl)" title="Download the prescription">
+          <button class="btn btn-doc btn-ordonnance me-2 mb-2 mb-md-0" [appDownloadPdf]="consultation.ordonnanceUrl"
+            title="Download the prescription">
             <i class="fa fa-file-medical me-1"></i>Prescription
           </button>
-          <button class="btn btn-doc btn-certificat" (click)="openPdf.emit(consultation.certificatUrl)"
+          <button class="btn btn-doc btn-certificat" [appDownloadPdf]="consultation.certificatUrl"
             title="Download the medical certificate">
             <i class="fa fa-certificate me-1"></i>Certificate
           </button>

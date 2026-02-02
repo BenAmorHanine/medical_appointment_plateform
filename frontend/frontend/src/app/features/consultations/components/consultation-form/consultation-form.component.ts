@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup } from '@angular/forms';
-import { ConsultationType } from '../../services/consultation.service';
+import { ConsultationType } from '../../models/consultation.model';
 import { ConsultationTypePipe } from '../../pipes/consultation-type.pipe';
 
 @Component({
