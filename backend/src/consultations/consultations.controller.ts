@@ -18,6 +18,7 @@ import { createReadStream } from 'fs';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { PaginationQueryDto } from '../common/dto/pagination.dto';
 
 @Controller('consultations')
 @UseGuards(JwtAuthGuard)
@@ -34,11 +35,8 @@ export class ConsultationsController {
   @Get()
   @UseGuards(RolesGuard)
   @Roles('admin')
-  findAll(
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
-  ) {
-    return this.consultationsService.findAll(page, limit);
+  findAll(@Query() query: PaginationQueryDto) {
+    return this.consultationsService.findAll(query);
   }
 
   @Get('doctor/:doctorId')

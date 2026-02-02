@@ -17,6 +17,7 @@ import { PdfService, PdfNames } from './services/pdf.services';
 import { DoctorProfileService } from '../profiles/doctor/doctor-profile.service';
 import { PatientProfileService } from '../profiles/patient/patient-profile.service';
 import { AppointmentsService } from '../appointments/appointments.service';
+import { PaginationQueryDto } from '../common/dto/pagination.dto';
 
 @Injectable()
 export class ConsultationsService {
@@ -89,6 +90,8 @@ export class ConsultationsService {
       await queryRunner.manager.save(consultation);
 
       // Mise à jour du rendez-vous si présent - DANS la transaction
+      /**Petite duplication justifiée : Lorsqu'on crée une consultation, on met à jour le statut du RDV manuellement (UPDATE appointments ...) au lieu d'appeler appointmentsService.markAsDone().
+Pourquoi ? C'est nécessaire pour inclure cette action dans la Transaction. Si la création échoue, la mise à jour du RDV s'annule aussi. C'est une bonne pratique de sécurité des données. */
       if (dto.appointmentId) {
         await queryRunner.manager.update(
           'appointments',
@@ -170,13 +173,16 @@ export class ConsultationsService {
   }
 
   async findAll(
-    page = 1,
-    limit = 20,
+    query?: PaginationQueryDto,
   ): Promise<{ data: ConsultationEntity[]; total: number; page: number; limit: number }> {
+    const page = query?.page || 1;
+    const limit = query?.limit || 20;
+    const skip = query ? query.skip : (page - 1) * limit;
+
     const [data, total] = await this.consultationRepo.findAndCount({
       relations: { doctorProfile: { user: true }, patient: { user: true } },
       order: { createdAt: 'DESC' },
-      skip: (page - 1) * limit,
+      skip,
       take: limit,
     });
 
