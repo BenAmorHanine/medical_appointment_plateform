@@ -156,6 +156,38 @@ export class ConsultationFacadeService {
   }
 
   /**
+   * Télécharge un PDF (ordonnance ou certificat)
+   */
+  openPdfUrl(relativeUrl: string | null): void {
+    if (!relativeUrl) {
+      this.error.set('PDF not available');
+      return;
+    }
+
+    // Extraire l'ID et le type depuis l'URL
+    // Format attendu: /consultations/{id}/ordonnance ou /consultations/{id}/certificat
+    const match = relativeUrl.match(/consultations\/([^\/]+)\/(ordonnance|certificat)/);
+    if (!match) {
+      this.error.set('Invalid PDF URL format');
+      return;
+    }
+
+    const [, id, type] = match;
+
+    // Utiliser le service de téléchargement avec JWT
+    const download$ = type === 'ordonnance'
+      ? this.consultationService.downloadOrdonnance(id)
+      : this.consultationService.downloadCertificat(id);
+
+    download$.subscribe({
+      error: (err) => {
+        console.error('PDF download failed:', err);
+        this.error.set(`Error downloading ${type}`);
+      },
+    });
+  }
+
+  /**
    * Réinitialise l'état complet du service
    */
   reset(): void {

@@ -9,7 +9,7 @@ import { ConsultationTypePipe } from '../../pipes/consultation-type.pipe';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, ConsultationTypePipe],
   templateUrl: './consultation-form.component.html',
-  styleUrls: ['./consultation-form.component.scss'],
+  styleUrl: './consultation-form.component.scss',
 })
 export class ConsultationFormComponent {
   @Input({ required: true }) form!: FormGroup;
@@ -20,12 +20,4 @@ export class ConsultationFormComponent {
   @Output() formReset = new EventEmitter<void>();
 
   readonly consultationTypeKeys = Object.values(ConsultationType);
-
-  onFormSubmit(): void {
-    this.formSubmit.emit();
-  }
-
-  onFormReset(): void {
-    this.formReset.emit();
-  }
 }

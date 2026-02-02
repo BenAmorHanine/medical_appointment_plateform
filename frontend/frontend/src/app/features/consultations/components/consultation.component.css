@@ -1,20 +1,24 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
-
 :host {
+  --primary-blue: #1e3a8a;
+  --primary-light: #3b82f6;
+  --primary-lighter: #60a5fa;
+  --primary-lightest: #a5b4fc;
+  --bg-gradient-start: #f8fafc;
+  --bg-gradient-mid: #e2e8f0;
+  --bg-gradient-end: #f1f5f9;
+
   font-family: 'Poppins', sans-serif;
   display: block;
 }
 
-/* Page container */
 .consultations-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%);
+  background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-mid) 50%, var(--bg-gradient-end) 100%);
   padding-bottom: 4rem;
 }
 
-/* Hero / Header bande */
 .consultations-hero {
-  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%);
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-light) 50%, var(--primary-lighter) 100%);
   padding: 2rem 0;
   margin-bottom: 2rem;
   position: relative;
@@ -46,7 +50,7 @@
 }
 
 .consultations-hero .page-title .gradient-text {
-  background: linear-gradient(135deg, #60a5fa, #a5b4fc);
+  background: linear-gradient(135deg, var(--primary-lighter), var(--primary-lightest));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -58,7 +62,7 @@
   font-weight: 600;
   font-size: 0.9rem;
   background: rgba(255, 255, 255, 0.95);
-  color: #1e3a8a;
+  color: var(--primary-blue);
   border: none;
   transition: all 0.3s ease;
   box-shadow: 0 4px 16px rgba(15, 23, 42, 0.2);
@@ -68,10 +72,9 @@
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.3);
   background: #ffffff;
-  color: #1e3a8a;
+  color: var(--primary-blue);
 }
 
-/* Responsive — hero uniquement */
 @media (max-width: 991.98px) {
   .consultations-hero {
     padding: 1.5rem 0;

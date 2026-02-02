@@ -8,13 +8,9 @@ import { ConsultationTypePipe } from '../../pipes/consultation-type.pipe';
   standalone: true,
   imports: [CommonModule, ConsultationTypePipe],
   templateUrl: './consultation-success.component.html',
-  styleUrls: ['./consultation-success.component.scss'],
+  styleUrl: './consultation-success.component.scss',
 })
 export class ConsultationSuccessComponent {
   @Input() consultation: Consultation | null = null;
   @Output() openPdf = new EventEmitter<string | null>();
-
-  onOpenPdf(url: string | null): void {
-    this.openPdf.emit(url);
-  }
 }

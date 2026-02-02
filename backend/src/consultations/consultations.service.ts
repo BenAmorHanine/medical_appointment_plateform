@@ -1,5 +1,6 @@
 // consultations/consultations.service.ts
-import { Injectable, NotFoundException, InternalServerErrorException, Logger,
+import {
+  Injectable, NotFoundException, InternalServerErrorException, Logger,
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -35,7 +36,7 @@ export class ConsultationsService {
     private readonly doctorProfileService: DoctorProfileService,
     private readonly patientProfileService: PatientProfileService,
     private readonly appointmentsService: AppointmentsService,
-  ) {}
+  ) { }
 
   /**
    * Valide et récupère les noms pour les PDFs
@@ -59,19 +60,6 @@ export class ConsultationsService {
    * Crée une consultation avec génération des PDFs
    */
   async create(dto: CreateConsultationDto): Promise<ConsultationEntity> {
-    // Vérifier si consultation existe déjà
-    if (dto.appointmentId) {
-      const existing = await this.consultationRepo.findOne({
-        where: { appointmentId: dto.appointmentId },
-      });
-      if (existing) {
-        this.logger.warn(
-          `Consultation exists for appointment ${dto.appointmentId}`,
-        );
-        return existing;
-      }
-    }
-
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -99,18 +87,34 @@ export class ConsultationsService {
       consultation.certificatUrl = `/consultations/${consultation.id}/certificat`;
 
       await queryRunner.manager.save(consultation);
-      await queryRunner.commitTransaction();
 
-      // Mise à jour du rendez-vous si présent
+      // Mise à jour du rendez-vous si présent - DANS la transaction
       if (dto.appointmentId) {
-        await this.appointmentsService.update(dto.appointmentId, { status: AppointmentStatus.DONE });
+        await queryRunner.manager.update(
+          'appointments',
+          { id: dto.appointmentId },
+          { status: AppointmentStatus.DONE },
+        );
       }
+
+      await queryRunner.commitTransaction();
 
       this.logger.log(`Consultation created: ${consultation.id}`);
       return consultation;
     } catch (error) {
       await queryRunner.rollbackTransaction();
       this.logger.error('Consultation creation failed', error);
+
+      // Gestion de la contrainte unique (duplicate key)
+      if (error.code === '23505' && dto.appointmentId) {
+        this.logger.warn(
+          `Consultation already exists for appointment ${dto.appointmentId}`,
+        );
+        const existing = await this.consultationRepo.findOne({
+          where: { appointmentId: dto.appointmentId },
+        });
+        if (existing) return existing;
+      }
 
       if (
         error instanceof NotFoundException ||
@@ -132,14 +136,7 @@ export class ConsultationsService {
     id: string,
     type: 'ordonnance' | 'certificat',
   ): Promise<{ path: string; filename: string }> {
-    const consultation = await this.consultationRepo.findOne({
-      where: { id },
-      relations: { doctorProfile: { user: true }, patient: { user: true } },
-    });
-
-    if (!consultation) {
-      throw new NotFoundException(`Consultation ${id} not found`);
-    }
+    const consultation = await this.findOne(id);
 
     const names: PdfNames = {
       doctor: consultation.doctorProfile?.user?.username ?? 'Dr. Unknown',
@@ -149,12 +146,14 @@ export class ConsultationsService {
     return this.pdfService.getPdfPath(consultation, names, type);
   }
 
-  async getOrdonnancePath(id: string) {
-    return this.getPdfPath(id, 'ordonnance');
-  }
-
-  async getCertificatPath(id: string) {
-    return this.getPdfPath(id, 'certificat');
+  /**
+   * Prépare un fichier PDF pour le téléchargement
+   */
+  async servePdfFile(
+    id: string,
+    type: 'ordonnance' | 'certificat',
+  ): Promise<{ path: string; filename: string }> {
+    return this.getPdfPath(id, type);
   }
 
   async findOne(id: string): Promise<ConsultationEntity> {
@@ -170,11 +169,18 @@ export class ConsultationsService {
     return consultation;
   }
 
-  async findAll(): Promise<ConsultationEntity[]> {
-    return this.consultationRepo.find({
+  async findAll(
+    page = 1,
+    limit = 20,
+  ): Promise<{ data: ConsultationEntity[]; total: number; page: number; limit: number }> {
+    const [data, total] = await this.consultationRepo.findAndCount({
       relations: { doctorProfile: { user: true }, patient: { user: true } },
       order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
     });
+
+    return { data, total, page, limit };
   }
 
   async findByDoctor(doctorProfileId: string): Promise<ConsultationEntity[]> {

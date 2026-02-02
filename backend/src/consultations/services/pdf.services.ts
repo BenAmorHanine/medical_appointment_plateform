@@ -39,6 +39,8 @@ export class PdfService implements OnModuleInit {
 
   /**
    * Génère un nom de fichier unique
+   * Format: PatientName_Date_Type.pdf
+   * Exemple: JohnDoe_2024-02-02_Ordonnance.pdf
    */
   generateFilename(
     type: 'ordonnance' | 'certificat',
@@ -46,9 +48,16 @@ export class PdfService implements OnModuleInit {
     patientName: string,
     date: Date,
   ): string {
-    const sanitized = patientName.replace(/[^a-zA-Z0-9]/g, '_');
+    // Nettoyer le nom du patient (enlever caractères spéciaux)
+    const sanitizedName = patientName.replace(/[^a-zA-Z0-9]/g, '_');
+
+    // Format de date lisible: YYYY-MM-DD
     const dateStr = date.toISOString().split('T')[0];
-    return `${type}-${sanitized}-${dateStr}-${consultationId}.pdf`;
+
+    // Type en capitalize
+    const typeCapitalized = type.charAt(0).toUpperCase() + type.slice(1);
+
+    return `${sanitizedName}_${dateStr}_${typeCapitalized}.pdf`;
   }
 
   /**

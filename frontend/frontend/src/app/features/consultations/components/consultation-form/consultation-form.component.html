@@ -5,27 +5,21 @@
     </h5>
   </div>
   <div class="card-body">
-    <form [formGroup]="form" (ngSubmit)="onFormSubmit()">
+    <form [formGroup]="form" (ngSubmit)="formSubmit.emit()">
       <!-- Type et Duration -->
       <div class="row">
         <div class="col-md-6 mb-3">
           <label for="type" class="form-label">Consultation Type *</label>
           <select id="type" class="form-select" formControlName="type">
             @for (type of consultationTypeKeys; track type) {
-              <option [value]="type">{{ type | consultationType }}</option>
+            <option [value]="type">{{ type | consultationType }}</option>
             }
           </select>
         </div>
         <div class="col-md-6 mb-3">
           <label for="duration" class="form-label">Duration (minutes) – Optional</label>
-          <input
-            type="number"
-            id="duration"
-            class="form-control"
-            formControlName="duration"
-            placeholder="Duration in minutes (auto if empty)"
-            min="5"
-          />
+          <input type="number" id="duration" class="form-control" formControlName="duration"
+            placeholder="Duration in minutes (auto if empty)" min="5" />
           <small class="text-muted d-block mt-1">
             Default duration: Standard=30 min, Control=15 min, Emergency=45 min
           </small>
@@ -36,27 +30,16 @@
       <div class="row">
         <div class="col-md-6 mb-3">
           <label for="medicament" class="form-label">Medication – Optional</label>
-          <input
-            type="text"
-            id="medicament"
-            class="form-control"
-            formControlName="medicament"
-            placeholder="E.g.: Paracetamol 500 mg, 2 tablets 3 times a day"
-          />
+          <input type="text" id="medicament" class="form-control" formControlName="medicament"
+            placeholder="E.g.: Paracetamol 500 mg, 2 tablets 3 times a day" />
           <small class="text-muted d-block mt-1">
             This medication will be added to the prescription
           </small>
         </div>
         <div class="col-md-6 mb-3">
           <label for="joursRepos" class="form-label">Number of rest days – Optional</label>
-          <input
-            type="number"
-            id="joursRepos"
-            class="form-control"
-            formControlName="joursRepos"
-            placeholder="Number of days"
-            min="1"
-          />
+          <input type="number" id="joursRepos" class="form-control" formControlName="joursRepos"
+            placeholder="Number of days" min="1" />
           <small class="text-muted d-block mt-1">
             This number will be added to the medical certificate
           </small>
@@ -65,31 +48,22 @@
 
       <!-- Buttons -->
       <div class="d-flex flex-wrap gap-2">
-        <button
-          type="submit"
-          class="btn btn-create"
-          [disabled]="isSubmitDisabled"
-        >
+        <button type="submit" class="btn btn-create" [disabled]="isSubmitDisabled">
           @if (loading) {
-            <span class="spinner-border spinner-border-sm me-2"></span>
+          <span class="spinner-border spinner-border-sm me-2"></span>
           }
           {{ loading ? 'Creating...' : 'Create Consultation' }}
         </button>
-        <button
-          type="button"
-          class="btn btn-reset"
-          (click)="onFormReset()"
-          [disabled]="loading"
-        >
+        <button type="button" class="btn btn-reset" (click)="formReset.emit()" [disabled]="loading">
           Reset
         </button>
       </div>
 
       <!-- Error message -->
       @if (error) {
-        <div class="alert alert-danger alert-custom mt-3">
-          {{ error }}
-        </div>
+      <div class="alert alert-danger alert-custom mt-3">
+        {{ error }}
+      </div>
       }
     </form>
   </div>

@@ -1,5 +1,4 @@
 <div class="consultations-page">
-  <!-- Bandeau hero -->
   <section class="consultations-hero">
     <div class="hero-overlay">
       <div class="container">
@@ -7,7 +6,7 @@
           <h1 class="page-title">
             <span class="gradient-text">Patient</span> Consultations
           </h1>
-          <button class="btn btn-back" (click)="goBack()">
+          <button class="btn btn-back" (click)="facade.error.set(null); facade.reset()">
             <i class="fa fa-arrow-left me-2"></i>Back to Appointments
           </button>
         </div>
@@ -18,27 +17,24 @@
   <div class="container">
     <div class="row">
       <div class="col-12">
-        <!-- Historique des Consultations -->
         <app-consultation-history
           [consultations]="facade.patientConsultations()"
-          (openPdf)="openPdfUrl($event)"
+          (openPdf)="facade.openPdfUrl($event)"
         />
 
-        <!-- Formulaire Nouvelle Consultation -->
         <app-consultation-form
           [form]="formService.form()"
           [loading]="facade.loading()"
           [error]="facade.error()"
           [isSubmitDisabled]="isSubmitDisabled()"
           (formSubmit)="onSubmit()"
-          (formReset)="resetForm()"
+          (formReset)="formService.reset()"
         />
 
-        <!-- Message de succès: n'afficher que si la consultation créée appartient à l'appointment courant -->
         @if (facade.currentConsultation() && facade.appointmentState()?.id === facade.currentConsultation()?.appointmentId) {
           <app-consultation-success
             [consultation]="facade.currentConsultation()"
-            (openPdf)="openPdfUrl($event)"
+            (openPdf)="facade.openPdfUrl($event)"
           />
         }
       </div>

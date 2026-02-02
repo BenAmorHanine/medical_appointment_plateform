@@ -36,7 +36,7 @@ export class ConsultationEntity {
   @Column({ type: 'int' })
   duration: number; // en minutes
 
-  @Column({ type: 'uuid', nullable: true })
+  @Column({ type: 'uuid', nullable: true, unique: true })
   appointmentId: string | null;
 
   @Column({ type: 'varchar', length: 500, nullable: true })
@@ -62,7 +62,7 @@ export class ConsultationEntity {
   //relation
   @ManyToOne(() => PatientProfileEntity, { eager: false })
   @JoinColumn({ name: 'patientId' })
-   patient: PatientProfileEntity;
+  patient: PatientProfileEntity;
   @ManyToOne(() => DoctorProfileEntity, { eager: false })
   @JoinColumn({ name: 'doctorProfileId' })
   doctorProfile: DoctorProfileEntity;

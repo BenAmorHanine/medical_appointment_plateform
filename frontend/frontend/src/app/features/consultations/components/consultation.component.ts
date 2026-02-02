@@ -9,7 +9,6 @@ import { ConsultationFormService } from '../services/consultation-form.service';
 import { ConsultationHistoryComponent } from './consultation-history/consultation-history.component';
 import { ConsultationFormComponent } from './consultation-form/consultation-form.component';
 import { ConsultationSuccessComponent } from './consultation-success/consultation-success.component';
-import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-consultation',
@@ -22,10 +21,9 @@ import { environment } from '../../../../environments/environment';
   ],
   providers: [ConsultationFormService],
   templateUrl: './consultation.component.html',
-  styleUrls: ['./consultation.component.css'],
+  styleUrl: './consultation.component.css',
 })
 export class ConsultationComponent implements OnInit, OnDestroy {
-  // Services
   private readonly router = inject(Router);
   private readonly appointmentService = inject(AppointmentService);
   private readonly authService = inject(AuthService);
@@ -33,10 +31,6 @@ export class ConsultationComponent implements OnInit, OnDestroy {
   readonly facade = inject(ConsultationFacadeService);
   readonly formService = inject(ConsultationFormService);
 
-  // Constantes
-  private readonly apiUrl = environment.apiUrl;
-
-  // Computed signals
   readonly isSubmitDisabled = computed(() => {
     return (
       this.facade.loading() ||
@@ -69,60 +63,39 @@ export class ConsultationComponent implements OnInit, OnDestroy {
     const appointment = (window.history.state as any)?.appointment;
     const currentUser = this.authService.getCurrentUser() as any;
 
-    if (!this.validateInitialState(appointment, currentUser)) {
+    if (!appointment?.id) {
+      this.facade.error.set('No appointment found in state');
+      setTimeout(() => this.router.navigate(['/appointments']), 2000);
       return;
     }
 
-    this.initializeAppointment(appointment.id, currentUser);
+    if (!currentUser) {
+      this.facade.error.set('User not authenticated');
+      this.router.navigate(['/auth/login']);
+      return;
+    }
+
+    this.appointmentService.getAppointment(appointment.id).subscribe({
+      next: (apt: Appointment) => {
+        if (currentUser.role === 'doctor') {
+          this.facade.verifyDoctorAccess(apt, currentUser.id).subscribe();
+        } else {
+          this.facade.verifyPatientAccess(apt, currentUser.id);
+        }
+      },
+      error: () => {
+        this.facade.error.set('Error retrieving the appointment. Redirecting...');
+        setTimeout(() => this.router.navigate(['/appointments']), 2000);
+      },
+    });
   }
 
   ngOnDestroy(): void {
     this.facade.reset();
   }
 
-  /**
-   * Valide l'état initial
-   */
-  private validateInitialState(appointment: any, currentUser: any): boolean {
-    if (!appointment?.id) {
-      this.handleError('No appointment found in state', '/appointments');
-      return false;
-    }
-
-    if (!currentUser) {
-      this.facade.error.set('User not authenticated');
-      this.router.navigate(['/auth/login']);
-      return false;
-    }
-
-    return true;
-  }
-
-  /**
-   * Initialise l'appointment
-   */
-  private initializeAppointment(appointmentId: string, currentUser: any): void {
-    this.appointmentService.getAppointment(appointmentId).subscribe({
-      next: (appointment: Appointment) => {
-        if (currentUser.role === 'doctor') {
-          this.facade.verifyDoctorAccess(appointment, currentUser.id).subscribe();
-        } else {
-          this.facade.verifyPatientAccess(appointment, currentUser.id);
-        }
-      },
-      error: () => {
-        this.handleError('Error retrieving the appointment', '/appointments');
-      },
-    });
-  }
-
-  /**
-   * Soumet le formulaire
-   */
   onSubmit(): void {
-    if (this.isSubmitDisabled()) {
-      return;
-    }
+    if (this.isSubmitDisabled()) return;
 
     const appointmentState = this.facade.appointmentState();
     if (!appointmentState) {
@@ -144,39 +117,5 @@ export class ConsultationComponent implements OnInit, OnDestroy {
     this.facade.createConsultation(dto).subscribe({
       next: () => this.formService.reset(),
     });
-  }
-
-  /**
-   * Réinitialise le formulaire
-   */
-  resetForm(): void {
-    this.formService.reset();
-  }
-
-  /**
-   * Ouvre un PDF dans un nouvel onglet
-   */
-  openPdfUrl(relativeUrl: string | null): void {
-    if (!relativeUrl) {
-      this.facade.error.set('PDF not available');
-      return;
-    }
-    window.open(`${this.apiUrl}${relativeUrl}`, '_blank');
-  }
-
-  /**
-   * Retourne à la page des rendez-vous
-   */
-  goBack(): void {
-    this.router.navigate(['/appointments']);
-  }
-
-  /**
-   * Gère les erreurs avec redirection
-   */
-  private handleError(message: string, redirectPath: string): void {
-    console.error(message);
-    this.facade.error.set(`${message}. Redirecting...`);
-    setTimeout(() => this.router.navigate([redirectPath]), 2000);
   }
 }

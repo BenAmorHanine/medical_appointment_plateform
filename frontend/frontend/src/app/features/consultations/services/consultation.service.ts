@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map, catchError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
 export enum ConsultationType {
@@ -63,20 +63,25 @@ export class ConsultationService {
   }
 
   /**
-   * Télécharge un document (ordonnance ou certificat) en utilisant le blob response
+   * Télécharge un document (ordonnance ou certificat) en utilisant HttpClient avec JWT
    * @param consultationId - L'ID de la consultation
    * @param documentType - Type de document ('ordonnance' ou 'certificat')
    */
-  private downloadDocument(consultationId: string, documentType: 'ordonnance' | 'certificat'): void {
-    this.http
+  private downloadDocument(
+    consultationId: string,
+    documentType: 'ordonnance' | 'certificat'
+  ): Observable<void> {
+    return this.http
       .get(`${this.apiUrl}/${consultationId}/${documentType}`, {
         responseType: 'blob',
         observe: 'response',
       })
-      .subscribe({
-        next: (response) => {
+      .pipe(
+        map((response) => {
           const blob = response.body;
-          if (!blob) return;
+          if (!blob) {
+            throw new Error('No blob received');
+          }
 
           // Extraction du nom de fichier depuis les headers
           const contentDisposition = response.headers.get('Content-Disposition');
@@ -84,12 +89,12 @@ export class ConsultationService {
 
           // Création et déclenchement du téléchargement
           this.triggerDownload(blob, filename);
-        },
-        error: (error) => {
+        }),
+        catchError((error) => {
           console.error(`Erreur lors du téléchargement du ${documentType}:`, error);
-          alert(`Erreur lors du téléchargement du ${documentType}`);
-        },
-      });
+          throw error;
+        })
+      );
   }
 
   /**
@@ -101,12 +106,29 @@ export class ConsultationService {
     documentType: string
   ): string {
     if (contentDisposition) {
-      const match = contentDisposition.match(/filename="(.+)"/);
+      // Essayer plusieurs patterns pour extraire le filename
+      // Pattern 1: filename="..."
+      let match = contentDisposition.match(/filename="([^"]+)"/);
       if (match?.[1]) {
         return match[1];
       }
+
+      // Pattern 2: filename=... (sans guillemets)
+      match = contentDisposition.match(/filename=([^;]+)/);
+      if (match?.[1]) {
+        return match[1].trim();
+      }
+
+      // Pattern 3: filename*=UTF-8''...
+      match = contentDisposition.match(/filename\*=UTF-8''(.+)/);
+      if (match?.[1]) {
+        return decodeURIComponent(match[1]);
+      }
     }
-    return `${documentType}-${consultationId}.pdf`;
+
+    // Fallback: générer un nom par défaut
+    const date = new Date().toISOString().split('T')[0];
+    return `${documentType}-${consultationId}-${date}.pdf`;
   }
 
   /**
@@ -121,11 +143,11 @@ export class ConsultationService {
     window.URL.revokeObjectURL(url);
   }
 
-  downloadOrdonnance(id: string): void {
-    this.downloadDocument(id, 'ordonnance');
+  downloadOrdonnance(id: string): Observable<void> {
+    return this.downloadDocument(id, 'ordonnance');
   }
 
-  downloadCertificat(id: string): void {
-    this.downloadDocument(id, 'certificat');
+  downloadCertificat(id: string): Observable<void> {
+    return this.downloadDocument(id, 'certificat');
   }
 }
