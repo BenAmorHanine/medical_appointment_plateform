@@ -10,14 +10,13 @@ export class VisitHistoryService {
 
   constructor(private http: HttpClient) {}
 
-  // 🔹 Helper pagination (centralisé)
   private buildPaginationParams(page: number, limit: number): HttpParams {
     return new HttpParams()
       .set('page', page)
       .set('limit', limit);
   }
 
-  // 🔹 Patient → SON historique
+  //  Patient voit son historique
   getMyHistory(page = 1, limit = 10): Observable<VisitHistoryResponse> {
     const params = this.buildPaginationParams(page, limit);
 
@@ -27,7 +26,7 @@ export class VisitHistoryService {
     );
   }
 
-  // 🔹 Doctor → liste des patients
+  // Doctor  voit laliste des patients
   getDoctorPatients(page = 1, limit = 10): Observable<any> {
     const params = this.buildPaginationParams(page, limit);
 
@@ -37,7 +36,7 @@ export class VisitHistoryService {
     );
   }
 
-  // 🔹 Doctor → historique d’un patient
+  // Doctor voit l' historique d’un patient
   getDoctorPatientHistory(
     patientId: string,
     page = 1,

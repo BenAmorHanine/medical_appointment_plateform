@@ -12,9 +12,6 @@ import { environment } from '../../../../../environments/environment';
 import { PAGE_SIZE } from '../../../../shared/constants/pagination.constants';
 import { Resource } from '../../../../shared/models/resource.model';
 
-/* =======================
-   Initial resource
-======================= */
 
 const INITIAL_RESOURCE: Resource<VisitHistoryResponse> = {
   loading: true,

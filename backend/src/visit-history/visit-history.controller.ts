@@ -12,7 +12,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { PaginationQueryDto } from '../common/dto/pagination.dto';
 import { PatientHistoryQueryDto } from './dto/patient-history-query.dto';
-//import { User } from '../users/entities/user.entity'; // Ajustez selon votre structure
+import { UserEntity } from '../users/entities/user.entity'; // Ajustez selon votre structure
 
 @ApiTags('Visit History')
 @ApiBearerAuth()
@@ -24,7 +24,7 @@ export class VisitHistoryController {
   @Get('me')
   @ApiOperation({ summary: 'Get current user visit history' })
   getMyHistory(
-    @GetUser() user: any,
+    @GetUser() user: UserEntity,
     @Query() pagination: PaginationQueryDto,
   ) {
     return this.visitHistoryService.getHistoryByUserId(
@@ -39,7 +39,7 @@ export class VisitHistoryController {
   @Roles('doctor')
   @ApiOperation({ summary: 'Get all patients of the current doctor' })
   getDoctorPatients(
-    @GetUser() user: any,
+    @GetUser() user: UserEntity,
     @Query() pagination: PaginationQueryDto,
   ) {
     return this.visitHistoryService.getPatientsOfDoctor(
@@ -55,7 +55,7 @@ export class VisitHistoryController {
   @ApiOperation({ summary: 'Get visit history of a specific patient (doctor only)' })
   @ApiQuery({ name: 'patientId', type: String, format: 'uuid', required: true })
   getPatientHistoryForDoctor(
-    @GetUser() user: any,
+    @GetUser() user: UserEntity,
     @Query() query: PatientHistoryQueryDto,
   ) {
     return this.visitHistoryService.getHistoryForDoctor(
