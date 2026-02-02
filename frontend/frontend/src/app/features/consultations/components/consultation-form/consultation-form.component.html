@@ -5,7 +5,7 @@
     </h5>
   </div>
   <div class="card-body">
-    <form [formGroup]="form" (ngSubmit)="formSubmit.emit()">
+    <form [formGroup]="form()" (ngSubmit)="formSubmit.emit()">
       <!-- Type et Duration -->
       <div class="row">
         <div class="col-md-6 mb-3">
@@ -48,21 +48,21 @@
 
       <!-- Buttons -->
       <div class="d-flex flex-wrap gap-2">
-        <button type="submit" class="btn btn-create" [disabled]="isSubmitDisabled">
-          @if (loading) {
+        <button type="submit" class="btn btn-create" [disabled]="isSubmitDisabled()">
+          @if (loading()) {
           <span class="spinner-border spinner-border-sm me-2"></span>
           }
-          {{ loading ? 'Creating...' : 'Create Consultation' }}
+          {{ loading() ? 'Creating...' : 'Create Consultation' }}
         </button>
-        <button type="button" class="btn btn-reset" (click)="formReset.emit()" [disabled]="loading">
+        <button type="button" class="btn btn-reset" (click)="formReset.emit()" [disabled]="loading()">
           Reset
         </button>
       </div>
 
       <!-- Error message -->
-      @if (error) {
+      @if (error()) {
       <div class="alert alert-danger alert-custom mt-3">
-        {{ error }}
+        {{ error() }}
       </div>
       }
     </form>

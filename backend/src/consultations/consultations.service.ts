@@ -1,18 +1,11 @@
 // consultations/consultations.service.ts
 import {
-  Injectable, NotFoundException, InternalServerErrorException, Logger,
-  BadRequestException,
-} from '@nestjs/common';
+  Injectable, NotFoundException, InternalServerErrorException, Logger, BadRequestException, } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
-import {
-  ConsultationEntity,
-  ConsultationType,
-} from './entities/consultation.entity';
+import { ConsultationEntity, ConsultationType, } from './entities/consultation.entity';
 import { CreateConsultationDto } from './dto/create-consultation.dto';
-import {
-  AppointmentStatus,
-} from '../appointments/entities/appointment.entity';
+import { AppointmentStatus, } from '../appointments/entities/appointment.entity';
 import { PdfService, PdfNames } from './services/pdf.services';
 import { DoctorProfileService } from '../profiles/doctor/doctor-profile.service';
 import { PatientProfileService } from '../profiles/patient/patient-profile.service';

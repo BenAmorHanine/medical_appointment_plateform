@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup } from '@angular/forms';
 import { ConsultationType } from '../../models/consultation.model';
@@ -12,12 +12,12 @@ import { ConsultationTypePipe } from '../../pipes/consultation-type.pipe';
   styleUrl: './consultation-form.component.scss',
 })
 export class ConsultationFormComponent {
-  @Input({ required: true }) form!: FormGroup;
-  @Input() loading = false;
-  @Input() error: string | null = null;
-  @Input() isSubmitDisabled = false;
-  @Output() formSubmit = new EventEmitter<void>();
-  @Output() formReset = new EventEmitter<void>();
+  form = input.required<FormGroup>();
+  loading = input(false);
+  error = input<string | null>(null);
+  isSubmitDisabled = input(false);
+  formSubmit = output<void>();
+  formReset = output<void>();
 
   readonly consultationTypeKeys = Object.values(ConsultationType);
 }

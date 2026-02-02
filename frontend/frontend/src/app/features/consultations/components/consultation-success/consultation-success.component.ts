@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Consultation } from '../../models/consultation.model';
 import { ConsultationTypePipe } from '../../pipes/consultation-type.pipe';
@@ -12,5 +12,5 @@ import { DownloadPdfDirective } from '../../../../shared/directives/download-pdf
   styleUrl: './consultation-success.component.scss',
 })
 export class ConsultationSuccessComponent {
-  @Input() consultation: Consultation | null = null;
+  consultation = input<Consultation | null>(null);
 }

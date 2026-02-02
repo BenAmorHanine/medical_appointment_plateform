@@ -5,14 +5,14 @@
     </h5>
   </div>
   <div class="card-body">
-    @if (consultations.length === 0) {
+    @if (consultations().length === 0) {
     <div class="empty-state">
       <h6>No previous consultations for this patient</h6>
       <p class="mb-0">This patient has no consultations recorded yet.</p>
     </div>
     }
 
-    @for (consultation of consultations; track consultation.id) {
+    @for (consultation of consultations(); track consultation.id) {
     <div class="consultation-item mb-3">
       <div class="row align-items-center">
         <div class="col-md-2 mb-2 mb-md-0">
