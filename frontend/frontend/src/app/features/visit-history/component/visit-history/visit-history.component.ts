@@ -1,14 +1,26 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router } from '@angular/router';
-import { VisitHistoryResponse, VisitHistoryItem } from '../../model/visit-history.model';
-import { VisitHistoryService } from '../../service/visit-history.service';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { environment } from '../../../../../environments/environment';
+import { catchError, map, Observable, of, startWith, switchMap } from 'rxjs';
+
+import { VisitHistoryResponse } from '../../model/visit-history.model';
+import { VisitHistoryService } from '../../service/visit-history.service';
 import { AuthService } from '../../../auth/services/auth.service';
-import { ConsultationFacadeService } from '../../../consultations/services/consultation-facade.service';
 import { DownloadPdfDirective } from '../../../../shared/directives/download-pdf.directive';
-import { catchError, map, of, startWith, switchMap, tap } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
+import { PAGE_SIZE } from '../../../../shared/constants/pagination.constants';
+import { Resource } from '../../../../shared/models/resource.model';
+
+/* =======================
+   Initial resource
+======================= */
+
+const INITIAL_RESOURCE: Resource<VisitHistoryResponse> = {
+  loading: true,
+  data: null,
+  error: null,
+};
 
 @Component({
   selector: 'app-visit-history',
@@ -18,75 +30,36 @@ import { catchError, map, of, startWith, switchMap, tap } from 'rxjs';
   styleUrls: ['./visit-history.component.css'],
 })
 export class VisitHistoryComponent {
-  private historyService = inject(VisitHistoryService);
-  private router = inject(Router);
-  private authService = inject(AuthService);
-  private consultationFacade = inject(ConsultationFacadeService);
 
-  // Pagination Signals
-  page = signal(1);
-  limit = 5;
 
-  // Déclencheur réactif pour le rechargement (page ou user change)
-  private reloadTrigger$ = toObservable(this.page).pipe(
-    startWith(this.page())
-  );
+  private readonly historyService = inject(VisitHistoryService);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
 
-  // Resource-like Signal: Gère automatiqument Loading / Data / Error
-  historyResource = toSignal(
-    this.reloadTrigger$.pipe(
-      switchMap((currentPage) => {
-        const user = this.authService.getCurrentUser();
 
-        if (!user) {
-          return of({ loading: false, data: null, error: 'Utilisateur non authentifié' });
-        }
+  readonly page = signal(1);
+  readonly limit = PAGE_SIZE.VISITS;
 
-        // Check Access
-        if (user.role === 'doctor' && !this.router.url.includes('/history/doctor/patient')) {
-          this.router.navigate(['/history/doctor']);
-          return of({ loading: false, data: null, error: 'Redirection...' });
-        }
 
-        // Determine Request
-        let request$;
-        if (user.role === 'patient') {
-          request$ = this.historyService.getMyHistory(currentPage, this.limit);
-        } else {
-          const patientId = window.history.state?.patientId || sessionStorage.getItem('patientHistoryId');
-          if (!patientId) {
-            return of({ loading: false, data: null, error: 'Patient non sélectionné' });
-          }
-          request$ = this.historyService.getDoctorPatientHistory(patientId, currentPage, this.limit);
-        }
 
-        // Execute Request
-        return request$.pipe(
-          map(data => ({ loading: false, data, error: null })),
-          startWith({ loading: true, data: null, error: null }),
-          catchError(err => of({
-            loading: false,
-            data: null,
-            error: err.error?.message || 'Erreur chargement historique'
-          }))
-        );
-      })
+  readonly historyResource = toSignal<Resource<VisitHistoryResponse>>(
+    toObservable(this.page).pipe(
+      switchMap(page => this.loadHistory(page)),
+      startWith(INITIAL_RESOURCE),
     ),
-    { initialValue: { loading: true, data: null, error: null } }
+    { requireSync: true },
   );
 
-  // Computed values derived from the resource
-  presentVisits = computed<VisitHistoryItem[]>(() =>
-    this.historyResource().data?.history.filter(h => h.status === 'EFFECTUE') ?? []
-  );
 
   get apiUrl(): string {
     return environment.apiUrl;
   }
 
+ 
+
   nextPage(): void {
-    const currentData = this.historyResource().data;
-    if (currentData && this.page() < currentData.totalPages) {
+    const data = this.historyResource().data;
+    if (data && this.page() < data.totalPages) {
       this.page.update(p => p + 1);
     }
   }
@@ -97,23 +70,63 @@ export class VisitHistoryComponent {
     }
   }
 
-  statusClass(status: string): string {
-    switch (status) {
-      case 'EFFECTUE': return 'badge-status badge-status-success';
-      case 'ANNULE': return 'badge-status badge-status-warning';
-      case 'ABSENT': return 'badge-status badge-status-danger';
-      default: return 'badge-status badge-status-secondary';
+
+  private loadHistory(
+    page: number,
+  ): Observable<Resource<VisitHistoryResponse>> {
+
+    const user = this.authService.getCurrentUser();
+
+    if (!user) {
+      return of(this.error('Utilisateur non authentifié'));
     }
+
+    if (user.role === 'patient') {
+      return this.historyService
+        .getMyHistory(page, this.limit)
+        .pipe(this.toResource());
+    }
+
+    return this.loadDoctorHistory(page);
   }
 
-  getStatusIcon(status: string): string {
-    switch (status) {
-      case 'EFFECTUE': return 'fas fa-check-circle';
-      case 'ANNULE': return 'fas fa-times-circle';
-      case 'ABSENT': return 'fas fa-user-slash';
-      default: return 'fas fa-info-circle';
+  private loadDoctorHistory(
+    page: number,
+  ): Observable<Resource<VisitHistoryResponse>> {
+
+    const patientId = history.state?.patientId;
+
+    if (!patientId) {
+      this.router.navigate(['/history/doctor/patients']);
+      return of(this.error('Patient non sélectionné'));
     }
+
+    return this.historyService
+      .getDoctorPatientHistory(patientId, page, this.limit)
+      .pipe(this.toResource());
   }
 
+ 
+  private toResource() {
+    return (source$: Observable<VisitHistoryResponse>) =>
+      source$.pipe(
+        map(data => ({
+          loading: false,
+          data,
+          error: null,
+        })),
+        startWith(INITIAL_RESOURCE),
+        catchError(err =>
+          of(this.error(err?.error?.message ?? 'Erreur chargement historique')),
+        ),
+      );
+  }
 
+  private error(message: string): Resource<VisitHistoryResponse> {
+    return {
+      loading: false,
+      data: null,
+      error: message,
+    };
+  }
 }

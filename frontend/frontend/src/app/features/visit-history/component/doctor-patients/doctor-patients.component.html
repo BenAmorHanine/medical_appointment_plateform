@@ -1,14 +1,18 @@
 <section class="doctor-patients-section">
   <div class="container py-5">
-    <!-- Header Section -->
+
+    <!-- Header -->
     <div class="patients-header text-center mb-5">
       <h2 class="section-title mb-3">
         My <span class="gradient-text">Patients</span>
       </h2>
-      <p class="section-subtitle">Manage and view your patients' visit history</p>
+      <p class="section-subtitle">
+        Manage and view your patients' visit history
+      </p>
     </div>
 
-    @if (loading()) {
+    <!-- Loading -->
+    @if (isLoading()) {
       <div class="loading-container text-center py-5">
         <div class="spinner-modern">
           <div class="spinner-border text-primary" role="status">
@@ -19,18 +23,21 @@
       </div>
     }
 
+    <!-- Empty -->
     @else if (patients().length === 0) {
       <div class="empty-state">
         <div class="empty-state-icon">
           <i class="fas fa-user-friends"></i>
         </div>
         <h3 class="empty-state-title">No patients found</h3>
-        <p class="empty-state-text">You don't have any patients yet.</p>
+        <p class="empty-state-text">
+          You don't have any patients yet.
+        </p>
       </div>
     }
 
+    <!-- Table -->
     @else {
-      <!-- Table Section -->
       <div class="table-section">
         <div class="table-card">
           <div class="table-header">
@@ -39,30 +46,33 @@
               Patients List
             </h3>
           </div>
+
           <div class="table-responsive">
             <table class="table-modern">
               <thead>
                 <tr>
-                  <th><i class="fas fa-user me-2"></i>Patient</th>
-                  <th><i class="fas fa-calendar-check me-2"></i>Visits</th>
-                  <th><i class="fas fa-clock me-2"></i>Last Visit</th>
-                  <th><i class="fas fa-actions me-2"></i>Actions</th>
+                  <th>Patient</th>
+                  <th>Visits</th>
+                  <th>Last Visit</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
+
               <tbody>
                 @for (p of patients(); track p.patientId) {
                   <tr>
-                    <td class="patient-name-cell">
-                      <i class="fas fa-user-circle me-2 text-primary"></i>
+                    <td>
                       <strong>{{ p.fullName }}</strong>
                     </td>
-                    <td class="visits-cell">
+
+                    <td>
                       <span class="visits-badge">{{ p.visits }}</span>
                     </td>
-                    <td class="date-cell">
-                      <i class="fas fa-calendar-alt me-2 text-muted"></i>
+
+                    <td>
                       {{ p.lastVisit | date:'dd/MM/yyyy' }}
                     </td>
+
                     <td>
                       <button
                         class="btn-view-history"
@@ -84,20 +94,20 @@
         <button
           class="btn-pagination"
           (click)="prev()"
-          [disabled]="page() === 1">
+          [disabled]="!canGoPrev()">
           <i class="fas fa-chevron-left me-2"></i>
-          <span>Previous</span>
+          Previous
         </button>
 
         <span class="pagination-info fw-bold">
-          Page {{ page() }} / {{ Math.ceil(total() / limit) }}
+          Page {{ page() }} / {{ totalPages() }}
         </span>
 
         <button
           class="btn-pagination"
           (click)="next()"
-          [disabled]="page() * limit >= total()">
-          <span>Next</span>
+          [disabled]="!canGoNext()">
+          Next
           <i class="fas fa-chevron-right ms-2"></i>
         </button>
       </div>

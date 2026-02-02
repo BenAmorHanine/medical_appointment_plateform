@@ -13,7 +13,6 @@ import { FindOptionsWhere, FindOptionsRelations } from 'typeorm';
 
 @Injectable()
 export class VisitHistoryService {
-  private readonly ABSENCE_LIMIT = 3;
 
   constructor(
     @InjectRepository(ConsultationEntity)
@@ -35,8 +34,7 @@ async getHistoryByUserId(userId: string, page = 1, limit = 10) {
 
   if (!patientProfile) {
     return {
-     // blocked: false,
-      //absenceCount: 0,
+  
       page,
       limit,
       total: 0,

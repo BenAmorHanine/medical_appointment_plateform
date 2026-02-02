@@ -80,10 +80,11 @@
                 </td>
                 <td>
                   <div class="status-documents">
-                    <span [class]="statusClass(item.status)">
-                      <i [class]="getStatusIcon(item.status)" class="me-1"></i>
-                      {{ item.status }}
-                    </span>
+                    <span class="badge-status badge-status-success">
+                   <i class="fas fa-check-circle me-1"></i>
+                            EFFECTUÉE
+                            </span>
+
                     <div class="mt-2 d-flex gap-2 flex-wrap">
                       @if (item.ordonnanceUrl) {
                       <button class="btn-document btn-document-primary" [appDownloadPdf]="item.ordonnanceUrl">
@@ -127,67 +128,78 @@
     </div>
 
 
-    <!-- ================= TIMELINE SECTION ================= -->
-    <div class="timeline-section mt-5">
-      <div class="timeline-header text-center mb-5">
-        <h3 class="section-title">
-          Visits <span class="gradient-text">Timeline</span>
-        </h3>
-        <p class="section-subtitle">Completed consultations overview</p>
-      </div>
+ <!-- ================= TIMELINE SECTION ================= -->
+<div class="timeline-section mt-5">
+  <div class="timeline-header text-center mb-5">
+    <h3 class="section-title">
+      Visits <span class="gradient-text">Timeline</span>
+    </h3>
+    <p class="section-subtitle">Completed consultations overview</p>
+  </div>
 
-      @if (presentVisits().length === 0) {
-      <div class="empty-state">
-        <div class="empty-state-icon">
-          <i class="fas fa-check-circle"></i>
-        </div>
-        <h3 class="empty-state-title">No completed visits yet</h3>
-        <p class="empty-state-text">Your completed consultations will appear here.</p>
+  @if (historyResource().data!.history.length === 0) {
+    <div class="empty-state">
+      <div class="empty-state-icon">
+        <i class="fas fa-check-circle"></i>
       </div>
-      }
-
-      @else {
-      <div class="timeline-container">
-        @for (item of presentVisits(); track item.consultationId) {
+      <h3 class="empty-state-title">No completed visits yet</h3>
+      <p class="empty-state-text">
+        Your completed consultations will appear here.
+      </p>
+    </div>
+  }
+  @else {
+    <div class="timeline-container">
+      @for (item of historyResource().data!.history; track item.consultationId) {
         <div class="timeline-item-modern">
           <div class="timeline-marker">
             <div class="timeline-dot-modern"></div>
             <div class="timeline-line"></div>
           </div>
+
           <div class="timeline-content-modern">
             <div class="timeline-date-modern">
               <i class="fas fa-calendar-alt me-2"></i>
               {{ item.date | date:'dd MMM yyyy HH:mm' }}
             </div>
+
             <div class="timeline-body">
-              <h4 class="timeline-type">{{ item.type | titlecase }}</h4>
+              <h4 class="timeline-type">
+                {{ item.type | titlecase }}
+              </h4>
+
               <div class="timeline-status">
                 <i class="fas fa-check-circle me-2 text-success"></i>
                 <span>Consultation completed</span>
               </div>
+
               <div class="timeline-documents mt-3">
                 @if (item.ordonnanceUrl) {
-                <button class="btn-document btn-document-primary" [appDownloadPdf]="item.ordonnanceUrl">
-                  <i class="fas fa-file-prescription me-2"></i>
-                  <span>Ordonnance</span>
-                </button>
+                  <button
+                    class="btn-document btn-document-primary"
+                    [appDownloadPdf]="item.ordonnanceUrl">
+                    <i class="fas fa-file-prescription me-2"></i>
+                    <span>Ordonnance</span>
+                  </button>
                 }
+
                 @if (item.certificatUrl) {
-                <button class="btn-document btn-document-success" [appDownloadPdf]="item.certificatUrl">
-                  <i class="fas fa-file-certificate me-2"></i>
-                  <span>Certificat</span>
-                </button>
+                  <button
+                    class="btn-document btn-document-success"
+                    [appDownloadPdf]="item.certificatUrl">
+                    <i class="fas fa-file-certificate me-2"></i>
+                    <span>Certificat</span>
+                  </button>
                 }
               </div>
             </div>
           </div>
         </div>
-        }
-      </div>
       }
     </div>
-
+  }
+</div>
     }
-    }
-  </div>
+  }
+</div> <!-- container -->
 </section>
