@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
-import { EventEmitter2 } from '@nestjs/event-emitter'; // ← AJOUTER
+import { Repository } from 'typeorm';
+import { EventEmitter2 } from '@nestjs/event-emitter'; 
 import { AppointmentEntity, AppointmentStatus } from './entities/appointment.entity';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { AvailabilityEntity } from '../availability/entities/availability.entity';
@@ -9,10 +9,10 @@ import {
   AppointmentCreatedEvent,
   AppointmentCancelledEvent,
 } from './events/appointment.events';
-import { Brackets } from 'typeorm'; 
-import { DataSource } from 'typeorm';
+
 import { PatientProfileEntity } from '../profiles/patient/entities/patient-profile.entity';
 import { DoctorProfileEntity } from '../profiles/doctor/entities/doctor-profile.entity';
+import { PaginationQueryDto } from 'src/common/dto/pagination.dto';
 @Injectable()
 export class AppointmentsService {
   constructor(
@@ -22,71 +22,73 @@ export class AppointmentsService {
     private readonly repository: Repository<AppointmentEntity>,
     @InjectRepository(AvailabilityEntity)
     private readonly availabilityRepository: Repository<AvailabilityEntity>,
-    private dataSource: DataSource,
     private readonly eventEmitter: EventEmitter2,
    
   ) {}
 
-  async findAll(): Promise<AppointmentEntity[]> {
-    return await this.repository.find({
-      order: { appointmentDate: 'ASC', startTime: 'ASC' },
-    });
-  }
+async findAll(
+  query?: PaginationQueryDto,
+): Promise<{ data: AppointmentEntity[]; total: number; page: number; limit: number }> {
+
+  const page = query?.page || 1;
+  const limit = query?.limit || 20;
+
+  const [data, total] = await this.repository.findAndCount({
+    relations: ['patient', 'patient.user', 'doctor', 'doctor.user'],
+    order: { appointmentDate: 'ASC', startTime: 'ASC' },
+    skip: query?.skip,
+    take: limit,
+  });
+
+  return { data, total, page, limit };
+}
+
 
   
   async findOne(id: string): Promise<AppointmentEntity & { doctorId: string }> {
     const appointment = await this.repository.findOne({
       where: { id },
-    });
+      relations: ['doctor', 'doctor.user', 'patient', 'patient.user'],
+  });
     if (!appointment) {
       throw new NotFoundException('Rendez-vous introuvable');
     }
-    const availability = await this.availabilityRepository.findOne({
-      where: { id: appointment.availabilityId },
-    });
-    if (!availability) {
-      throw new NotFoundException('Créneau associé introuvable');
-    }
-    return { ...appointment, doctorId: availability.doctorId };
+    return appointment;
+
   }
 
-findDoctorAppointments(doctorProfileId: string) {
-  return this.repository.find({
-    where: {
-      doctor: { id: doctorProfileId },
-    },
-    relations: [
-      'patient',
-      'patient.user',
-    ],
-    order: {
-      appointmentDate: 'ASC',
-      startTime: 'ASC',
-    },
-  });
-}
+  findDoctorAppointments(doctorProfileId: string) {
+    return this.repository.find({
+      where: {
+        doctor: { id: doctorProfileId },
+      },
+      relations: [
+        'patient',
+        'patient.user',
+      ],
+      order: {
+        appointmentDate: 'ASC',
+        startTime: 'ASC',
+      },
+    });
+  }
 
 
-findPatientAppointments(patientProfileId: string) {
-  return this.repository.find({
-    where: {
-      patient: { id: patientProfileId },
-    },
-    relations: [
-      'doctor',
-      'doctor.user',
-    ],
-    order: {
-      appointmentDate: 'ASC',
-      startTime: 'ASC',
-    },
-  });
-}
-
-
-
-
-
+  findPatientAppointments(patientProfileId: string) {
+    return this.repository.find({
+      where: {
+        patient: { id: patientProfileId },
+      },
+      relations: [
+        'doctor',
+        'doctor.user',
+      ],
+      order: {
+        appointmentDate: 'ASC',
+        startTime: 'ASC',
+      },
+    });
+  }
 
 
   async create(createDto: CreateAppointmentDto): Promise<AppointmentEntity> {
@@ -108,9 +110,9 @@ findPatientAppointments(patientProfileId: string) {
   relations: ['user'],
 });
 
-if (!patient) {
-  throw new NotFoundException('Patient introuvable');
-}
+  if (!patient) {
+    throw new NotFoundException('Patient introuvable');
+  }
 
   // Créer appointment
   const appointment = this.repository.create({
@@ -130,7 +132,6 @@ if (!patient) {
   availability.bookedSlots++;
   await this.availabilityRepository.save(availability);
 
-  //  ÉMETTRE L'ÉVÉNEMENT avec userId du doctor
   console.log(' Emitting appointment.created event...');
   console.log(' Doctor userId:', availability.doctor.user.id);
   this.eventEmitter.emit(
@@ -145,7 +146,8 @@ if (!patient) {
 
   return saved;
 }
-    async cancel(appointmentId: string): Promise<AppointmentEntity> {
+
+  async cancel(appointmentId: string): Promise<AppointmentEntity> {
   const appointment = await this.repository.findOne({ 
     where: { id: appointmentId } ,
     relations: ['patient', 'patient.user'],

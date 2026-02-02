@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException,BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository ,LessThan} from 'typeorm';
+import { Repository } from 'typeorm';
 import { AvailabilityEntity } from './entities/availability.entity';
 import { CreateAvailabilityDto } from './dto/create-availability.dto';
 import { DoctorProfileEntity } from '../profiles/doctor/entities/doctor-profile.entity';
@@ -38,15 +38,18 @@ export class AvailabilityService {
     });
   }
 
-  async findAvailableSlots(doctorId: string, date: string): Promise<AvailabilityEntity[]> {
-    return await this.repository.find({
-      where: { 
-        doctorId, 
-        date: new Date(date),
-        bookedSlots: LessThan(5) 
-      }
-    });
+  async findAvailableSlots(
+    doctorId: string,
+    date: string
+  ) {
+    return this.repository
+      .createQueryBuilder('a')
+      .where('a.doctorId = :doctorId', { doctorId })
+      .andWhere('a.date = :date', { date })
+      .andWhere('a.bookedSlots < a.capacity')
+      .getMany();
   }
+
   async remove(id: string): Promise<void> {
   const result = await this.repository.delete(id);
   

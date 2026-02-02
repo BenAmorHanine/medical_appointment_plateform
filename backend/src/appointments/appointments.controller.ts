@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UsePipes, ValidationPipe, Delete, Param, Patch, UseGuards, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Post, Body, Delete, Param, Patch, UseGuards, UseInterceptors, UploadedFile, Query } from '@nestjs/common';
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -7,53 +7,52 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
-import { UpdateAppointmentDto } from './dto/update-aapointment.dto';
+import { UpdateAppointmentDto } from './dto/update-appointment.dto';
+import { PaginationQueryDto } from 'src/common/dto/pagination.dto';
 
 @Controller('appointments')
+@UseGuards(JwtAuthGuard)
 export class AppointmentsController {
-  constructor(private readonly service: AppointmentsService,) {}
+  constructor(private readonly service: AppointmentsService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(RolesGuard)
   @Roles('patient')
-  @UsePipes(ValidationPipe)
   create(@Body() dto: CreateAppointmentDto) {
     return this.service.create(dto);
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard)
-  findAll() {
-    return this.service.findAll();
-  }
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  findAll(@Query() query: PaginationQueryDto) {
+  return this.service.findAll(query);
+}
 
   @Get('doctor/:doctorId')
-  @UseGuards(JwtAuthGuard)
   findDoctorAppointments(@Param('doctorId') doctorId: string) {
     return this.service.findDoctorAppointments(doctorId);
   }
 
+  @Get('patient/:patientId')
+  findPatientAppointments(@Param('patientId') patientId: string) {
+    return this.service.findPatientAppointments(patientId);
+  }
+
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
   findOne(@Param('id') id: string) {
     return this.service.findOne(id);
   }
 
-  @Get('patient/:patientId')
-  @UseGuards(JwtAuthGuard)
- findPatientAppointments(@Param('patientId') patientId: string) {
-  return this.service.findPatientAppointments(patientId);
-}
-
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(RolesGuard)
   @Roles('patient', 'doctor', 'admin')
   async cancel(@Param('id') id: string) {
     return await this.service.cancel(id);
   }
 
   @Patch(':id/done')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(RolesGuard)
   @Roles('doctor', 'admin')
   async markAsDone(@Param('id') id: string) {
     return await this.service.markAsDone(id);
@@ -61,17 +60,18 @@ export class AppointmentsController {
 
    @Patch(':id')
    @UseInterceptors(
-  FileInterceptor('file', { 
-    storage: diskStorage({
-      destination: './uploads/medical-docs', 
-      filename: (_, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-        cb(null, `doc-${uniqueSuffix}${extname(file.originalname)}`);
-      },
+   FileInterceptor('file', { 
+      storage: diskStorage({
+        destination: './uploads/medical-docs', 
+        filename: (_, file, cb) => {
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          cb(null, `doc-${uniqueSuffix}${extname(file.originalname)}`);
+        },
+      }),
+      limits: { fileSize: 5 * 1024 * 1024 }, 
     }),
-    limits: { fileSize: 5 * 1024 * 1024 }, 
-  }),
-)
+  )
+
   update(
     @Param('id') id: string, 
     @Body() updateDto: UpdateAppointmentDto, 
