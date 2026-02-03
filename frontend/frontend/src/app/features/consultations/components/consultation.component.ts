@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { CreateConsultationDto } from '../models/create-consultation.dto';
 import { AppointmentService, Appointment } from '../../appointments/services/appointment.service';
 import { AuthService } from '../../auth/services/auth.service';
-import { ConsultationFacadeService } from '../services/consultation-facade.service';
+import { ConsultationService } from '../services/consultation.service';
 import { ConsultationFormService } from '../services/consultation-form.service';
 import { ConsultationHistoryComponent } from './consultation-history/consultation-history.component';
 import { ConsultationFormComponent } from './consultation-form/consultation-form.component';
@@ -28,12 +28,12 @@ export class ConsultationComponent implements OnInit, OnDestroy {
   private readonly appointmentService = inject(AppointmentService);
   private readonly authService = inject(AuthService);
 
-  readonly facade = inject(ConsultationFacadeService);
+  readonly consultationService = inject(ConsultationService);
   readonly formService = inject(ConsultationFormService);
 
   readonly isSubmitDisabled = computed(() => {
     return (
-      this.facade.loading() ||
+      this.consultationService.loading() ||
       !this.formService.isValid() ||
       this.isButtonDisabled() ||
       this.hasConsultation()
@@ -41,15 +41,15 @@ export class ConsultationComponent implements OnInit, OnDestroy {
   });
 
   readonly hasConsultation = computed(() => {
-    const consultations = this.facade.patientConsultations();
-    const appointmentId = this.facade.appointmentState()?.id;
+    const consultations = this.consultationService.patientConsultations();
+    const appointmentId = this.consultationService.appointmentState()?.id;
     return appointmentId
       ? consultations.some((c) => c.appointmentId === appointmentId)
       : false;
   });
 
   readonly isButtonDisabled = computed(() => {
-    const appointmentDate = this.facade.appointmentState()?.appointmentDate;
+    const appointmentDate = this.consultationService.appointmentState()?.appointmentDate;
     if (!appointmentDate) return false;
 
     const today = new Date();
@@ -64,38 +64,38 @@ export class ConsultationComponent implements OnInit, OnDestroy {
     const currentUser = this.authService.getCurrentUser() as any;
 
     if (!appointment?.id) {
-      this.facade.error.set('No appointment found in state');
+      this.consultationService.error.set('No appointment found in state');
       setTimeout(() => this.router.navigate(['/appointments']), 2000);
       return;
     }
 
     if (!currentUser) {
-      this.facade.error.set('User not authenticated');
+      this.consultationService.error.set('User not authenticated');
       this.router.navigate(['/auth/login']);
       return;
     }
 
     this.appointmentService.getAppointment(appointment.id).subscribe({
       next: (apt: Appointment) => {
-        this.facade.setAppointmentState(apt);
+        this.consultationService.setAppointmentState(apt);
       },
       error: () => {
-        this.facade.error.set('Error retrieving the appointment. Redirecting...');
+        this.consultationService.error.set('Error retrieving the appointment. Redirecting...');
         setTimeout(() => this.router.navigate(['/appointments']), 2000);
       },
     });
   }
 
   ngOnDestroy(): void {
-    this.facade.reset();
+    this.consultationService.reset();
   }
 
   onSubmit(): void {
     if (this.isSubmitDisabled()) return;
 
-    const appointmentState = this.facade.appointmentState();
+    const appointmentState = this.consultationService.appointmentState();
     if (!appointmentState) {
-      this.facade.error.set('Appointment not identified. Please refresh the page.');
+      this.consultationService.error.set('Appointment not identified. Please refresh the page.');
       return;
     }
 
@@ -110,7 +110,7 @@ export class ConsultationComponent implements OnInit, OnDestroy {
       joursRepos: formValue.joursRepos || undefined,
     };
 
-    this.facade.createConsultation(dto).subscribe({
+    this.consultationService.createConsultation(dto).subscribe({
       next: () => this.formService.reset(),
     });
   }

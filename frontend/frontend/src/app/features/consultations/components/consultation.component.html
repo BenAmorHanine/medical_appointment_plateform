@@ -6,7 +6,7 @@
           <h1 class="page-title">
             <span class="gradient-text">Patient</span> Consultations
           </h1>
-          <button class="btn btn-back" (click)="facade.error.set(null); facade.reset()">
+          <button class="btn btn-back" (click)="consultationService.error.set(null); consultationService.reset()">
             <i class="fa fa-arrow-left me-2"></i>Back to Appointments
           </button>
         </div>
@@ -17,14 +17,15 @@
   <div class="container">
     <div class="row">
       <div class="col-12">
-        <app-consultation-history [consultations]="facade.patientConsultations()" />
+        <app-consultation-history [consultations]="consultationService.patientConsultations()" />
 
-        <app-consultation-form [form]="formService.form()" [loading]="facade.loading()" [error]="facade.error()"
-          [isSubmitDisabled]="isSubmitDisabled()" (formSubmit)="onSubmit()" (formReset)="formService.reset()" />
+        <app-consultation-form [form]="formService.form" [loading]="consultationService.loading()"
+          [error]="consultationService.error()" [isSubmitDisabled]="isSubmitDisabled()" (formSubmit)="onSubmit()"
+          (formReset)="formService.reset()" />
 
-        @if (facade.currentConsultation() && facade.appointmentState()?.id ===
-        facade.currentConsultation()?.appointmentId) {
-        <app-consultation-success [consultation]="facade.currentConsultation()" />
+        @if (consultationService.currentConsultation() && consultationService.appointmentState()?.id ===
+        consultationService.currentConsultation()?.appointmentId) {
+        <app-consultation-success [consultation]="consultationService.currentConsultation()" />
         }
       </div>
     </div>

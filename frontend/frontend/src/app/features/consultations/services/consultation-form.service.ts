@@ -16,7 +16,7 @@ export class ConsultationFormService {
     [ConsultationType.URGENCE]: 45,
   };
 
-  readonly form = signal<FormGroup>(this.createForm());
+  readonly form: FormGroup = this.createForm();
 
   /**
    * Crée le formulaire de consultation
@@ -46,21 +46,21 @@ export class ConsultationFormService {
    * Récupère les valeurs du formulaire
    */
   getValue() {
-    return this.form().value;
+    return this.form.value;
   }
 
   /**
    * Vérifie si le formulaire est valide
    */
   isValid(): boolean {
-    return this.form().valid;
+    return this.form.valid;
   }
 
   /**
    * Réinitialise le formulaire
    */
   reset(): void {
-    this.form().reset({
+    this.form.reset({
       type: ConsultationType.STANDARD,
       duration: this.DEFAULT_DURATIONS[ConsultationType.STANDARD],
     });
