@@ -1,5 +1,6 @@
 import {
-  Injectable, NotFoundException, InternalServerErrorException, Logger, BadRequestException, } from '@nestjs/common';
+  Injectable, NotFoundException, InternalServerErrorException, Logger, BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 //DataSource : obligatoire pour créer des transactions
@@ -101,8 +102,8 @@ Pourquoi ? C'est nécessaire pour inclure cette action dans la Transaction. Si l
       await queryRunner.rollbackTransaction();
       this.logger.error('Consultation creation failed', error);
 
-      // Gestion de la contrainte unique (duplicate key)
-      if (error.code === '23505' && dto.appointmentId) {
+      // Gestion de la contrainte unique (duplicate key) - MySQL: ER_DUP_ENTRY / 1062
+      if ((error.code === 'ER_DUP_ENTRY' || error.errno === 1062) && dto.appointmentId) {
         this.logger.warn(
           `Consultation already exists for appointment ${dto.appointmentId}`,
         );

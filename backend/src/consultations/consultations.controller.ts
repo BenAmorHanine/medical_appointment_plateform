@@ -23,7 +23,7 @@ import { PaginationQueryDto } from '../common/dto/pagination.dto';
 @Controller('consultations')
 @UseGuards(JwtAuthGuard)
 export class ConsultationsController {
-  constructor(private readonly consultationsService: ConsultationsService) { }
+  constructor(private readonly consultationsService: ConsultationsService) {}
 
   @Post()
   @UseGuards(RolesGuard)
@@ -72,15 +72,17 @@ export class ConsultationsController {
 
   /**
    * Helper method pour servir les fichiers PDF
-   * StreamableFile configure automatiquement les headers depuis les options
+   * StreamableFile est une classe NestJS qui permet d'envoyer des fichiers efficacement.
    */
   private async servePdf(
     id: string,
     type: 'ordonnance' | 'certificat',
     res: Response,
   ): Promise<StreamableFile> {
-    const { path, filename } =
-      await this.consultationsService.servePdfFile(id, type);
+    const { path, filename } = await this.consultationsService.servePdfFile(
+      id,
+      type,
+    );
 
     return new StreamableFile(createReadStream(path), {
       type: 'application/pdf',

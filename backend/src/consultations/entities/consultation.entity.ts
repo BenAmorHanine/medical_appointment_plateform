@@ -60,11 +60,11 @@ export class ConsultationEntity {
   @UpdateDateColumn()
   updatedAt: Date;
   //relation
+  // eager : false Charge à la demande
   @ManyToOne(() => PatientProfileEntity, { eager: false })
   @JoinColumn({ name: 'patientId' })
   patient: PatientProfileEntity;
   @ManyToOne(() => DoctorProfileEntity, { eager: false })
   @JoinColumn({ name: 'doctorProfileId' })
   doctorProfile: DoctorProfileEntity;
-
 }

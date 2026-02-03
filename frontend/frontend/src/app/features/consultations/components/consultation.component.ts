@@ -77,11 +77,7 @@ export class ConsultationComponent implements OnInit, OnDestroy {
 
     this.appointmentService.getAppointment(appointment.id).subscribe({
       next: (apt: Appointment) => {
-        if (currentUser.role === 'doctor') {
-          this.facade.verifyDoctorAccess(apt, currentUser.id).subscribe();
-        } else {
-          this.facade.verifyPatientAccess(apt, currentUser.id);
-        }
+        this.facade.setAppointmentState(apt);
       },
       error: () => {
         this.facade.error.set('Error retrieving the appointment. Redirecting...');

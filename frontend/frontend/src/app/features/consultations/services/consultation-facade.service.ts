@@ -98,53 +98,6 @@ export class ConsultationFacadeService {
   }
 
   /**
-   * Vérifie l'accès médecin via son profil.
-   * Utilise map/catchError au lieu de new Observable pour rester réactif.
-   */
-  verifyDoctorAccess(
-    appointment: Appointment,
-    userId: string
-  ): Observable<boolean> {
-    return this.http
-      .get<any>(`${this.apiUrl}/doctor-profiles/user/${userId}`)
-      .pipe(
-        map((doctorProfile) => {
-          if (!doctorProfile?.id) {
-            this.handleError('Doctor profile not found', '/appointments');
-            return false;
-          }
-
-          if (appointment.doctorId !== doctorProfile.id) {
-            this.handleError('You do not have access to this appointment', '/appointments');
-            return false;
-          }
-
-          // setAppointmentState appelle déjà loadPatientConsultations en interne
-          this.setAppointmentState(appointment);
-          return true;
-        }),
-        catchError((err) => {
-          console.error('Error retrieving doctor profile:', err);
-          this.error.set('Error verifying permissions');
-          return of(false);
-        })
-      );
-  }
-
-  /**
-   * Vérifie l'accès patient
-   */
-  verifyPatientAccess(appointment: Appointment, userId: string): boolean {
-    if (appointment.patientId !== userId) {
-      this.handleError('You do not have access to this appointment', '/appointments');
-      return false;
-    }
-
-    this.setAppointmentState(appointment);
-    return true;
-  }
-
-  /**
    * Gère les erreurs avec redirection
    */
   private handleError(message: string, redirectPath: string): void {
