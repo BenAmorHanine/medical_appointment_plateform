@@ -37,10 +37,6 @@ export class PasswordResetVerifyComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     const navigation = this.router.getCurrentNavigation();
     this.email = navigation?.extras?.state?.['email'] || '';
-    
-    if (!this.email) {
-      this.email = this.activatedRoute.snapshot.queryParamMap.get('email') || '';
-    }
 
     if (!this.email) {
       const historyState = (window.history as any).state;

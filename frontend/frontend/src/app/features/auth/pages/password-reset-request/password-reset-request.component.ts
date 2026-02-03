@@ -43,8 +43,7 @@ export class PasswordResetRequestComponent {
         
         setTimeout(() => {
           this.router.navigate(['/auth/password-reset-verify'], { 
-            state: { email },
-            queryParams: { email }
+            state: { email }
           });
         }, 100);
       },
