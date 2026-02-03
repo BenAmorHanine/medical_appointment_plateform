@@ -37,5 +37,11 @@ export class PatientService {
       )
     );
   }
+
+
+  getByUserId(userId: string): Observable<PatientProfile> {
+  return this.http.get<PatientProfile>(`${environment.apiUrl}/patient-profiles/user/${userId}`);
+}
+
 }
 

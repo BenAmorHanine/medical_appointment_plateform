@@ -1,7 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { Appointment } from '../models/appointment.interface';
+import { Observable, switchMap } from 'rxjs';
+import { Appointment, CreateAppointmentDto } from '../models/appointment.interface';
 import { environment } from '../../../../environments/environment';
 
 @Injectable({
@@ -9,17 +9,24 @@ import { environment } from '../../../../environments/environment';
 })
 export class AppointmentService {
   private apiUrl = `${environment.apiUrl}/appointments`;
+  private http = inject(HttpClient);
 
-  loading = signal(false);
-  error = signal<string | null>(null);
-  appointments = signal<Appointment[]>([]);
 
-  constructor(private http: HttpClient) {}
 
+getAppointmentsByRole(profileId: string, role: string): Observable<Appointment[]> {
+  const rolePath = role.toLowerCase(); 
+  return this.http.get<Appointment[]>(`${this.apiUrl}/${rolePath}/${profileId}`);
+}
+
+  /**
   getAppointmentsByDoctor(doctorId: string): Observable<Appointment[]> {
     return this.http.get<Appointment[]>(`${this.apiUrl}/doctor/${doctorId}`, { withCredentials: true });
   }
 
+  getAppointmentsByPatient(patientId: string): Observable<Appointment[]> {
+    return this.http.get<Appointment[]>(`${this.apiUrl}/patient/${patientId}`, { withCredentials: true });
+  }
+*/
   getAppointment(id: string): Observable<Appointment> {
     return this.http.get<Appointment>(`${this.apiUrl}/${id}`, { withCredentials: true });
   }
@@ -28,11 +35,7 @@ export class AppointmentService {
     return this.http.get<Appointment[]>(this.apiUrl, { withCredentials: true });
   }
 
-  getAppointmentsByPatient(patientId: string): Observable<Appointment[]> {
-    return this.http.get<Appointment[]>(`${this.apiUrl}/patient/${patientId}`, { withCredentials: true });
-  }
-
-  createAppointment(dto: any): Observable<Appointment> {
+  createAppointment(dto: CreateAppointmentDto): Observable<Appointment> {
     return this.http.post<Appointment>(this.apiUrl, dto, { withCredentials: true });
   }
 
@@ -40,22 +43,12 @@ export class AppointmentService {
     return this.http.delete<Appointment>(`${this.apiUrl}/${id}`, { withCredentials: true });
   }
 
-  markAsDone(id: string): Observable<Appointment> {
-    return this.http.patch<Appointment>(`${this.apiUrl}/${id}/done`, {}, { withCredentials: true });
+  updateAppointmentDetails(id: string, formData: FormData): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/${id}`, formData);
   }
 
-  loadAppointmentsForPatient(patientId: string) {
-    this.loading.set(true);
-    this.getAppointmentsByPatient(patientId).subscribe({
-      next: (data) => {
-        this.appointments.set(data);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.error.set('Error loading appointments');
-        this.loading.set(false);
-      }
-    });
+  markAsDone(id: string): Observable<Appointment> {
+    return this.http.patch<Appointment>(`${this.apiUrl}/${id}/done`, {}, { withCredentials: true });
   }
 
 }

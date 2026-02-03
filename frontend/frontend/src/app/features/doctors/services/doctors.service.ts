@@ -21,6 +21,12 @@ export class DoctorsService {
     );
   }
 
+  getByUserId(userId: string): Observable<Doctor | null> {
+  return this.http.get<Doctor>(`${this.apiUrl}/user/${userId}`).pipe(
+    catchError(() => of(null))
+  );
+}
+
   getFeaturedDoctors(): Observable<Doctor[]> {
     if (this.featuredCache.value.length > 0) {
       return this.featuredCache.asObservable();
@@ -44,4 +50,6 @@ export class DoctorsService {
   rateDoctor(doctorId: number, score: number): Observable<Doctor> {
   return this.http.post<Doctor>(`${this.apiUrl}/rate`, { score, doctorId });
 }
+
+
 }

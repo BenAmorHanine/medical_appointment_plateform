@@ -76,20 +76,30 @@
       @for (slot of availabilities; track slot.id) {
         <div class="card mb-3">
           <div class="card-body">
-            <div class="d-flex justify-content-between">
-              <div>
-                <div><strong>{{ slot.date | date:'fullDate' }}</strong></div>
-                <div class="text-muted">{{ slot.startTime }} - {{ slot.endTime }}</div>
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="mb-1 fw-bold text-dark">
+                <i class="far fa-calendar-alt me-2 text-primary"></i>
+                {{ slot.date | date:'fullDate' }}
+              </h6>
+              <div class="text-muted">
+                <i class="far fa-clock me-2"></i>{{ slot.startTime }} - {{ slot.endTime }}
+                <span class="badge bg-light text-primary ms-3 border">
+                  Capacity: {{ slot.bookedSlots }}/{{ slot.capacity }}
+                </span>
               </div>
-              <button class="btn btn-outline-danger btn-sm"
-                      [disabled]="loading || slot.bookedSlots > 0"
-                      (click)="deleteSlot(slot.id)">
-                Delete
-              </button>
             </div>
+            
+            <button class="btn btn-outline-danger btn-sm rounded-pill px-3"
+                    [disabled]="loading || slot.bookedSlots > 0"
+                    (click)="deleteSlot(slot.id)">
+              <i class="fas fa-trash-alt me-1"></i> 
+              {{ slot.bookedSlots > 0 ? 'Booked' : 'Delete' }}
+            </button>
           </div>
         </div>
-      }
-    }
+              </div>
+            }
+          }
   </div>
 </section>

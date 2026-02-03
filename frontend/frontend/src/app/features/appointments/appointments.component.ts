@@ -1,6 +1,6 @@
 import { Component, inject, OnInit ,signal, computed} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, ActivatedRoute, Router } from '@angular/router';
+import { RouterLink,  Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AppointmentService } from './services/appointment.service'; 
 import { Appointment } from './models/appointment.interface';
@@ -8,6 +8,8 @@ import { AuthService } from '../auth/services/auth.service';
 import { environment } from '../../../environments/environment';
 import { finalize } from 'rxjs';
 import { FormsModule } from '@angular/forms';
+import { PatientService } from '../patients/services/patient.service'; 
+import { DoctorsService } from '../doctors/services/doctors.service';
 @Component({
   selector: 'app-appointments',
   standalone: true,
@@ -18,17 +20,21 @@ import { FormsModule } from '@angular/forms';
 export class AppointmentsComponent implements OnInit {
   private appointmentService = inject(AppointmentService);
   private router = inject(Router);
-  private http = inject(HttpClient);
   private authService = inject(AuthService);
-  private apiUrl = environment.apiUrl;
+  private patientService = inject(PatientService);
+  private doctorService = inject(DoctorsService);
+  //private apiUrl = environment.apiUrl;
 
   appointments = signal<Appointment[]>([]);
   loading = signal(false);
   selectedFile: File | null = null;
-  patientNote = signal(''); 
-  selectedAppointment: any = null;
-  tempNote: string = '';
 
+  patientNote = signal(''); 
+
+  selectedAppointment = signal<Appointment | null>(null);
+  viewingPatientAppointment = signal<Appointment | null>(null);
+  tempNote = '';
+  
   appointmentList = computed(() => 
     this.appointments().filter(apt => apt.status?.toLowerCase() !== 'cancelled')
   );
@@ -37,90 +43,50 @@ export class AppointmentsComponent implements OnInit {
     this.loadData();
   }
 
-// appointments.component.ts
+
 
 loadData() {
-  const currentUser = this.authService.getCurrentUser();
-  if (!currentUser) return;
+    const user = this.authService.getCurrentUser();
+    if (!user || !user.id) return;
 
-  if (currentUser.role === 'doctor') {
-    this.loadDoctorAppointments(currentUser.id);
-  } else if (currentUser.role === 'patient') {
-    this.fetchPatientProfileAndLoad(currentUser.id);
-  }
-}
-
-fetchPatientProfileAndLoad(userId: string) {
-  this.loading.set(true);
-  this.http.get<any>(`${this.apiUrl}/patient-profiles/user/${userId}`).subscribe({
-    next: (patientProfile) => {
-      if (patientProfile?.id) {
-        
-        this.loadPatientAppointments(patientProfile.id);
-      } else {
-        this.loading.set(false);
-      }
-    },
-    error: () => this.loading.set(false)
-  });
-}
-
-loadPatientAppointments(patientProfileId: string) {
-  this.appointmentService.getAppointmentsByPatient(patientProfileId).pipe(
-    finalize(() => this.loading.set(false))
-  ).subscribe({
-    next: (data) => this.appointments.set(data),
-    error: () => this.appointments.set([])
-  });
-}
-
-loadDoctorAppointments(userId: string) {
     this.loading.set(true);
-    this.http.get<any>(`${this.apiUrl}/doctor-profiles/user/${userId}`).subscribe({
-      next: (doctorProfile) => {
-        if (doctorProfile?.id) {
-          this.appointmentService.getAppointmentsByDoctor(doctorProfile.id).pipe(
-            finalize(() => this.loading.set(false))
-          ).subscribe({
-            next: (data) => this.appointments.set(data),
-            error: () => this.loading.set(false)
-          });
-        } else {
-          this.loading.set(false);
+
+    if (user.role === 'patient') {
+      this.patientService.getByUserId(user.id).subscribe({
+        next: (profile) => this.fetchAppointments(profile.id, 'patient'),
+        error: () => this.loading.set(false)
+      });
+        }  else if (user.role === 'doctor') {
+      this.doctorService.getByUserId(user.id).subscribe({
+        next: (profile) => {
+          if (profile) {
+            this.fetchAppointments(String(profile.id), 'doctor');
+          } else {
+            this.loading.set(false);
+          }
+        },
+        error: () => this.loading.set(false)
+      });
+    }
+  }
+
+
+  private fetchAppointments(profileId: string, role: string) {
+    this.appointmentService.getAppointmentsByRole(profileId, role)
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe({
+        next: (data) => {
+          this.appointments.set(data);
+          console.log('Rendez-vous affichés !', data);
+        },
+        error: (err) => {
+          console.error("Erreur de chargement des rendez-vous", err);
+          this.appointments.set([]);
         }
-      },
-      error: () => this.loading.set(false)
-    });
+      });
   }
 
-  get isDoctor(): boolean {
-    return this.authService.getCurrentUser()?.role === 'doctor';
-  }
-
-getDoctorName(appointment: any): string {
-  const user = appointment?.doctor?.user;
-  if (!user) return 'Doctor unknown';
-  return `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim();
-}
-
-getPatientDisplayName(appointment: any): string {
-  const user = appointment?.patient?.user;
-  if (!user) return 'Patient unknown';
-  return `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim();
-}
-
-
-isLoading = computed(() => {
-  const currentUser = this.authService.getCurrentUser();
-  if (currentUser?.role === 'doctor') {
-    return this.loading(); 
-  }
-  return this.appointmentService.loading(); 
-});
-
-
-
-cancelAppointment(id: string) {
+  cancelAppointment(id: string) {
     if (!confirm('Are you sure you want to cancel this appointment?')) return;
     
     this.loading.set(true);
@@ -129,70 +95,78 @@ cancelAppointment(id: string) {
       error: () => this.loading.set(false)
     });
   }
+  
 
-  navigateToConsultation(appointment: any) {
-    console.log('Navigation vers consultation avec appointment:', appointment);
-    this.router.navigate(['/consultation'], {
-      state: { appointment }
-    });
-  }
+  savePreparation() {
+    const apt = this.selectedAppointment();
+    if (!apt) return;
 
+    const formData = new FormData();
+    formData.append('patientNote', this.tempNote); 
+    if (this.selectedFile) formData.append('file', this.selectedFile);
 
-  canCancel(appointment: any): boolean {
-    const status = appointment.status?.toLowerCase();
-    return status === 'reserved';
-  }
-
-formatAppointmentDate(dateValue: any): string {
-  const date = new Date(dateValue.displayDate || dateValue);
-  return date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-}
-
-
-onFileSelected(event: any) {
-  this.selectedFile = event.target.files[0];
-}
-
-openPreparationModal(appointment: any) {
-  this.selectedAppointment = appointment;
-  this.tempNote = appointment.patientNote || ''; 
-}
-
-savePreparation() {
-  if (!this.selectedAppointment) return;
-
-  const formData = new FormData();
-  formData.append('patientNote', this.tempNote); 
-  if (this.selectedFile) {
-    formData.append('file', this.selectedFile);
-  }
-
-  this.loading.set(true);
-
-  this.http.patch(`${this.apiUrl}/appointments/${this.selectedAppointment.id}`, formData)
-    .subscribe({
+    this.loading.set(true);
+    this.appointmentService.updateAppointmentDetails(apt.id, formData).subscribe({
       next: () => {
-        this.loading.set(false);
-        this.selectedAppointment = null; 
-        this.selectedFile = null; 
-        this.loadData(); 
-        alert('saved successfully!'); 
+        this.selectedAppointment.set(null);
+        this.selectedFile = null;
+        this.loadData();
+        alert('Saved successfully!');
       },
       error: () => {
         this.loading.set(false);
         alert('Error saving changes.');
       }
     });
-}
+  }
 
-viewingPatientAppointment: any = null;
+  get isDoctor(): boolean {
+    return this.authService.getCurrentUser()?.role === 'doctor';
+  }
 
-openPatientInfoModal(appointment: any) {
-  this.viewingPatientAppointment = appointment;
-}
+  getDoctorName(appointment: any): string {
+    const user = appointment?.doctor?.user;
+    if (!user) return 'Doctor unknown';
+    return `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim();
+  }
+
+  getPatientDisplayName(appointment:any): string {
+    const user = appointment?.patient?.user;
+    if (!user) return 'Patient unknown';
+    return `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim();
+  }
+
+  navigateToConsultation(appointment: Appointment) {
+    console.log('Navigation vers consultation avec appointment:', appointment);
+    this.router.navigate(['/consultation'], {
+      state: { appointment }
+    });
+  }
+
+  canCancel(appointment: Appointment): boolean {
+    const status = appointment.status?.toLowerCase();
+    return status === 'reserved';
+  }
+
+  formatAppointmentDate(dateValue: any): string {
+    const date = new Date(dateValue.displayDate || dateValue);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
+
+  onFileSelected(event: any) {
+    this.selectedFile = event.target.files[0];
+  }
+
+  openPreparationModal(appointment: Appointment) {
+    this.selectedAppointment.set(appointment);
+    this.tempNote = appointment.patientNote || ''; 
+  }
+  openPatientInfoModal(appointment: Appointment) {
+    this.viewingPatientAppointment.set(appointment);
+  }
 }
