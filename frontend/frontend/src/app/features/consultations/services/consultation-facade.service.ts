@@ -8,12 +8,6 @@ import { Consultation } from '../models/consultation.model';
 import { CreateConsultationDto } from '../models/create-consultation.dto';
 import { AppointmentService, Appointment } from '../../appointments/services/appointment.service';
 
-interface AppointmentState {
-  id: string;
-  patientId: string;
-  doctorId: string;
-  appointmentDate: Date;
-}
 
 /**
  * Facade service pour gérer la logique métier des consultations
@@ -31,7 +25,7 @@ export class ConsultationFacadeService {
   // État réactif
   readonly patientConsultations = signal<Consultation[]>([]);
   readonly currentConsultation = signal<Consultation | null>(null);
-  readonly appointmentState = signal<AppointmentState | null>(null);
+  readonly appointmentState = signal<Appointment | null>(null);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
 
@@ -86,12 +80,7 @@ export class ConsultationFacadeService {
    * d'une consultation précédente reste affiché.
    */
   setAppointmentState(appointment: Appointment): void {
-    this.appointmentState.set({
-      id: appointment.id,
-      patientId: appointment.patientId,
-      doctorId: appointment.doctorId,
-      appointmentDate: new Date(appointment.appointmentDate),
-    });
+    this.appointmentState.set(appointment);
 
     this.currentConsultation.set(null);
     this.loadPatientConsultations(appointment.patientId);
