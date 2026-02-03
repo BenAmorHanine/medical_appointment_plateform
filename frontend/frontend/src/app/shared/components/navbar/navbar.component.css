@@ -54,11 +54,9 @@
         &.active,
         &:hover {
           color: #1e40af;
-          background: linear-gradient(
-            135deg,
-            rgba(59, 130, 246, 0.1) 0%,
-            rgba(30, 64, 175, 0.1) 100%
-          );
+          background: linear-gradient(135deg,
+              rgba(59, 130, 246, 0.1) 0%,
+              rgba(30, 64, 175, 0.1) 100%);
           box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
           transform: translateY(-1px);
         }
@@ -262,23 +260,10 @@
   .notif-footer {
     padding: 10px 14px;
   }
+
   /* 🔔 end notifications dropdown */
 
-  .btn-history {
-    color: #3b82f6;
-    font-weight: 600;
-    padding: 0.75rem 1.25rem;
-    border-radius: 12px;
-    text-decoration: none;
-    transition: all 0.3s ease;
 
-    &.active,
-    &:hover {
-      background: rgba(59, 130, 246, 0.1);
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
-      transform: translateY(-1px);
-    }
-  }
 
   .btn-login {
     color: #3b82f6;
@@ -408,11 +393,9 @@
           text-align: left;
 
           &:hover {
-            background: linear-gradient(
-              135deg,
-              rgba(59, 130, 246, 0.1),
-              rgba(30, 64, 175, 0.1)
-            );
+            background: linear-gradient(135deg,
+                rgba(59, 130, 246, 0.1),
+                rgba(30, 64, 175, 0.1));
             color: #1e40af;
             padding-left: 1rem;
           }

@@ -45,15 +45,15 @@ export class ProfileComponent implements OnInit {
     }
   }
 
-private stripUndefined(obj: any) {
-  return Object.fromEntries(
-    Object.entries(obj).filter(
-      ([_, v]) => v !== undefined && v !== ''
-    )
-  );
-}
+  private stripUndefined(obj: any) {
+    return Object.fromEntries(
+      Object.entries(obj).filter(
+        ([_, v]) => v !== undefined && v !== ''
+      )
+    );
+  }
 
-onFileSelected(event: any) {
+  onFileSelected(event: any) {
     const file = event.target.files[0];
     if (file) {
       this.selectedFile = file;

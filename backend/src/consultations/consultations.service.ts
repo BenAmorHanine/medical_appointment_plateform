@@ -1,8 +1,8 @@
-// consultations/consultations.service.ts
 import {
   Injectable, NotFoundException, InternalServerErrorException, Logger, BadRequestException, } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
+//DataSource : obligatoire pour créer des transactions
 import { ConsultationEntity, ConsultationType, } from './entities/consultation.entity';
 import { CreateConsultationDto } from './dto/create-consultation.dto';
 import { AppointmentStatus, } from '../appointments/entities/appointment.entity';
@@ -73,7 +73,7 @@ export class ConsultationsService {
         this.consultationRepo.create({ ...dto, duration }),
       );
 
-      // Génération des PDFs
+      // Génératiaon des PDFs
       await this.pdfService.generateConsultationPdfs(consultation, names);
 
       // Mise à jour des URLs dans la consultation
