@@ -102,7 +102,6 @@ export class DoctorProfileService {
     });
   }
 
-  // backend/src/doctor-profile/doctor-profile.service.ts
 
 async updateRating(doctorId: string | number, newScore: number) {
   // 1. Find the doctor
